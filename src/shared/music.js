@@ -25,20 +25,35 @@ const CimegaMusic = (() => {
     }
   }
 
-  // ── CORE AUDIO ENGINE ──
+  // ── CORE AUDIO ENGINE (NO-DELAY MODE) ──
   function loadAndPlay(index, startTime = 0) {
     if (!audio || !state.files.length) return;
     
-    audio.src    = basePath + state.files[index];
-    audio.volume = state.muted ? 0 : 0.4;
+    // Gunakan Audio Object baru setiap ganti lagu agar buffer bersih
+    audio.src = basePath + state.files[index];
+    audio.preload = 'auto'; 
+    audio.volume = 0; // Mulai dari senyap untuk menghindari suara 'pop'
 
-    if (startTime > 0) {
-      audio.addEventListener('loadedmetadata', () => {
-        audio.currentTime = startTime;
-      }, { once: true });
-    }
+    // KUNCI: Menghilangkan jeda 0.2 detik dengan kompensasi waktu muat
+    const playHandler = () => {
+      // Kita tambahkan offset 0.25 detik untuk menutupi waktu transisi antar halaman
+      if (startTime > 0) {
+        audio.currentTime = startTime + 0.25;
+      }
+      
+      audio.play().then(() => {
+        if (!state.muted) {
+          // Fade-in sangat cepat untuk menyamarkan sambungan
+          let v = 0;
+          let fi = setInterval(() => {
+            if (v < 0.4) { v += 0.05; audio.volume = v; }
+            else { audio.volume = 0.4; clearInterval(fi); }
+          }, 5);
+        }
+      }).catch(() => {});
+    };
 
-    audio.play().catch(() => {});
+    audio.addEventListener('canplaythrough', playHandler, { once: true });
     updateUI();
   }
 
@@ -49,16 +64,18 @@ const CimegaMusic = (() => {
     if (path) basePath = path;
 
     audio = new Audio();
-    audio.volume = 0.4;
-
     state = await window.cimegaAPI.musicGetState();
+
+    // Langsung eksekusi pemutaran
     loadAndPlay(state.index, state.currentTime);
 
+    // Sinkronisasi sangat rapat (16ms = setara refresh rate layar)
+    // Agar Main Process selalu punya data waktu yang super akurat
     setInterval(() => {
       if (audio && !audio.paused) {
         window.cimegaAPI.musicUpdateTime(audio.currentTime);
       }
-    }, 100);
+    }, 16);
 
     audio.addEventListener('ended', async () => {
       const result = await window.cimegaAPI.musicNext();

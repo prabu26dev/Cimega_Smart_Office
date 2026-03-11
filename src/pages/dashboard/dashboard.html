@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Dashboard - Cimega Smart Office</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--cyan:#00e5ff;--blue:#0066ff;--dark:#020b18;--dark2:#041428;--dark3:#061a35;--card:rgba(4,20,45,0.95);--border:rgba(0,229,255,0.15);--text:#e0f4ff;--muted:#5a8aaa;--success:#00ff88;--danger:#ff4466;--warn:#ffaa00;--purple:#aa55ff;--sidebar:245px}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Exo 2',sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+
+    /* SIDEBAR */
+    .sidebar{width:var(--sidebar);background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;z-index:10}
+    .sidebar-header{padding:14px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+    .sidebar-logo{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .sidebar-logo img{width:30px;height:30px;object-fit:contain}
+    .sidebar-logo-text{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.3}
+    .sidebar-logo-text span{color:var(--cyan);display:block}
+    .user-card{background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.1);border-radius:10px;padding:10px}
+    .user-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-role-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 7px;border-radius:20px;margin-top:4px;letter-spacing:1px}
+    .role-guru{background:rgba(0,102,255,0.12);color:#66aaff;border:1px solid rgba(0,102,255,0.2)}
+    .role-kepsek{background:rgba(170,85,255,0.12);color:#cc88ff;border:1px solid rgba(170,85,255,0.2)}
+    .user-sekolah{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-nav{flex:1;overflow-y:auto;padding:6px}
+    .sidebar-nav::-webkit-scrollbar{width:3px}
+    .sidebar-nav::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
+    .nav-section{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:8px 8px 3px;font-weight:600}
+    .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:1px;font-size:12px;color:var(--muted)}
+    .nav-item:hover{background:rgba(0,229,255,0.07);color:var(--text)}
+    .nav-item.active{background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.18)}
+    .nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0}
+    .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700}
+    .sidebar-footer{padding:8px;border-top:1px solid var(--border);flex-shrink:0}
+    .school-tag{font-size:9px;color:var(--muted);line-height:1.4;padding:6px 8px;border:1px solid rgba(0,229,255,0.07);border-radius:7px;margin-bottom:6px}
+    .school-tag strong{color:var(--cyan);display:block;font-size:10px;margin-bottom:1px}
+    .page-settings{background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.08);border-radius:7px;padding:7px;margin-bottom:6px}
+    .ps-title{font-size:9px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+    .ps-row{display:flex;gap:3px;margin-bottom:3px;flex-wrap:wrap}
+    .ps-label{font-size:9px;color:var(--muted);margin-bottom:2px}
+    .ps-btn{font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(0,229,255,0.12);background:rgba(0,229,255,0.04);color:var(--muted);cursor:pointer;transition:all .2s}
+    .ps-btn.active{background:rgba(0,229,255,0.14);color:var(--cyan);border-color:rgba(0,229,255,0.3)}
+    .btn-logout{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:7px;color:#ff8899;font-size:12px;cursor:pointer;transition:all .2s}
+    .btn-logout:hover{background:rgba(255,68,102,0.14)}
+
+    /* MAIN */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1}
+    .topbar{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--dark2);flex-shrink:0}
+    .topbar-title{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:1px}
+    .topbar-right{display:flex;align-items:center;gap:10px}
+    .topbar-time{font-size:11px;color:var(--muted);font-family:'Orbitron',sans-serif}
+    .icon-btn{width:30px;height:30px;border-radius:50%;background:rgba(0,229,255,0.07);border:1px solid rgba(0,229,255,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;position:relative;transition:all .2s}
+    .icon-btn:hover{background:rgba(0,229,255,0.14)}
+    .notif-dot{position:absolute;top:1px;right:1px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:2px solid var(--dark2);display:none}
+    .notif-dot.show{display:block}
+    .content{flex:1;overflow-y:auto;padding:18px}
+    .content::-webkit-scrollbar{width:4px}
+    .content::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
+
+    /* PAGES */
+    .page{display:none;animation:fadein .25s ease}
+    .page.active{display:block}
+    @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+    /* CARDS & GRID */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px}
+    .card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .card-title{font-family:'Orbitron',sans-serif;font-size:10px;color:var(--cyan);letter-spacing:1px;font-weight:700}
+    .card-body{padding:14px 16px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+    /* STAT CARD */
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;transition:all .2s;cursor:pointer}
+    .stat-card:hover{border-color:var(--cyan);transform:translateY(-2px)}
+    .stat-icon{font-size:20px;margin-bottom:8px}
+    .stat-num{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:#fff}
+    .stat-label{font-size:10px;color:var(--muted);margin-top:2px}
+
+    /* WELCOME */
+    .welcome{background:linear-gradient(135deg,rgba(0,102,255,0.14),rgba(0,229,255,0.07));border:1px solid rgba(0,229,255,0.18);border-radius:14px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden}
+    .welcome::before{content:'';position:absolute;right:-10px;top:-10px;width:100px;height:100px;background:radial-gradient(circle,rgba(0,229,255,0.1),transparent 70%)}
+    .welcome-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .welcome-info h2{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:3px}
+    .welcome-info p{font-size:12px;color:var(--muted)}
+    .welcome-date{margin-left:auto;text-align:right;font-size:11px;color:var(--muted);font-family:'Orbitron',sans-serif}
+
+    /* UPDATE BANNER */
+    .update-banner{background:linear-gradient(135deg,rgba(0,255,136,0.07),rgba(0,229,255,0.04));border:1px solid rgba(0,255,136,0.22);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:none;align-items:center;gap:12px}
+    .update-banner.show{display:flex}
+
+    /* MENU GRID */
+    .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .menu-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+    .menu-card:hover{border-color:var(--cyan);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,229,255,0.08)}
+    .menu-card-icon{font-size:28px;margin-bottom:10px}
+    .menu-card-title{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:5px;line-height:1.4}
+    .menu-card-desc{font-size:11px;color:var(--muted);line-height:1.4}
+    .menu-card-count{position:absolute;top:12px;right:12px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);border-radius:20px;padding:2px 7px;font-size:9px;color:var(--cyan);font-family:'Orbitron',sans-serif}
+
+    /* DOC LIST */
+    .doc-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .doc-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
+    .doc-item:hover{border-color:var(--cyan);background:rgba(0,229,255,0.03)}
+    .doc-item-icon{width:36px;height:36px;border-radius:8px;background:rgba(0,102,255,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .doc-item-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .doc-item-meta{font-size:10px;color:var(--muted)}
+
+    /* DOC VIEWER */
+    .doc-viewer{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .doc-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .doc-body{padding:20px}
+    .doc-content{background:rgba(255,255,255,0.02);border:1px solid rgba(0,229,255,0.07);border-radius:9px;padding:18px;min-height:380px;font-size:13px;line-height:1.8;color:var(--text)}
+    .doc-content[contenteditable=true]{outline:none;border-color:rgba(0,229,255,0.18)}
+    .doc-content[contenteditable=true]:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,0.05)}
+
+    /* SHARE / DOKUMEN BERSAMA */
+    .shared-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;transition:all .2s}
+    .shared-item:hover{border-color:rgba(0,229,255,0.3)}
+    .shared-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+    .shared-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .shared-name{font-size:13px;font-weight:600;color:var(--text)}
+    .shared-meta{font-size:11px;color:var(--muted);margin-top:2px}
+    .shared-doc{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.1);border-radius:8px;padding:10px 13px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+    .shared-doc:hover{border-color:var(--cyan)}
+    .shared-doc-name{font-size:12px;font-weight:600;color:var(--text)}
+    .shared-doc-preview{font-size:11px;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .comment-wrap{margin-top:8px}
+    .comment-item{display:flex;gap:8px;margin-bottom:6px}
+    .comment-avatar{width:24px;height:24px;border-radius:50%;background:rgba(0,102,255,0.15);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+    .comment-body{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.08);border-radius:8px;padding:7px 10px;flex:1}
+    .comment-author{font-size:10px;color:var(--cyan);font-weight:600;margin-bottom:2px}
+    .comment-text{font-size:11px;color:var(--text)}
+    .comment-time{font-size:10px;color:var(--muted);margin-top:2px}
+    .comment-input-row{display:flex;gap:8px;margin-top:8px}
+    .comment-input{flex:1;padding:7px 12px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:8px;color:var(--text);font-size:12px;outline:none;transition:border .2s}
+    .comment-input:focus{border-color:var(--cyan)}
+    .comment-input::placeholder{color:var(--muted)}
+
+    /* STATUS BADGES */
+    .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+    .badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+    .badge-draft{background:rgba(90,138,170,0.12);color:var(--muted);border:1px solid rgba(90,138,170,0.2)}
+    .badge-shared{background:rgba(0,102,255,0.1);color:#66aaff;border:1px solid rgba(0,102,255,0.2)}
+    .badge-pending{background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.2)}
+    .badge-approved{background:rgba(0,255,136,0.1);color:var(--success);border:1px solid rgba(0,255,136,0.2)}
+    .badge-rejected{background:rgba(255,68,102,0.1);color:var(--danger);border:1px solid rgba(255,68,102,0.2)}
+
+    /* KEPSEK MONITOR */
+    .monitor-guru-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .2s}
+    .monitor-guru-card:hover{border-color:rgba(0,229,255,0.3)}
+    .monitor-guru-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .monitor-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .monitor-progress-bar{background:rgba(0,229,255,0.07);border-radius:20px;height:6px;overflow:hidden;flex:1}
+    .monitor-progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:20px;transition:width .5s}
+    .rekap-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(0,229,255,0.06);font-size:12px}
+    .rekap-row:last-child{border-bottom:none}
+
+    /* APPROVAL */
+    .approval-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:all .2s}
+    .approval-card:hover{border-color:rgba(0,229,255,0.25)}
+
+    /* BUTTONS */
+    .btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:12px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+    .btn-primary{background:linear-gradient(135deg,#0044cc,#0066ff);color:#fff}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,102,255,0.4)}
+    .btn-success{background:rgba(0,255,136,0.1);color:var(--success);border:1px solid rgba(0,255,136,0.22)}
+    .btn-success:hover{background:rgba(0,255,136,0.16)}
+    .btn-danger{background:rgba(255,68,102,0.1);color:var(--danger);border:1px solid rgba(255,68,102,0.22)}
+    .btn-ghost{background:rgba(0,229,255,0.06);color:var(--cyan);border:1px solid rgba(0,229,255,0.18)}
+    .btn-ghost:hover{background:rgba(0,229,255,0.12)}
+    .btn-warn{background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.22)}
+    .btn-purple{background:rgba(170,85,255,0.1);color:var(--purple);border:1px solid rgba(170,85,255,0.22)}
+    .btn-sm{padding:5px 10px;font-size:10px;border-radius:6px}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+    .modal-overlay.show{display:flex}
+    .modal{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:480px;animation:fadein .25s ease}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .modal-title{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#fff}
+    .modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+    .modal-close:hover{color:var(--danger)}
+    .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+    .form-group{margin-bottom:14px}
+    .form-label{display:block;font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
+    .form-control{width:100%;padding:9px 12px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:'Exo 2',sans-serif;outline:none;transition:border .2s}
+    .form-control:focus{border-color:var(--cyan)}
+    .form-control::placeholder{color:var(--muted)}
+    select.form-control option{background:var(--dark3)}
+    textarea.form-control{min-height:80px;resize:vertical}
+
+    /* NOTIF PANEL */
+    .notif-panel{position:fixed;top:48px;right:16px;width:300px;background:var(--dark3);border:1px solid var(--border);border-radius:12px;z-index:500;box-shadow:0 10px 40px rgba(0,0,0,0.5);display:none;animation:fadein .2s ease}
+    .notif-panel.show{display:block}
+    .notif-item{padding:11px 16px;border-bottom:1px solid rgba(0,229,255,0.05);cursor:pointer;transition:background .2s}
+    .notif-item:hover{background:rgba(0,229,255,0.04)}
+    .notif-item:last-child{border-bottom:none}
+
+    /* MUSIC WIDGET */
+    .music-widget{position:fixed;bottom:16px;right:16px;z-index:999;background:rgba(4,20,45,0.96);border:1px solid rgba(0,229,255,0.2);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:9px;backdrop-filter:blur(12px);box-shadow:0 6px 24px rgba(0,0,0,0.4);min-width:210px}
+    .music-widget:hover{border-color:rgba(0,229,255,0.4)}
+    .mw-bars{display:flex;align-items:flex-end;gap:2px;height:13px;flex-shrink:0}
+    .mw-bars .b{width:3px;border-radius:2px;background:#00e5ff;animation:mwbar .8s ease-in-out infinite}
+    .mw-bars .b:nth-child(1){height:5px;animation-delay:0s}.mw-bars .b:nth-child(2){height:11px;animation-delay:.15s}.mw-bars .b:nth-child(3){height:7px;animation-delay:.3s}.mw-bars .b:nth-child(4){height:11px;animation-delay:.1s}.mw-bars .b:nth-child(5){height:5px;animation-delay:.25s}
+    .mw-bars.paused .b{animation-play-state:paused;opacity:.2}
+    @keyframes mwbar{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+    .mw-title{font-size:10px;font-weight:600;color:#e0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mw-sub{font-size:9px;color:#5a8aaa;margin-top:1px}
+    .mw-controls{display:flex;align-items:center;gap:4px}
+    .mw-btn{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,229,255,0.18);background:rgba(0,229,255,0.07);color:#00e5ff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .mw-btn:hover{background:rgba(0,229,255,0.2);transform:scale(1.1)}
+    .mw-btn.mute{width:28px;height:28px;font-size:13px}
+
+    /* TOAST */
+    .toast-wrap{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+    .toast{background:var(--dark3);border:1px solid var(--border);border-radius:10px;padding:11px 14px;min-width:240px;display:flex;align-items:center;gap:9px;animation:fadein .3s ease;box-shadow:0 6px 24px rgba(0,0,0,0.4);font-size:12px}
+    .toast.success{border-color:rgba(0,255,136,0.3)}.toast.error{border-color:rgba(255,68,102,0.3)}.toast.info{border-color:rgba(0,229,255,0.3)}
+
+    .empty-state{text-align:center;padding:36px 16px;color:var(--muted)}
+    .empty-state .icon{font-size:36px;margin-bottom:10px;opacity:.4}
+    .spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .section-title{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:14px}
+    .section-title span{color:var(--cyan)}
+    .back-btn{width:28px;height:28px;border-radius:50%;background:rgba(0,229,255,0.07);border:1px solid rgba(0,229,255,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all .2s;flex-shrink:0}
+    .back-btn:hover{background:rgba(0,229,255,0.14)}
+    .page-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .divider{border:none;border-top:1px solid rgba(0,229,255,0.07);margin:10px 0}
+  </style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- NOTIF PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <span style="font-family:'Orbitron',sans-serif;font-size:10px;color:var(--cyan);letter-spacing:1px">🔔 NOTIFIKASI</span>
+    <span style="font-size:10px;color:var(--muted);cursor:pointer" onclick="markAllRead()">Tandai dibaca</span>
+  </div>
+  <div id="notifList"><div class="empty-state" style="padding:16px"><div class="icon">🔔</div><p style="font-size:11px">Tidak ada notifikasi</p></div></div>
+</div>
+
+<!-- MODAL SHARE -->
+<div class="modal-overlay" id="modalShare">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📤 BAGIKAN DOKUMEN</div>
+      <button class="modal-close" onclick="closeModal('modalShare')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dokumen</label>
+      <input class="form-control" id="shareDocName" readonly/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bagikan kepada</label>
+      <select class="form-control" id="shareTarget">
+        <option value="school">Semua Guru di Sekolah Ini</option>
+        <option value="kepsek">Kepala Sekolah (Pantau)</option>
+        <option value="approval">Kepala Sekolah (Minta Persetujuan)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catatan (opsional)</label>
+      <textarea class="form-control" id="shareNote" placeholder="Tulis catatan untuk penerima..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalShare')">Batal</button>
+      <button class="btn btn-primary" onclick="doShare()">📤 Bagikan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETAIL DOKUMEN (dari share) -->
+<div class="modal-overlay" id="modalDocDetail">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title" id="modalDocDetailTitle">Dokumen</div>
+      <button class="modal-close" onclick="closeModal('modalDocDetail')">✕</button>
+    </div>
+    <div style="background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.08);border-radius:8px;padding:14px;max-height:300px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text);margin-bottom:14px" id="modalDocContent"></div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">💬 Komentar</label>
+      <div id="modalComments" style="margin-bottom:8px;max-height:150px;overflow-y:auto"></div>
+      <div style="display:flex;gap:8px">
+        <input class="form-control" id="commentInput" placeholder="Tulis komentar..."/>
+        <button class="btn btn-primary btn-sm" onclick="submitComment()">Kirim</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalDocDetail')">Tutup</button>
+      <button class="btn btn-ghost" onclick="downloadSharedDoc()" id="downloadSharedBtn">⬇️ Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../../../assets_images/Logo SDN Cimega.png" onerror="this.style.display='none'" alt="logo"/>
+      <div class="sidebar-logo-text">CIMEGA<span>SMART OFFICE</span></div>
+    </div>
+    <div class="user-card">
+      <div class="user-name" id="sidebarNama">—</div>
+      <div class="user-role-badge" id="sidebarRole">—</div>
+      <div class="user-sekolah" id="sidebarSekolah">—</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sidebarNav"></nav>
+  <div class="sidebar-footer">
+    <div class="school-tag">
+      <strong id="schoolName">SDN Cimega</strong>
+      <span id="schoolAddr">Kp.Bojongloa Desa Sarinagen, Kec.Cipongkor</span>
+    </div>
+    <div class="page-settings">
+      <div class="ps-title">⚙ Halaman Dokumen</div>
+      <div class="ps-label">Ukuran</div>
+      <div class="ps-row">
+        <div class="ps-btn active" id="psA4" onclick="setPageSize('A4')">A4</div>
+        <div class="ps-btn" id="psF4" onclick="setPageSize('F4')">F4</div>
+      </div>
+      <div class="ps-label">Margin</div>
+      <div class="ps-row">
+        <div class="ps-btn active" id="psNormal" onclick="setMargin('Normal')">Normal</div>
+        <div class="ps-btn" id="psModerate" onclick="setMargin('Moderate')">Moderate</div>
+        <div class="ps-btn" id="psNarrow" onclick="setMargin('Narrow')">Narrow</div>
+      </div>
+      <div class="ps-label">Orientasi</div>
+      <div class="ps-row">
+        <div class="ps-btn active" id="psPortrait" onclick="setOrientation('Portrait')">Portrait</div>
+        <div class="ps-btn" id="psLandscape" onclick="setOrientation('Landscape')">Landscape</div>
+      </div>
+    </div>
+    <div class="btn-logout" onclick="doLogout()"><span>🚪</span> Keluar</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">BERANDA</div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="toggleNotif()" id="notifBtn">🔔<div class="notif-dot" id="notifDot"></div></div>
+      <div class="topbar-time" id="topbarTime">--:--</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- BERANDA -->
+    <div class="page active" id="page-beranda">
+      <div class="update-banner" id="updateBanner">
+        <span style="font-size:24px">🚀</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--success)" id="updateTitle">Update Tersedia!</div><div style="font-size:11px;color:var(--muted)" id="updateDesc"></div></div>
+        <button class="btn btn-success btn-sm" onclick="doUpdate()">Update</button>
+        <button class="btn btn-ghost btn-sm" id="skipUpdateBtn" onclick="document.getElementById('updateBanner').classList.remove('show')">Nanti</button>
+      </div>
+      <div class="welcome">
+        <div class="welcome-avatar" id="welcomeAvatar">👤</div>
+        <div class="welcome-info">
+          <h2 id="welcomeName">Selamat Datang!</h2>
+          <p id="welcomeSub">Sistem Administrasi Digital</p>
+        </div>
+        <div class="welcome-date" id="welcomeDate"></div>
+      </div>
+      <div class="grid-4" id="homeStats" style="margin-bottom:16px"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 MENU CEPAT</div></div>
+          <div class="card-body" id="quickMenuHome"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔔 NOTIFIKASI TERBARU</div></div>
+          <div class="card-body" id="recentNotifHome"><div class="empty-state" style="padding:16px"><div class="icon">🔔</div><p style="font-size:11px">Belum ada notifikasi</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MENU DOKUMEN -->
+    <div class="page" id="page-menu">
+      <div class="section-title" id="menuTitle">Pilih <span>Dokumen</span></div>
+      <div class="menu-grid" id="menuGrid"></div>
+    </div>
+
+    <!-- DAFTAR DOKUMEN -->
+    <div class="page" id="page-doclist">
+      <div class="page-header">
+        <div class="back-btn" onclick="goBack()">←</div>
+        <div>
+          <div class="section-title" id="doclistTitle" style="margin-bottom:0">Daftar <span>Dokumen</span></div>
+          <div style="font-size:10px;color:var(--muted)" id="doclistSub"></div>
+        </div>
+      </div>
+      <div class="doc-list" id="docGrid"></div>
+    </div>
+
+    <!-- VIEWER DOKUMEN -->
+    <div class="page" id="page-docview">
+      <div class="page-header">
+        <div class="back-btn" onclick="goBackToList()">←</div>
+        <div style="flex:1">
+          <div class="section-title" id="docviewTitle" style="margin-bottom:0;font-size:13px">Dokumen</div>
+          <div style="font-size:10px;color:var(--muted)" id="docviewMeta"></div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="toggleEdit()" id="editBtn">✏️ Edit</button>
+          <button class="btn btn-primary btn-sm" onclick="saveDoc()" id="saveBtn" style="display:none">💾 Simpan</button>
+          <button class="btn btn-purple btn-sm" onclick="openShareModal()">📤 Bagikan</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadDoc()">⬇️ Download</button>
+          <button class="btn btn-ghost btn-sm" onclick="printDoc()">🖨️ Cetak</button>
+        </div>
+      </div>
+      <div class="doc-viewer">
+        <div class="doc-toolbar" id="docToolbar">
+          <span style="font-size:10px;color:var(--muted)">Format:</span>
+          <button class="btn btn-ghost btn-sm" onclick="fmt('bold')"><b>B</b></button>
+          <button class="btn btn-ghost btn-sm" onclick="fmt('italic')"><i>I</i></button>
+          <button class="btn btn-ghost btn-sm" onclick="fmt('underline')"><u>U</u></button>
+          <span style="font-size:10px;color:var(--muted);margin-left:6px">Align:</span>
+          <button class="btn btn-ghost btn-sm" onclick="fmt('justifyLeft')">⬅</button>
+          <button class="btn btn-ghost btn-sm" onclick="fmt('justifyCenter')">↔</button>
+          <button class="btn btn-ghost btn-sm" onclick="fmt('justifyRight')">➡</button>
+          <button class="btn btn-ghost btn-sm" onclick="fmt('justifyFull')">☰</button>
+          <span style="font-size:10px;color:var(--muted);margin-left:auto" id="pageInfoLabel"></span>
+        </div>
+        <div class="doc-body">
+          <div class="doc-content" id="docContent" contenteditable="false"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOKUMEN BERSAMA (share antar guru) -->
+    <div class="page" id="page-shared">
+      <div class="section-title">Dokumen <span>Bersama</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <button class="btn btn-ghost btn-sm" onclick="filterShared('all')" id="sfAll">Semua</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterShared('school')" id="sfSchool">Dari Guru Lain</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterShared('mine')" id="sfMine">Yang Saya Bagikan</button>
+      </div>
+      <div id="sharedList"><div class="empty-state"><div class="icon">📤</div><p>Belum ada dokumen dibagikan</p></div></div>
+    </div>
+
+    <!-- KIRIM KE KEPSEK (approval) -->
+    <div class="page" id="page-approval-guru">
+      <div class="section-title">Dokumen <span>Dikirim ke Kepsek</span></div>
+      <div id="submissionList"><div class="empty-state"><div class="icon">📬</div><p>Belum ada dokumen dikirim</p></div></div>
+    </div>
+
+    <!-- MONITOR GURU (kepsek) -->
+    <div class="page" id="page-monitor">
+      <div class="section-title">Monitor <span>Guru</span></div>
+      <div class="grid-4" id="monitorStats" style="margin-bottom:16px"></div>
+      <div id="monitorList"><div class="empty-state"><div class="icon">👨‍🏫</div><p>Memuat data guru...</p></div></div>
+    </div>
+
+    <!-- VALIDASI (kepsek) -->
+    <div class="page" id="page-validasi">
+      <div class="section-title">Validasi <span>Dokumen</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn btn-ghost btn-sm" onclick="filterApproval('pending')" id="afPending">⏳ Menunggu</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterApproval('approved')" id="afApproved">✅ Disetujui</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterApproval('rejected')" id="afRejected">❌ Ditolak</button>
+      </div>
+      <div id="approvalList"><div class="empty-state"><div class="icon">✅</div><p>Belum ada dokumen untuk divalidasi</p></div></div>
+    </div>
+
+    <!-- REKAP DOKUMEN (kepsek) -->
+    <div class="page" id="page-rekap">
+      <div class="section-title">Rekap <span>Dokumen Guru</span></div>
+      <div id="rekapContent"><div class="empty-state"><div class="icon">📊</div><p>Memuat rekap...</p></div></div>
+    </div>
+
+    <!-- PROFIL -->
+    <div class="page" id="page-profil">
+      <div class="section-title">Profil <span>Saya</span></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+              <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:24px" id="profilAvatar">👤</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#fff" id="profilNama">—</div>
+                <div id="profilRoleBadge" style="margin-top:4px"></div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px" id="profilSekolah">—</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="rekap-row"><span style="color:var(--muted)">Username</span><span id="profilUsername">—</span></div>
+              <div class="rekap-row"><span style="color:var(--muted)">Expired</span><span id="profilExpired">—</span></div>
+              <div class="rekap-row" style="border:none"><span style="color:var(--muted)">Status</span><span id="profilStatus">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔒 GANTI PASSWORD</div></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Password Lama</label><input type="password" class="form-control" id="oldPassUser" placeholder="Password saat ini"/></div>
+            <div class="form-group"><label class="form-label">Password Baru</label><input type="password" class="form-control" id="newPassUser" placeholder="Password baru"/></div>
+            <div class="form-group"><label class="form-label">Konfirmasi</label><input type="password" class="form-control" id="confirmPassUser" placeholder="Ulangi password baru"/></div>
+            <button class="btn btn-primary" style="width:100%" onclick="gantiPasswordUser()">💾 Simpan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- MUSIC WIDGET -->
+<div class="music-widget">
+  <div class="mw-bars" id="musicBars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+  <div style="flex:1;min-width:0">
+    <div class="mw-title" id="musicTitle">Memuat...</div>
+    <div class="mw-sub">Track <span id="musicTrackInfo">—</span> — Kang Prabu</div>
+  </div>
+  <div class="mw-controls">
+    <div class="mw-btn" onclick="CimegaMusic.prev()">⏮</div>
+    <div class="mw-btn mute" id="musicMuteBtn" onclick="CimegaMusic.toggleMute()">🔊</div>
+    <div class="mw-btn" onclick="CimegaMusic.next()">⏭</div>
+  </div>
+</div>
+
+<script src="../../shared/music.js"></script>
+<script>
+// =============================================
+// CIMEGA SMART OFFICE — DASHBOARD v2
+// Guru & Kepala Sekolah + Sistem Share Dokumen
+// =============================================
+
+let db, userData;
+let pageHistory = [], currentKat = '', currentDocId = '', currentDocName = '';
+let allShared = [], allApprovals = [], currentShareDocContent = '', currentShareDocId = '';
+let pageSettings = { size:'A4', margin:'Normal', orientation:'Portrait' };
+
+userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
+if (!userData?.role || userData.role === 'admin') window.location.href = '../login/login.html';
+
+// ── Struktur menu ──────────────────────────
+const menuData = {
+  guru:[
+    {id:'adm_guru',icon:'📚',title:'Administrasi Guru & Pembelajaran',desc:'RPP, Modul Ajar, Penilaian, Jurnal',items:['RPP Deep Learning','Modul Ajar Kurikulum Merdeka','Modul Ajar Kurikulum Berbasis Cinta','TP','ATP','PROTA','PROMES','Proyek Kokulikuler','Analisis Soal','Kisi-Kisi Soal','Lembar Soal & Kunci Jawaban','Daftar Hadir Siswa','PH','PTS','PAS','Rekap Nilai','RPP K13','Silabus','KKM','Jurnal Mengajar']},
+    {id:'perpus',icon:'📖',title:'Administrasi Perpustakaan',desc:'Keanggotaan, Peminjaman, Inventaris',items:['Keanggotaan','Kolektif','Peminjaman','Keuangan Perpustakaan','Administrasi Umum Perpus']}
+  ],
+  kepsek:[
+    {id:'adm_guru',icon:'📚',title:'Administrasi Guru & Pembelajaran',desc:'RPP, Modul Ajar, Penilaian',items:['RPP Deep Learning','Modul Ajar Kurikulum Merdeka','Modul Ajar Kurikulum Berbasis Cinta','TP','ATP','PROTA','PROMES','Proyek Kokulikuler','Analisis Soal','Kisi-Kisi Soal','Lembar Soal & Kunci Jawaban','Daftar Hadir Siswa','PH','PTS','PAS','Rekap Nilai','RPP K13','Silabus','KKM','Jurnal Mengajar']},
+    {id:'adm_kepsek',icon:'🏛️',title:'Administrasi Kepala Sekolah',desc:'Tugas Pokok, Supervisi, Manajerial',items:['Tugas Pokok Kepsek','Administrasi Manajerial','Supervisi Akademik','Kurikulum','Kesiswaan','Keuangan','Humas']},
+    {id:'kosp',icon:'📋',title:'Kurikulum Operasional Satuan Pendidikan',desc:'Karakteristik, Visi Misi, Perencanaan',items:['Karakteristik','Visi Misi Tujuan','Pengorganisasian','Perencanaan','Projek 8 Dimensi','Pendekatan','Asesmen','Pengelolaan']},
+    {id:'adm_umum',icon:'🏫',title:'Administrasi Umum Sekolah',desc:'SK, Inventaris, Jadwal, Tata Tertib',items:['SK Pembagian Tugas','SK Panitia Ujian','SK Wali Kelas','SK Ekskul','SK Tim Kurikulum','SK OSIS','SK BOS','SK MPLS','SK Operator','SK Kenaikan Kelas','SK Kelulusan','Inventaris','Jadwal','Struktur Org','Kalender','Tata Tertib','Buku Tamu','Notulen']},
+    {id:'keuangan',icon:'💰',title:'Keuangan & BOS',desc:'Laporan BOS, RKAS, LPJ, Nota',items:['Laporan BOS Triwulan','RKAS','BKU','Nota Pembelian','Realisasi BOS','LPJ BOS','Berita Acara Pengadaan','Daftar Hadir Honor']},
+    {id:'evaluasi',icon:'📊',title:'Evaluasi & Pelaporan',desc:'EDS, Akreditasi, Supervisi, Monev',items:['EDS','Instrumen Akreditasi','Laporan Kegiatan','LPJ Kegiatan','Monev','Supervisi Kelas','Berita Acara Rapat','Berita Acara Penilaian']},
+    {id:'perpus',icon:'📖',title:'Administrasi Perpustakaan',desc:'Keanggotaan, Peminjaman, Inventaris',items:['Keanggotaan','Kolektif','Peminjaman','Keuangan Perpustakaan','Administrasi Umum Perpus']}
+  ]
+};
+
+// ── Clock ──────────────────────────────────
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('topbarTime').textContent=n.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+},1000);
+
+// ── Toast ──────────────────────────────────
+function showToast(type,title,msg){
+  const icons={success:'✅',error:'❌',warn:'⚠️',info:'ℹ️'};
+  const t=document.createElement('div');t.className=`toast ${type}`;
+  t.innerHTML=`<span style="font-size:16px">${icons[type]||'ℹ️'}</span><div><strong style="display:block;margin-bottom:1px">${title}</strong>${msg||''}</div>`;
+  document.getElementById('toastWrap').appendChild(t);setTimeout(()=>t.remove(),4000);
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function openModal(id){document.getElementById(id).classList.add('show');}
+
+// ── Navigation ─────────────────────────────
+function showPage(id,title){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('topbarTitle').textContent=title||id.toUpperCase();
+}
+
+function goBack(){
+  if(pageHistory.length>0){const p=pageHistory.pop();showPage(p.id,p.title);}
+  else showPage('beranda','BERANDA');
+}
+function goBackToList(){showPage('doclist','DAFTAR DOKUMEN');}
+
+// ── Sidebar ────────────────────────────────
+function buildSidebar(){
+  const role=userData.role;
+  const menus=menuData[role]||[];
+  let html=`<div class="nav-section">Menu Utama</div>
+  <div class="nav-item active" onclick="navTo(this,'beranda','BERANDA',loadBeranda)"><span class="nav-icon">🏠</span>Beranda</div>
+  <div class="nav-section">Dokumen</div>`;
+  menus.forEach(m=>{
+    html+=`<div class="nav-item" onclick="navToMenu(this,'${m.id}')"><span class="nav-icon">${m.icon}</span><span style="flex:1;font-size:11px;line-height:1.3">${m.title}</span></div>`;
+  });
+  html+=`<div class="nav-section">Kolaborasi</div>
+  <div class="nav-item" onclick="navTo(this,'shared','DOKUMEN BERSAMA',loadShared)"><span class="nav-icon">📤</span>Dok. Bersama</div>`;
+  if(role==='guru'){
+    html+=`<div class="nav-item" onclick="navTo(this,'approval-guru','DIKIRIM KE KEPSEK',loadMySubmissions)"><span class="nav-icon">📬</span>Dikirim ke Kepsek<span class="nav-badge" id="submBadge" style="display:none">!</span></div>`;
+  }
+  if(role==='kepsek'){
+    html+=`<div class="nav-item" onclick="navTo(this,'monitor','MONITOR GURU',loadMonitor)"><span class="nav-icon">👁️</span>Monitor Guru</div>
+    <div class="nav-item" onclick="navTo(this,'validasi','VALIDASI DOKUMEN',()=>loadApprovals('pending'))"><span class="nav-icon">✅</span>Validasi Dok.<span class="nav-badge" id="approvalBadge" style="display:none">!</span></div>
+    <div class="nav-item" onclick="navTo(this,'rekap','REKAP DOKUMEN',loadRekap)"><span class="nav-icon">📊</span>Rekap Dokumen</div>`;
+  }
+  html+=`<div class="nav-section">Lainnya</div>
+  <div class="nav-item" onclick="navTo(this,'profil','PROFIL SAYA',loadProfil)"><span class="nav-icon">👤</span>Profil Saya</div>`;
+  document.getElementById('sidebarNav').innerHTML=html;
+}
+
+function navTo(el,pageId,title,fn){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  pageHistory=[];
+  showPage(pageId,title);
+  if(fn) fn();
+}
+function navToMenu(el,menuId){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  pageHistory=[];
+  const menus=menuData[userData.role]||[];
+  renderMenuGrid(menus,menuId);
+  showPage('menu','ADMINISTRASI');
+}
+
+// ── Menu grid ──────────────────────────────
+function renderMenuGrid(menus,focusId){
+  document.getElementById('menuGrid').innerHTML=menus.map(m=>`
+    <div class="menu-card" onclick="openDocList('${m.id}','${m.title}',${JSON.stringify(m.items)})">
+      <div class="menu-card-count">${m.items.length}</div>
+      <div class="menu-card-icon">${m.icon}</div>
+      <div class="menu-card-title">${m.title}</div>
+      <div class="menu-card-desc">${m.desc}</div>
+    </div>`).join('');
+}
+
+// ── Doc list ───────────────────────────────
+function openDocList(katId,katTitle,items){
+  currentKat=katId;
+  pageHistory.push({id:'menu',title:'ADMINISTRASI'});
+  const icons=['📄','📝','📋','🗒️','📃','📑','🗃️'];
+  document.getElementById('doclistTitle').innerHTML=`<span>${katTitle.split(' ').slice(0,3).join(' ')}</span>`;
+  document.getElementById('doclistSub').textContent=katTitle+' · '+items.length+' dokumen';
+  document.getElementById('docGrid').innerHTML=items.map((name,i)=>`
+    <div class="doc-item" onclick="openDoc('${katId}','${name.replace(/'/g,"\\'")}')">
+      <div class="doc-item-icon">${icons[i%icons.length]}</div>
+      <div style="flex:1;min-width:0">
+        <div class="doc-item-name">${name}</div>
+        <div class="doc-item-meta">${katTitle}</div>
+      </div>
+      <span style="color:var(--muted);font-size:11px">▶</span>
+    </div>`).join('');
+  showPage('doclist','DAFTAR DOKUMEN');
+}
+
+// ── Buka dokumen ───────────────────────────
+async function openDoc(katId,docName){
+  currentKat=katId; currentDocName=docName;
+  currentDocId='';
+  pageHistory.push({id:'doclist',title:'DAFTAR DOKUMEN'});
+  document.getElementById('docviewTitle').textContent=docName;
+  document.getElementById('docviewMeta').textContent=katId+' · '+pageSettings.size+' '+pageSettings.orientation;
+  document.getElementById('pageInfoLabel').textContent=pageSettings.size+' | '+pageSettings.margin+' | '+pageSettings.orientation;
+  const contentEl=document.getElementById('docContent');
+  contentEl.contentEditable='false';
+  document.getElementById('saveBtn').style.display='none';
+  document.getElementById('editBtn').textContent='✏️ Edit';
+  contentEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)"><div class="spinner"></div> Memuat...</div>';
+  showPage('docview',docName);
+  try{
+    const{collection,query,where,getDocs}=window._fb;
+    const snap=await getDocs(query(collection(db,'konten'),where('kategori','==',katId),where('nama','==',docName)));
+    if(!snap.empty){
+      const d=snap.docs[0]; currentDocId=d.id;
+      const data=d.data();
+      const savedContent=data.savedContentByUser?.[userData.id] || data.savedContent || null;
+      contentEl.innerHTML = savedContent || data.template?.replace(/\n/g,'<br/>') ||
+        `<div style="color:var(--muted);text-align:center;padding:36px">
+          <div style="font-size:36px;margin-bottom:12px">📄</div>
+          <div style="font-size:13px;color:var(--text);margin-bottom:6px">${docName}</div>
+          <div>Template belum diisi admin. Klik <strong>Edit</strong> untuk mulai menulis dokumen Anda.</div>
+        </div>`;
+    } else {
+      contentEl.innerHTML=`<div style="color:var(--muted);text-align:center;padding:36px"><div style="font-size:36px;margin-bottom:12px">📄</div><div style="font-size:13px;color:var(--text);margin-bottom:6px">${docName}</div><div>Konten belum tersedia dari admin.</div></div>`;
+    }
+  }catch(e){contentEl.innerHTML='<div style="color:var(--muted);text-align:center;padding:30px">Gagal memuat.</div>';}
+}
+
+// ── Edit & Save ────────────────────────────
+function toggleEdit(){
+  const ce=document.getElementById('docContent');
+  const editing=ce.contentEditable==='true';
+  if(editing){ce.contentEditable='false';document.getElementById('saveBtn').style.display='none';document.getElementById('editBtn').textContent='✏️ Edit';}
+  else{ce.contentEditable='true';ce.focus();document.getElementById('saveBtn').style.display='inline-flex';document.getElementById('editBtn').textContent='✕ Batal';}
+}
+
+async function saveDoc(){
+  if(!currentDocId){showToast('warn','Perhatian','Dokumen ini belum ada di database. Hubungi admin.');return;}
+  const{doc,updateDoc,serverTimestamp}=window._fb;
+  const content=document.getElementById('docContent').innerHTML;
+  try{
+    // Simpan per-user agar tidak menimpa milik guru lain
+    const field=`savedContentByUser.${userData.id}`;
+    await updateDoc(doc(db,'konten',currentDocId),{[field]:content,updatedAt:serverTimestamp()});
+    toggleEdit();
+    showToast('success','Tersimpan','Dokumen berhasil disimpan');
+  }catch(e){showToast('error','Gagal',e.message);}
+}
+
+function fmt(cmd){document.execCommand(cmd,false,null);}
+
+// ── Download dokumen sebagai HTML ──────────
+function downloadDoc(){
+  const content=document.getElementById('docContent').innerHTML;
+  const title=currentDocName||'Dokumen';
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+    <style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;color:#000;padding:2cm;max-width:21cm;margin:0 auto}</style>
+    </head><body><h2 style="font-family:Arial">${title}</h2><hr/>${content}</body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=title+'.html'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('success','Diunduh',title+' berhasil diunduh');
+}
+
+// ── Print ──────────────────────────────────
+function printDoc(){
+  const content=document.getElementById('docContent').innerHTML;
+  const title=currentDocName||'Dokumen';
+  const w=window.open('','_blank');
+  const margins={Normal:'2.54cm',Moderate:'1.91cm',Narrow:'1.27cm'};
+  const mg=margins[pageSettings.margin]||'2.54cm';
+  const sz=pageSettings.size==='F4'?'21.59cm 33.02cm':'A4';
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+    <style>@page{size:${sz};margin:${mg}}body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;color:#000}</style>
+    </head><body>${content}</body></html>`);
+  w.document.close(); setTimeout(()=>{w.print();w.close();},400);
+}
+
+// ══════════════════════════════════════════
+// SISTEM SHARE DOKUMEN
+// ══════════════════════════════════════════
+
+function openShareModal(){
+  if(!currentDocName){showToast('warn','Perhatian','Buka dokumen terlebih dahulu');return;}
+  document.getElementById('shareDocName').value=currentDocName;
+  openModal('modalShare');
+}
+
+async function doShare(){
+  const{collection,addDoc,serverTimestamp}=window._fb;
+  const target=document.getElementById('shareTarget').value;
+  const note=document.getElementById('shareNote').value.trim();
+  const content=document.getElementById('docContent').innerHTML;
+  if(!currentDocName){return;}
+  try{
+    const isApproval=target==='approval';
+    await addDoc(collection(db,'shared_docs'),{
+      docName:currentDocName, kategori:currentKat,
+      content:content, note:note,
+      sharedBy:userData.nama, sharedById:userData.id,
+      sekolah:userData.sekolah,
+      target:target, // 'school' | 'kepsek' | 'approval'
+      status:isApproval?'pending':'shared',
+      sharedAt:serverTimestamp(),
+      comments:[],
+    });
+    closeModal('modalShare');
+    document.getElementById('shareNote').value='';
+    if(isApproval){
+      showToast('success','Terkirim!',`Dokumen "${currentDocName}" dikirim ke Kepala Sekolah untuk disetujui`);
+    } else if(target==='kepsek'){
+      showToast('success','Terkirim!',`Dokumen "${currentDocName}" dibagikan ke Kepala Sekolah untuk dipantau`);
+    } else {
+      showToast('success','Dibagikan!',`Dokumen "${currentDocName}" dibagikan ke semua guru di ${userData.sekolah}`);
+    }
+  }catch(e){showToast('error','Gagal',e.message);}
+}
+
+// ── Load dokumen bersama ───────────────────
+async function loadShared(filter='all'){
+  const{collection,getDocs,query,where,orderBy}=window._fb;
+  const listEl=document.getElementById('sharedList');
+  listEl.innerHTML='<div class="empty-state"><div class="spinner"></div></div>';
+  try{
+    const snap=await getDocs(query(
+      collection(db,'shared_docs'),
+      where('sekolah','==',userData.sekolah),
+      orderBy('sharedAt','desc')
+    ));
+    allShared=[];
+    snap.forEach(d=>allShared.push({id:d.id,...d.data()}));
+    renderShared(filter);
+  }catch(e){listEl.innerHTML='<div class="empty-state"><p>Gagal memuat</p></div>';}
+}
+
+function filterShared(f){
+  ['all','school','mine'].forEach(k=>{
+    document.getElementById('sf'+k.charAt(0).toUpperCase()+k.slice(1))?.classList.toggle('active',k===f);
+  });
+  renderShared(f);
+}
+
+function renderShared(filter){
+  const listEl=document.getElementById('sharedList');
+  let items=allShared;
+  if(filter==='school') items=allShared.filter(d=>d.sharedById!==userData.id && d.target==='school');
+  if(filter==='mine') items=allShared.filter(d=>d.sharedById===userData.id);
+  // Guru hanya lihat target=school, bukan target kepsek/approval
+  if(userData.role==='guru') items=items.filter(d=>d.target==='school'||d.sharedById===userData.id);
+  if(items.length===0){listEl.innerHTML='<div class="empty-state"><div class="icon">📤</div><p>Tidak ada dokumen</p></div>';return;}
+  listEl.innerHTML=items.map(d=>`
+    <div class="shared-item">
+      <div class="shared-header">
+        <div class="shared-avatar">👤</div>
+        <div style="flex:1">
+          <div class="shared-name">${d.sharedBy}</div>
+          <div class="shared-meta">${d.sekolah} · ${fmtDate(d.sharedAt)}</div>
+        </div>
+        <span class="badge badge-${d.status==='shared'?'shared':d.status==='pending'?'pending':d.status==='approved'?'approved':'rejected'}">${d.status==='shared'?'Dibagikan':d.status==='pending'?'Menunggu':d.status==='approved'?'Disetujui':'Ditolak'}</span>
+      </div>
+      <div class="shared-doc" onclick="openSharedDoc('${d.id}')">
+        <div class="shared-doc-name">📄 ${d.docName}</div>
+        ${d.note?`<div class="shared-doc-preview">"${d.note}"</div>`:''}
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">${d.kategori}</div>
+      </div>
+      <div class="comment-wrap">
+        <div id="comments-${d.id}">${renderComments(d.comments||[])}</div>
+        <div class="comment-input-row">
+          <input class="comment-input" id="ci-${d.id}" placeholder="Tulis komentar..."/>
+          <button class="btn btn-ghost btn-sm" onclick="addComment('${d.id}')">Kirim</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderComments(comments){
+  if(!comments||comments.length===0) return '<div style="font-size:10px;color:var(--muted);padding:4px 0">Belum ada komentar</div>';
+  return comments.map(c=>`
+    <div class="comment-item">
+      <div class="comment-avatar">👤</div>
+      <div class="comment-body">
+        <div class="comment-author">${c.author}</div>
+        <div class="comment-text">${c.text}</div>
+        <div class="comment-time">${c.time||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function addComment(docId){
+  const{doc,updateDoc,getDoc}=window._fb;
+  const input=document.getElementById('ci-'+docId);
+  const text=input.value.trim();
+  if(!text) return;
+  try{
+    const ref=doc(db,'shared_docs',docId);
+    const snap=await getDoc(ref);
+    if(!snap.exists()) return;
+    const comments=[...(snap.data().comments||[]),{author:userData.nama,text,time:new Date().toLocaleDateString('id-ID')}];
+    await updateDoc(ref,{comments});
+    input.value='';
+    document.getElementById('comments-'+docId).innerHTML=renderComments(comments);
+    showToast('success','Terkirim','Komentar ditambahkan');
+  }catch(e){showToast('error','Gagal',e.message);}
+}
+
+function openSharedDoc(docId){
+  const d=allShared.find(x=>x.id===docId);
+  if(!d) return;
+  currentShareDocId=docId;
+  currentShareDocContent=d.content||'';
+  document.getElementById('modalDocDetailTitle').textContent='📄 '+d.docName;
+  document.getElementById('modalDocContent').innerHTML=d.content||'<em>Tidak ada konten</em>';
+  document.getElementById('modalComments').innerHTML=renderComments(d.comments||[]);
+  openModal('modalDocDetail');
+}
+
+async function submitComment(){
+  const input=document.getElementById('commentInput');
+  const text=input.value.trim();
+  if(!text||!currentShareDocId) return;
+  await addComment(currentShareDocId);
+  const updated=allShared.find(x=>x.id===currentShareDocId);
+  if(updated) document.getElementById('modalComments').innerHTML=renderComments(updated.comments||[]);
+  input.value='';
+}
+
+function downloadSharedDoc(){
+  const d=allShared.find(x=>x.id===currentShareDocId);
+  if(!d) return;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${d.docName}</title>
+    <style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;padding:2cm}</style>
+    </head><body><h2>${d.docName}</h2><p><em>Dibuat oleh: ${d.sharedBy}</em></p><hr/>${d.content}</body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=d.docName+'.html'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('success','Diunduh',d.docName+' berhasil diunduh');
+}
+
+// ── Kiriman guru ke kepsek ─────────────────
+async function loadMySubmissions(){
+  const{collection,getDocs,query,where,orderBy}=window._fb;
+  const listEl=document.getElementById('submissionList');
+  listEl.innerHTML='<div class="empty-state"><div class="spinner"></div></div>';
+  try{
+    const snap=await getDocs(query(
+      collection(db,'shared_docs'),
+      where('sharedById','==',userData.id),
+      where('target','in',['kepsek','approval']),
+      orderBy('sharedAt','desc')
+    ));
+    if(snap.empty){listEl.innerHTML='<div class="empty-state"><div class="icon">📬</div><p>Belum ada dokumen dikirim ke kepsek</p></div>';return;}
+    let html='';
+    snap.forEach(d=>{
+      const data=d.data();
+      const statusMap={shared:'Dipantau Kepsek',pending:'Menunggu Persetujuan',approved:'✅ Disetujui',rejected:'❌ Ditolak'};
+      const badgeMap={shared:'shared',pending:'pending',approved:'approved',rejected:'rejected'};
+      html+=`<div class="approval-card">
+        <div style="font-size:22px">📄</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${data.docName}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${data.kategori} · ${fmtDate(data.sharedAt)}</div>
+          ${data.note?`<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">"${data.note}"</div>`:''}
+        </div>
+        <span class="badge badge-${badgeMap[data.status]||'draft'}">${statusMap[data.status]||data.status}</span>
+      </div>`;
+    });
+    listEl.innerHTML=html;
+  }catch(e){listEl.innerHTML='<div class="empty-state"><p>Gagal memuat</p></div>';}
+}
+
+// ══════════════════════════════════════════
+// KEPSEK — MONITOR & VALIDASI
+// ══════════════════════════════════════════
+
+async function loadMonitor(){
+  const{collection,getDocs,query,where}=window._fb;
+  const listEl=document.getElementById('monitorList');
+  listEl.innerHTML='<div class="empty-state"><div class="spinner"></div></div>';
+  try{
+    // Ambil semua guru di sekolah ini
+    const guruSnap=await getDocs(query(collection(db,'users'),where('sekolah','==',userData.sekolah),where('role','==','guru')));
+    // Ambil semua shared doc dari sekolah ini
+    const sharedSnap=await getDocs(query(collection(db,'shared_docs'),where('sekolah','==',userData.sekolah)));
+    const sharedDocs=[];
+    sharedSnap.forEach(d=>sharedDocs.push({id:d.id,...d.data()}));
+
+    const totalDokMungkin=(menuData.kepsek||[]).reduce((a,m)=>a+m.items.length,0);
+    let statTotal=0,statShared=0,statApproved=0,statPending=0;
+
+    let html='';
+    guruSnap.forEach(gDoc=>{
+      const guru=gDoc.data();
+      const guruDocs=sharedDocs.filter(d=>d.sharedById===gDoc.id);
+      const approved=guruDocs.filter(d=>d.status==='approved').length;
+      const pending=guruDocs.filter(d=>d.status==='pending').length;
+      const shared=guruDocs.filter(d=>d.status==='shared').length;
+      const pct=Math.min(100,Math.round(guruDocs.length/Math.max(1,20)*100));
+      statTotal++; statShared+=shared; statApproved+=approved; statPending+=pending;
+      html+=`<div class="monitor-guru-card" onclick="openGuruDetail('${gDoc.id}','${guru.nama}')">
+        <div class="monitor-guru-header">
+          <div class="monitor-avatar">👨‍🏫</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${guru.nama}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${guru.username} · ${guru.status}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--muted)">${guruDocs.length} dokumen dibuat</div>
+            <div style="display:flex;gap:5px;margin-top:4px;justify-content:flex-end">
+              ${pending>0?`<span class="badge badge-pending">${pending} pending</span>`:''}
+              ${approved>0?`<span class="badge badge-approved">${approved} disetujui</span>`:''}
+              ${shared>0?`<span class="badge badge-shared">${shared} dibagikan</span>`:''}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="monitor-progress-bar"><div class="monitor-progress-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:10px;color:var(--cyan);font-family:'Orbitron',sans-serif">${pct}%</span>
+        </div>
+      </div>`;
+    });
+
+    document.getElementById('monitorStats').innerHTML=[
+      {icon:'👨‍🏫',num:statTotal,label:'Total Guru'},
+      {icon:'📤',num:statShared,label:'Dok Dibagikan'},
+      {icon:'⏳',num:statPending,label:'Menunggu Approval'},
+      {icon:'✅',num:statApproved,label:'Disetujui'},
+    ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+    listEl.innerHTML=html||'<div class="empty-state"><div class="icon">👨‍🏫</div><p>Belum ada guru di sekolah ini</p></div>';
+  }catch(e){listEl.innerHTML='<div class="empty-state"><p>Gagal memuat: '+e.message+'</p></div>';}
+}
+
+async function openGuruDetail(guruId,guruNama){
+  const{collection,getDocs,query,where,orderBy}=window._fb;
+  const snap=await getDocs(query(collection(db,'shared_docs'),where('sharedById','==',guruId),orderBy('sharedAt','desc')));
+  let html=`<div style="margin-bottom:16px"><span style="font-size:13px;color:var(--cyan)">📋 Dokumen dari: <strong>${guruNama}</strong></span></div>`;
+  if(snap.empty){html+='<div class="empty-state"><div class="icon">📄</div><p>Guru ini belum membuat dokumen</p></div>';}
+  else{
+    snap.forEach(d=>{
+      const data=d.data();
+      const statusMap={shared:'Dibagikan',pending:'Menunggu',approved:'Disetujui',rejected:'Ditolak'};
+      const badgeMap={shared:'shared',pending:'pending',approved:'approved',rejected:'rejected'};
+      html+=`<div class="approval-card" onclick="openSharedDocKepsek('${d.id}')">
+        <div style="font-size:20px">📄</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${data.docName}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${data.kategori} · ${fmtDate(data.sharedAt)}</div>
+        </div>
+        <span class="badge badge-${badgeMap[data.status]||'draft'}">${statusMap[data.status]||data.status}</span>
+      </div>`;
+    });
+  }
+  // Tampilkan dalam area monitor dengan tombol kembali
+  document.getElementById('monitorList').innerHTML=`
+    <div class="back-btn" style="margin-bottom:12px" onclick="loadMonitor()">←</div>${html}`;
+}
+
+async function openSharedDocKepsek(docId){
+  const{doc,getDoc}=window._fb;
+  const snap=await getDoc(doc(db,'shared_docs',docId));
+  if(!snap.exists()) return;
+  const d={id:docId,...snap.data()};
+  allShared=[d];
+  currentShareDocId=docId;
+  document.getElementById('modalDocDetailTitle').textContent='📄 '+d.docName;
+  document.getElementById('modalDocContent').innerHTML=d.content||'<em>Tidak ada konten</em>';
+  document.getElementById('modalComments').innerHTML=renderComments(d.comments||[]);
+  openModal('modalDocDetail');
+}
+
+// ── Approval (kepsek) ──────────────────────
+async function loadApprovals(statusFilter='pending'){
+  const{collection,getDocs,query,where,orderBy}=window._fb;
+  const listEl=document.getElementById('approvalList');
+  listEl.innerHTML='<div class="empty-state"><div class="spinner"></div></div>';
+  try{
+    const snap=await getDocs(query(
+      collection(db,'shared_docs'),
+      where('sekolah','==',userData.sekolah),
+      where('target','==','approval'),
+      where('status','==',statusFilter),
+      orderBy('sharedAt','desc')
+    ));
+    allApprovals=[];
+    snap.forEach(d=>allApprovals.push({id:d.id,...d.data()}));
+    renderApprovals();
+    // Update badge
+    if(statusFilter==='pending'){
+      const badge=document.getElementById('approvalBadge');
+      if(badge){badge.style.display=allApprovals.length>0?'':'none';badge.textContent=allApprovals.length;}
+    }
+  }catch(e){listEl.innerHTML='<div class="empty-state"><p>Gagal memuat</p></div>';}
+}
+
+function filterApproval(f){
+  ['pending','approved','rejected'].forEach(k=>{
+    document.getElementById('af'+k.charAt(0).toUpperCase()+k.slice(1))?.classList.toggle('active',k===f);
+  });
+  loadApprovals(f);
+}
+
+function renderApprovals(){
+  const listEl=document.getElementById('approvalList');
+  if(allApprovals.length===0){
+    listEl.innerHTML='<div class="empty-state"><div class="icon">✅</div><p>Tidak ada dokumen</p></div>';return;
+  }
+  listEl.innerHTML=allApprovals.map(d=>`
+    <div class="approval-card">
+      <div style="font-size:22px">📄</div>
+      <div style="flex:1;cursor:pointer" onclick="openSharedDocKepsek('${d.id}')">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${d.docName}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${d.sharedBy} · ${d.kategori} · ${fmtDate(d.sharedAt)}</div>
+        ${d.note?`<div style="font-size:11px;color:var(--cyan);margin-top:3px;font-style:italic">"${d.note}"</div>`:''}
+      </div>
+      ${d.status==='pending'?`
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-success btn-sm" onclick="approveDoc('${d.id}')">✅ Setujui</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectDoc('${d.id}')">❌ Tolak</button>
+      </div>`:`<span class="badge badge-${d.status==='approved'?'approved':'rejected'}">${d.status==='approved'?'Disetujui':'Ditolak'}</span>`}
+    </div>`).join('');
+}
+
+async function approveDoc(id){
+  const{doc,updateDoc,serverTimestamp}=window._fb;
+  await updateDoc(doc(db,'shared_docs',id),{status:'approved',approvedBy:userData.nama,approvedAt:serverTimestamp()});
+  loadApprovals('pending');
+  showToast('success','Disetujui','Dokumen berhasil divalidasi');
+}
+async function rejectDoc(id){
+  const{doc,updateDoc,serverTimestamp}=window._fb;
+  await updateDoc(doc(db,'shared_docs',id),{status:'rejected',rejectedBy:userData.nama,rejectedAt:serverTimestamp()});
+  loadApprovals('pending');
+  showToast('warn','Ditolak','Dokumen dikembalikan ke guru');
+}
+
+// ── Rekap dokumen ──────────────────────────
+async function loadRekap(){
+  const{collection,getDocs,query,where}=window._fb;
+  const el=document.getElementById('rekapContent');
+  el.innerHTML='<div class="empty-state"><div class="spinner"></div></div>';
+  try{
+    const guruSnap=await getDocs(query(collection(db,'users'),where('sekolah','==',userData.sekolah),where('role','==','guru')));
+    const sharedSnap=await getDocs(query(collection(db,'shared_docs'),where('sekolah','==',userData.sekolah)));
+    const allDocs=[];
+    sharedSnap.forEach(d=>allDocs.push({id:d.id,...d.data()}));
+    let html=`<div class="card" style="margin-bottom:14px">
+      <div class="card-header"><div class="card-title">📊 REKAP PER GURU</div></div>
+      <div class="card-body">`;
+    guruSnap.forEach(gDoc=>{
+      const guru=gDoc.data();
+      const docs=allDocs.filter(d=>d.sharedById===gDoc.id);
+      const byKat={};
+      docs.forEach(d=>{ byKat[d.kategori]=(byKat[d.kategori]||0)+1; });
+      html+=`<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(0,229,255,0.07)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:13px">👨‍🏫</div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">${guru.nama}</div>
+            <div style="font-size:10px;color:var(--muted)">${docs.length} dokumen total</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:5px">
+            <span class="badge badge-approved">${docs.filter(d=>d.status==='approved').length} disetujui</span>
+            <span class="badge badge-pending">${docs.filter(d=>d.status==='pending').length} pending</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${Object.entries(byKat).map(([k,v])=>`<span class="badge badge-shared">${k}: ${v}</span>`).join('')||'<span style="font-size:10px;color:var(--muted)">Belum ada dokumen</span>'}
+        </div>
+      </div>`;
+    });
+    html+='</div></div>';
+    el.innerHTML=html;
+  }catch(e){el.innerHTML='<div class="empty-state"><p>Gagal memuat rekap</p></div>';}
+}
+
+// ── Notifikasi ─────────────────────────────
+function toggleNotif(){document.getElementById('notifPanel').classList.toggle('show');}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#notifPanel')&&!e.target.closest('#notifBtn')) document.getElementById('notifPanel').classList.remove('show');
+});
+function markAllRead(){document.getElementById('notifDot').classList.remove('show');document.getElementById('notifPanel').classList.remove('show');}
+
+async function loadNotifications(){
+  const{collection,getDocs,query,orderBy}=window._fb;
+  try{
+    const snap=await getDocs(query(collection(db,'notifications'),orderBy('sentAt','desc')));
+    const icons={info:'ℹ️',warn:'⚠️',success:'✅'};
+    const items=[];
+    snap.forEach(d=>{
+      const data=d.data();
+      if(data.target!=='all'&&data.target!==userData.role) return;
+      items.push(data);
+    });
+    if(items.length>0){
+      document.getElementById('notifDot').classList.add('show');
+      document.getElementById('notifList').innerHTML=items.slice(0,6).map(n=>`
+        <div class="notif-item">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${icons[n.type]||'ℹ️'} ${n.title}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${n.message}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">${n.sentAt?new Date(n.sentAt.toDate()).toLocaleDateString('id-ID'):''}</div>
+        </div>`).join('');
+      document.getElementById('recentNotifHome').innerHTML=items.slice(0,3).map(n=>`
+        <div style="padding:8px 0;border-bottom:1px solid rgba(0,229,255,0.06)">
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${icons[n.type]||'ℹ️'} ${n.title}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${n.message}</div>
+        </div>`).join('');
+    }
+  }catch(e){}
+}
+
+// ── Cek update ─────────────────────────────
+async function checkUpdate(){
+  const{doc,getDoc}=window._fb;
+  try{
+    const appConfig=await window.cimegaAPI.getAppConfig();
+    const snap=await getDoc(doc(db,'appConfig','version'));
+    if(!snap.exists()) return;
+    if(snap.data().current!==appConfig.appVersion){
+      document.getElementById('updateBanner').classList.add('show');
+      document.getElementById('updateTitle').textContent=`🚀 Update v${snap.data().current} Tersedia!`;
+      document.getElementById('updateDesc').textContent=snap.data().notes||'Versi baru siap diunduh';
+      if(snap.data().forceUpdate) document.getElementById('skipUpdateBtn').style.display='none';
+      window._updateUrl=snap.data().downloadUrl;
+    }
+  }catch(e){}
+}
+function doUpdate(){if(window._updateUrl) require('electron').shell.openExternal(window._updateUrl);}
+
+// ── Beranda ────────────────────────────────
+function loadBeranda(){
+  const isKepsek=userData.role==='kepsek';
+  document.getElementById('welcomeAvatar').textContent=isKepsek?'🏛️':'👨‍🏫';
+  document.getElementById('welcomeName').textContent='Selamat datang, '+userData.nama+'!';
+  document.getElementById('welcomeSub').textContent=userData.sekolah+' — '+(isKepsek?'Kepala Sekolah':'Guru');
+  const now=new Date();
+  document.getElementById('welcomeDate').innerHTML=now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br/><span style="font-size:10px;color:var(--cyan)">'+now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})+'</span>';
+  const menus=menuData[userData.role]||[];
+  const total=menus.reduce((a,m)=>a+m.items.length,0);
+  document.getElementById('homeStats').innerHTML=[
+    {icon:'📂',num:menus.length,label:'Kategori Menu'},
+    {icon:'📄',num:total,label:'Total Dokumen'},
+    {icon:'📤',num:isKepsek?'Monitor':'Share',label:isKepsek?'Monitor Guru':'Dok Bersama'},
+    {icon:'✨',num:'AI',label:'Powered'},
+  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
+  document.getElementById('quickMenuHome').innerHTML=menus.slice(0,4).map(m=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(0,229,255,0.06);cursor:pointer"
+      onclick="openDocList('${m.id}','${m.title}',${JSON.stringify(m.items)})">
+      <span style="font-size:16px">${m.icon}</span>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${m.title}</div><div style="font-size:10px;color:var(--muted)">${m.items.length} dokumen</div></div>
+      <span style="color:var(--muted);font-size:11px">▶</span>
+    </div>`).join('');
+}
+
+// ── Profil ─────────────────────────────────
+async function loadProfil(){
+  const{doc,getDoc}=window._fb;
+  try{
+    const snap=await getDoc(doc(db,'users',userData.id));
+    if(!snap.exists()) return;
+    const data=snap.data();
+    const isKepsek=data.role==='kepsek';
+    document.getElementById('profilAvatar').textContent=isKepsek?'🏛️':'👨‍🏫';
+    document.getElementById('profilNama').textContent=data.nama;
+    document.getElementById('profilRoleBadge').innerHTML=`<span class="badge ${isKepsek?'badge-shared':'badge-guru'}">${isKepsek?'Kepala Sekolah':'Guru'}</span>`;
+    document.getElementById('profilSekolah').textContent=data.sekolah;
+    document.getElementById('profilUsername').textContent=data.username;
+    const exp=data.expired?(data.expired.toDate?data.expired.toDate():new Date(data.expired)):null;
+    document.getElementById('profilExpired').textContent=exp?exp.toLocaleDateString('id-ID'):'-';
+    document.getElementById('profilStatus').innerHTML=`<span class="badge ${data.status==='aktif'?'badge-approved':'badge-rejected'}">${data.status}</span>`;
+  }catch(e){}
+}
+
+async function gantiPasswordUser(){
+  const{collection,query,where,getDocs,doc,updateDoc,serverTimestamp}=window._fb;
+  const old=document.getElementById('oldPassUser').value;
+  const nw=document.getElementById('newPassUser').value;
+  const conf=document.getElementById('confirmPassUser').value;
+  if(!old||!nw||!conf){showToast('warn','Peringatan','Semua field harus diisi!');return;}
+  if(nw!==conf){showToast('warn','Peringatan','Password baru tidak cocok!');return;}
+  if(nw.length<6){showToast('warn','Peringatan','Minimal 6 karakter!');return;}
+  try{
+    const snap=await getDocs(query(collection(db,'users'),where('username','==',userData.username)));
+    if(snap.empty){showToast('error','Error','User tidak ditemukan');return;}
+    const uDoc=snap.docs[0];
+    if(uDoc.data().password!==old){showToast('error','Gagal','Password lama salah!');return;}
+    await updateDoc(doc(db,'users',uDoc.id),{password:nw,updatedAt:serverTimestamp()});
+    ['oldPassUser','newPassUser','confirmPassUser'].forEach(id=>document.getElementById(id).value='');
+    showToast('success','Berhasil','Password berhasil diperbarui!');
+  }catch(e){showToast('error','Error',e.message);}
+}
+
+// ── Page settings ──────────────────────────
+function setPageSize(s){pageSettings.size=s;['A4','F4'].forEach(v=>document.getElementById('ps'+v).classList.toggle('active',v===s));}
+function setMargin(m){pageSettings.margin=m;['Normal','Moderate','Narrow'].forEach(v=>document.getElementById('ps'+v).classList.toggle('active',v===m));}
+function setOrientation(o){pageSettings.orientation=o;['Portrait','Landscape'].forEach(v=>document.getElementById('ps'+v).classList.toggle('active',v===o));}
+
+// ── Helpers ────────────────────────────────
+function fmtDate(ts){
+  if(!ts) return '-';
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+}
+function doLogout(){if(confirm('Keluar dari sistem?')){localStorage.removeItem('cimega_user');window.location.href='../login/login.html';}}
+
+// ── Setup sidebar user info ─────────────────
+function setupUser(){
+  document.getElementById('sidebarNama').textContent=userData.nama||'-';
+  const isKepsek=userData.role==='kepsek';
+  const rb=document.getElementById('sidebarRole');
+  rb.className='user-role-badge '+(isKepsek?'role-kepsek':'role-guru');
+  rb.textContent=isKepsek?'👑 Kepala Sekolah':'👨‍🏫 Guru';
+  document.getElementById('sidebarSekolah').textContent=userData.sekolah||'-';
+  document.getElementById('schoolName').textContent=userData.sekolah||'SDN Cimega';
+}
+
+// ── INIT ───────────────────────────────────
+async function initApp(){
+  try{
+    CimegaMusic.init('../../../assets_music/');
+    const firebaseConfig=await window.cimegaAPI.getFirebaseConfig();
+    const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const{getFirestore,collection,doc,getDoc,getDocs,addDoc,updateDoc,deleteDoc,query,where,orderBy,serverTimestamp,Timestamp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const fbApp=initializeApp(firebaseConfig);
+    db=getFirestore(fbApp);
+    window._fb={collection,doc,getDoc,getDocs,addDoc,updateDoc,deleteDoc,query,where,orderBy,serverTimestamp,Timestamp};
+    setupUser();
+    buildSidebar();
+    loadBeranda();
+    loadNotifications();
+    checkUpdate();
+    // Cek pending approval untuk kepsek
+    if(userData.role==='kepsek'){
+      try{
+        const snap=await getDocs(query(collection(db,'shared_docs'),where('sekolah','==',userData.sekolah),where('target','==','approval'),where('status','==','pending')));
+        if(!snap.empty){const b=document.getElementById('approvalBadge');if(b){b.style.display='';b.textContent=snap.size;}}
+      }catch(e){}
+    }
+  }catch(e){console.error(e);}
+}
+
+initApp();
+</script>
+</body>
+</html>
