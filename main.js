@@ -1,9 +1,11 @@
 // ============================================
 // CIMEGA SMART OFFICE - main.js
+// Versi lengkap dengan auto-updater
 // ============================================
-const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
-const fs   = require('fs');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const path  = require('path');
+const fs    = require('fs');
+const https = require('https');
 
 // ── Baca .env ──────────────────────────────
 function loadEnv() {
@@ -20,7 +22,7 @@ function loadEnv() {
 }
 const envConfig = loadEnv();
 
-// ── State musik (hidup di main process) ───
+// ── Musik state ────────────────────────────
 const musicFiles = [
   'Kang Prabu - Himne SDN Cimega.mp3',
   'Kang Prabu - Mars SDN Cimega.mp3',
@@ -30,46 +32,43 @@ const musicFiles = [
   'Kang Prabu - Restu Terakhir.mp3',
   'Kang Prabu - Senam Kreasi Cimega.mp3',
 ];
-
 const musicState = {
-  // Memilih index acak setiap kali aplikasi dijalankan
   index: Math.floor(Math.random() * musicFiles.length),
   muted: false,
-  currentTime: 0,
 };
 
-// ── Window Management ──────────────────────
+// ── Update state ───────────────────────────
+let updateInfo = null; // simpan info update yang tersedia
+
 let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    title: "Cimega Smart Office",
-    icon: path.join(__dirname, 'assets/logo.png'),
+    width: 1280, height: 800, minWidth: 1024, minHeight: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     },
-    backgroundColor: '#020b18'
+    show: false,
+    backgroundColor: '#020b18',
+    title: 'Cimega Smart Office',
+    icon: path.join(__dirname, 'assets_images', 'Logo SDN Cimega.png'),
   });
 
-  mainWindow.setMenuBarVisibility(false);
   mainWindow.loadFile('src/pages/login/login.html');
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.maximize();
+  });
+  mainWindow.on('closed', () => { mainWindow = null; });
 }
 
-app.whenReady().then(createWindow);
+// ══════════════════════════════════════════
+// IPC HANDLERS
+// ══════════════════════════════════════════
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
-});
-
-// ── IPC: Firebase & Config ─────────────────
+// Firebase config
 ipcMain.handle('get-firebase-config', () => ({
   apiKey:            envConfig.FIREBASE_API_KEY,
   authDomain:        envConfig.FIREBASE_AUTH_DOMAIN,
@@ -77,56 +76,155 @@ ipcMain.handle('get-firebase-config', () => ({
   storageBucket:     envConfig.FIREBASE_STORAGE_BUCKET,
   messagingSenderId: envConfig.FIREBASE_MESSAGING_SENDER_ID,
   appId:             envConfig.FIREBASE_APP_ID,
-  measurementId:     envConfig.FIREBASE_MEASUREMENT_ID
+  measurementId:     envConfig.FIREBASE_MEASUREMENT_ID,
 }));
 
 ipcMain.handle('get-app-config', () => ({
   appName:    envConfig.APP_NAME    || 'Cimega Smart Office',
-  appVersion: envConfig.APP_VERSION || '1.0.0'
+  appVersion: envConfig.APP_VERSION || app.getVersion() || '1.0.0',
 }));
 
-// ── IPC: Musik (SYNC ENGINE) ───────────────
-
-// Renderer minta state musik saat halaman dimuat
-ipcMain.handle('music-get-state', () => {
-  return {
-    index:       musicState.index,
-    muted:       musicState.muted,
-    currentTime: musicState.currentTime,
-    title:       musicFiles[musicState.index],
-    total:       musicFiles.length,
-    files:       musicFiles,
-  };
-});
-
-// Sinkronisasi detik lagu secara real-time
-ipcMain.handle('music-update-time', (event, time) => {
-  musicState.currentTime = time;
-  return { success: true };
-});
-
-// Renderer kirim perubahan state ke main
-ipcMain.handle('music-set-state', (event, newState) => {
-  if (typeof newState.index !== 'undefined') {
-    musicState.index = newState.index;
-    musicState.currentTime = 0; 
-  }
-  if (typeof newState.muted !== 'undefined') {
-    musicState.muted = newState.muted;
-  }
+// Musik
+ipcMain.handle('music-get-state', () => ({
+  index: musicState.index,
+  muted: musicState.muted,
+  files: musicFiles,
+  total: musicFiles.length,
+}));
+ipcMain.handle('music-set-state', (e, s) => {
+  if (typeof s.index !== 'undefined') musicState.index = s.index;
+  if (typeof s.muted !== 'undefined') musicState.muted = s.muted;
   return musicState;
 });
-
-// Renderer minta lagu berikutnya
 ipcMain.handle('music-next', () => {
   musicState.index = (musicState.index + 1) % musicFiles.length;
-  musicState.currentTime = 0;
+  return { index: musicState.index, title: musicFiles[musicState.index] };
+});
+ipcMain.handle('music-prev', () => {
+  musicState.index = (musicState.index - 1 + musicFiles.length) % musicFiles.length;
   return { index: musicState.index, title: musicFiles[musicState.index] };
 });
 
-// Renderer minta lagu sebelumnya
-ipcMain.handle('music-prev', () => {
-  musicState.index = (musicState.index - 1 + musicFiles.length) % musicFiles.length;
-  musicState.currentTime = 0;
-  return { index: musicState.index, title: musicFiles[musicState.index] };
+// ══════════════════════════════════════════
+// AUTO UPDATER via GitHub Releases
+// Tidak pakai electron-updater karena butuh
+// code signing. Pakai sistem custom yang lebih
+// fleksibel dan tidak butuh sertifikat.
+// ══════════════════════════════════════════
+
+// Cek versi terbaru dari GitHub Releases API
+ipcMain.handle('check-github-update', async (e, { owner, repo }) => {
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'api.github.com',
+      path: `/repos/${owner}/${repo}/releases/latest`,
+      method: 'GET',
+      headers: { 'User-Agent': 'Cimega-Smart-Office' }
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const release = JSON.parse(data);
+          // Cari file .exe di assets
+          const exeAsset = release.assets?.find(a => a.name.endsWith('.exe'));
+          resolve({
+            latestVersion: release.tag_name?.replace('v','') || '0.0.0',
+            downloadUrl:   exeAsset?.browser_download_url || release.html_url,
+            releaseNotes:  release.body || '',
+            releaseName:   release.name || release.tag_name || '',
+            publishedAt:   release.published_at || '',
+          });
+        } catch(err) {
+          resolve({ error: 'Gagal parse response: ' + err.message });
+        }
+      });
+    });
+    req.on('error', (err) => resolve({ error: err.message }));
+    req.setTimeout(8000, () => { req.destroy(); resolve({ error: 'Timeout' }); });
+    req.end();
+  });
 });
+
+// Download update ke folder temp
+ipcMain.handle('download-update', async (e, { url, version }) => {
+  return new Promise((resolve) => {
+    const tmpDir  = app.getPath('temp');
+    const outPath = path.join(tmpDir, `CimegaSmartOffice-Setup-${version}.exe`);
+
+    // Kalau sudah ada, langsung return
+    if (fs.existsSync(outPath)) {
+      resolve({ success: true, filePath: outPath });
+      return;
+    }
+
+    const file = fs.createWriteStream(outPath);
+    let downloaded = 0;
+    let total = 0;
+
+    function doDownload(downloadUrl) {
+      const protocol = downloadUrl.startsWith('https') ? https : require('http');
+      protocol.get(downloadUrl, (res) => {
+        // Handle redirect
+        if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307) {
+          doDownload(res.headers.location);
+          return;
+        }
+        total = parseInt(res.headers['content-length'] || '0');
+        res.on('data', (chunk) => {
+          downloaded += chunk.length;
+          file.write(chunk);
+          // Kirim progress ke renderer
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            const pct = total > 0 ? Math.round(downloaded / total * 100) : 0;
+            mainWindow.webContents.send('update-download-progress', { pct, downloaded, total });
+          }
+        });
+        res.on('end', () => {
+          file.end();
+          resolve({ success: true, filePath: outPath });
+        });
+        res.on('error', (err) => {
+          file.destroy();
+          resolve({ success: false, error: err.message });
+        });
+      }).on('error', (err) => {
+        file.destroy();
+        resolve({ success: false, error: err.message });
+      });
+    }
+
+    doDownload(url);
+  });
+});
+
+// Install update (jalankan .exe installer, lalu tutup app)
+ipcMain.handle('install-update', async (e, { filePath }) => {
+  if (!fs.existsSync(filePath)) {
+    return { success: false, error: 'File tidak ditemukan: ' + filePath };
+  }
+  try {
+    const { spawn } = require('child_process');
+    // /S = silent install (NSIS)
+    spawn(filePath, ['/S'], {
+      detached: true,
+      stdio:    'ignore',
+    }).unref();
+    // Tunggu sebentar lalu tutup app
+    setTimeout(() => app.quit(), 1500);
+    return { success: true };
+  } catch(err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// Buka link di browser
+ipcMain.handle('open-external', (e, url) => {
+  shell.openExternal(url);
+});
+
+// ══════════════════════════════════════════
+app.whenReady().then(createWindow);
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('activate', () => { if (!mainWindow) createWindow(); });

@@ -4,23 +4,27 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('cimegaAPI', {
-  // ── Firebase Configuration ──
-  getFirebaseConfig: () => ipcRenderer.invoke('get-firebase-config'),
-  
-  // ── App Configuration ──
-  getAppConfig:      () => ipcRenderer.invoke('get-app-config'),
+  // Firebase
+  getFirebaseConfig:  () => ipcRenderer.invoke('get-firebase-config'),
+  getAppConfig:       () => ipcRenderer.invoke('get-app-config'),
 
-  // ── Musik Sync Engine ──
-  // Mengambil status terakhir (index, mute, dan detik lagu)
-  musicGetState: () => ipcRenderer.invoke('music-get-state'),
-  
-  // Mengupdate status musik ke Main Process
+  // Musik
+  musicGetState: ()  => ipcRenderer.invoke('music-get-state'),
   musicSetState: (s) => ipcRenderer.invoke('music-set-state', s),
-  
-  // Navigasi Playlist
-  musicNext:     () => ipcRenderer.invoke('music-next'),
-  musicPrev:     () => ipcRenderer.invoke('music-prev'),
-  
-  // Sinkronisasi detik berjalan agar selaras saat pindah halaman
-  musicUpdateTime: (t) => ipcRenderer.invoke('music-update-time', t)
+  musicNext:     ()  => ipcRenderer.invoke('music-next'),
+  musicPrev:     ()  => ipcRenderer.invoke('music-prev'),
+
+  // Auto Updater
+  checkGithubUpdate:  (opts) => ipcRenderer.invoke('check-github-update', opts),
+  downloadUpdate:     (opts) => ipcRenderer.invoke('download-update', opts),
+  installUpdate:      (opts) => ipcRenderer.invoke('install-update', opts),
+  openExternal:       (url)  => ipcRenderer.invoke('open-external', url),
+
+  // Listener progress download (dari main ke renderer)
+  onDownloadProgress: (cb) => {
+    ipcRenderer.on('update-download-progress', (e, data) => cb(data));
+  },
+  removeDownloadListener: () => {
+    ipcRenderer.removeAllListeners('update-download-progress');
+  },
 });
