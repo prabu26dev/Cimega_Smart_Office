@@ -1,5 +1,5 @@
 {
-  "name": "cimega-smart-office",
+  "name": "Cimega_Smart_Office",
   "version": "1.0.0",
   "description": "Sistem Administrasi Digital SDN Cimega",
   "main": "main.js",
@@ -73,7 +73,7 @@
     "publish": {
       "provider": "github",
       "owner":    "prabu26dev",
-      "repo":     "cimega-smart-office"
+      "repo":     "Cimega_Smart_Office"
     }
   }
 }

@@ -41,23 +41,23 @@ Buka `package.json`, cari bagian `"publish"`:
 ```json
 "publish": {
   "provider": "github",
-  "owner": "GANTI_DENGAN_USERNAME_GITHUB_ANDA",
+  "owner": "prabu26dev",
   "repo":  "cimega-smart-office"
 }
 ```
-Ganti `GANTI_DENGAN_USERNAME_GITHUB_ANDA` dengan username GitHub Anda.
+Ganti `prabu26dev` dengan username GitHub Anda.
 
 ### Langkah 3 — Edit .env
 Tambahkan baris berikut ke file `.env`:
 ```
-GITHUB_OWNER=username_github_anda
+GITHUB_OWNER=prabu26dev
 GITHUB_REPO=cimega-smart-office
 ```
 
 ### Langkah 4 — Tambahkan di Firebase (Firestore)
 Di collection `appConfig`, document `version`, tambahkan field:
 ```
-githubOwner: "username_github_anda"
+githubOwner: "prabu26dev"
 githubRepo:  "cimega-smart-office"
 ```
 
@@ -82,7 +82,7 @@ Lalu di dalam fungsi `initApp()`, setelah `db` siap, tambahkan:
 ```javascript
 // Inisialisasi updater
 await CimegaUpdater.init({
-  owner: 'username_github_anda',
+  owner: 'prabu26dev',
   repo:  'cimega-smart-office',
 });
 // Mulai cek update otomatis
@@ -99,7 +99,7 @@ async function initApp() {
     window._fb = { ... };
 
     // ← TAMBAHKAN DI SINI:
-    await CimegaUpdater.init({ owner:'username_anda', repo:'cimega-smart-office' });
+    await CimegaUpdater.init({ owner:'prabu26dev', repo:'cimega-smart-office' });
     CimegaUpdater.startChecking(db);
 
     setupUser();

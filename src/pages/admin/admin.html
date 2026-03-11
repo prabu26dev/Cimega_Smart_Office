@@ -387,42 +387,124 @@
       <div class="section-header">
         <div class="section-title">Update <span>Aplikasi</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div class="update-card">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">VERSI SAAT INI</div>
-          <div class="update-version" id="currentVersion">v1.0.0</div>
-          <div class="update-status">
-            <span class="badge badge-active">Aktif</span>
+
+      <!-- Status bar versi -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px">
+        <div class="update-card" style="padding:16px;display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px">📦</span>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Versi Aktif (Firebase)</div>
+            <div class="update-version" id="currentVersion" style="font-size:22px;margin:4px 0">v1.0.0</div>
+            <span class="badge badge-active">Live</span>
           </div>
+        </div>
+        <div class="update-card" style="padding:16px;display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px">🐙</span>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Rilis Terbaru GitHub</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:20px;color:#fff;margin:4px 0" id="githubLatestVer">—</div>
+            <span style="font-size:10px;color:var(--muted)" id="githubLatestDate">Belum dicek</span>
+          </div>
+        </div>
+        <div class="update-card" style="padding:16px;display:flex;align-items:center;gap:14px">
+          <span style="font-size:28px">💻</span>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Versi Lokal App Ini</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:20px;color:#fff;margin:4px 0" id="localVersion">v1.0.0</div>
+            <span style="font-size:10px;color:var(--muted)">Di device ini</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px">
+
+        <!-- Form push update -->
+        <div class="update-card">
+          <div style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:18px;letter-spacing:1px">🚀 PUSH UPDATE KE SEMUA PENGGUNA</div>
+
+          <!-- GitHub config -->
+          <div style="background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.1);border-radius:10px;padding:14px;margin-bottom:16px">
+            <div style="font-size:11px;color:var(--cyan);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px">🐙 GITHUB RELEASES</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">GitHub Owner/Username</label>
+                <input class="form-control" id="githubOwner" placeholder="username_github_anda" value="prabu26dev"/>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Nama Repository</label>
+                <input class="form-control" id="githubRepo" placeholder="Cimega_Smart_Office" value="Cimega_Smart_Office"/>
+              </div>
+            </div>
+            <button class="btn btn-ghost" style="width:100%;font-size:11px" onclick="cekGithubRelease()">
+              🔍 Cek Rilis Terbaru di GitHub
+            </button>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Versi Baru</label>
             <input class="form-control" id="newVersion" placeholder="contoh: 1.1.0"/>
           </div>
           <div class="form-group">
-            <label class="form-label">URL Download (.exe)</label>
-            <input class="form-control" id="downloadUrl" placeholder="https://github.com/..."/>
+            <label class="form-label">URL Download (.exe)
+              <span style="color:var(--muted);font-weight:400;margin-left:6px">← otomatis dari GitHub atau isi manual</span>
+            </label>
+            <div style="display:flex;gap:8px">
+              <input class="form-control" id="downloadUrl" placeholder="https://github.com/.../releases/download/v1.x.x/Setup.exe"/>
+              <button class="btn btn-ghost btn-sm" onclick="bukaGithubRelease()" title="Buka GitHub Releases">🔗</button>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Tipe Update</label>
             <select class="form-control" id="updateType">
-              <option value="false">Opsional (bisa skip)</option>
-              <option value="true">Wajib (harus update)</option>
+              <option value="false">Opsional — Guru bisa skip & update nanti</option>
+              <option value="true">Wajib — Guru harus update, tidak bisa skip</option>
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Catatan Update (Changelog)</label>
-            <textarea class="form-control" id="updateNotes" placeholder="Tuliskan perubahan di versi baru..."></textarea>
+            <textarea class="form-control" id="updateNotes" rows="4" placeholder="• Fitur baru apa saja&#10;• Bug yang diperbaiki&#10;• Perubahan tampilan"></textarea>
           </div>
-          <button class="btn btn-primary" style="width:100%" onclick="pushUpdate()">
-            🚀 Push Update ke Semua Pengguna
+
+          <!-- Preview -->
+          <div style="background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.15);border-radius:10px;padding:12px;margin-bottom:16px;font-size:11px;color:var(--muted)">
+            ℹ️ Setelah push, popup update akan muncul di <strong style="color:var(--text)">semua laptop guru & kepala sekolah</strong> dalam <strong style="color:var(--cyan)">30 menit</strong>. Update wajib tidak bisa di-skip.
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:13px;letter-spacing:1px" onclick="pushUpdate()">
+            🚀 PUSH UPDATE KE SEMUA PENGGUNA
           </button>
         </div>
-        <div class="update-card">
-          <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--cyan);margin-bottom:16px">📋 RIWAYAT UPDATE</div>
-          <div id="updateHistory">
-            <div class="empty-state"><div class="icon">🔄</div><p>Belum ada riwayat update</p></div>
+
+        <!-- Riwayat + preview popup -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- Preview popup -->
+          <div class="update-card" style="padding:16px">
+            <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px;letter-spacing:1px">👁 PREVIEW POPUP GURU</div>
+            <div style="background:#041428;border:1px solid rgba(0,229,255,0.25);border-radius:12px;padding:16px;font-size:12px">
+              <div style="font-size:24px;text-align:center;margin-bottom:8px" id="previewIcon">🚀</div>
+              <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:#fff;text-align:center;margin-bottom:6px" id="previewTitle">UPDATE TERSEDIA</div>
+              <div style="text-align:center;margin-bottom:10px">
+                <span style="font-size:11px;color:var(--muted)">v<span id="previewOld">1.0.0</span></span>
+                <span style="color:var(--cyan);margin:0 6px">→</span>
+                <span style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan)">v<span id="previewNew">—</span></span>
+              </div>
+              <div style="background:rgba(0,229,255,0.04);border-radius:7px;padding:8px;font-size:10px;color:var(--muted);margin-bottom:10px;min-height:40px" id="previewNotes">Catatan update muncul di sini...</div>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.15);border-radius:7px;padding:7px;text-align:center;font-size:10px;color:var(--muted)" id="previewSkip">Nanti</div>
+                <div style="flex:1;background:linear-gradient(135deg,#0044cc,#0066ff);border-radius:7px;padding:7px;text-align:center;font-size:10px;color:#fff;font-weight:700">⬇️ UPDATE SEKARANG</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Riwayat update -->
+          <div class="update-card" style="padding:16px;flex:1">
+            <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px;letter-spacing:1px">📋 RIWAYAT UPDATE</div>
+            <div id="updateHistory">
+              <div class="empty-state"><div class="icon">🔄</div><p>Belum ada riwayat update</p></div>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -727,22 +809,36 @@ async function initApp() {
     db = getFirestore(fbApp);
     window._fb = { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp };
 
-    // Load versi
+    // Load versi & GitHub config dari Firestore
     try {
       const v = await getDoc(doc(db,'appConfig','version'));
       if (v.exists()) {
-        const ver = 'v' + v.data().current;
+        const data = v.data();
+        const ver = 'v' + data.current;
         document.getElementById('currentVersion').textContent = ver;
         document.getElementById('settingVersion').textContent = ver;
-        document.getElementById('newVersion').value = v.data().current;
-        document.getElementById('downloadUrl').value = v.data().downloadUrl || '';
+        // Isi form dengan data terakhir
+        if (document.getElementById('newVersion'))    document.getElementById('newVersion').value    = data.current || '';
+        if (document.getElementById('downloadUrl'))   document.getElementById('downloadUrl').value   = data.downloadUrl || '';
+        if (document.getElementById('githubOwner'))   document.getElementById('githubOwner').value   = data.githubOwner || '';
+        if (document.getElementById('githubRepo'))    document.getElementById('githubRepo').value    = data.githubRepo  || 'Cimega_Smart_Office';
+        if (document.getElementById('updateNotes'))   document.getElementById('updateNotes').value   = '';
+        updatePreview();
       }
+    } catch(e) {}
+
+    // Load versi lokal
+    try {
+      const appConfig = await window.cimegaAPI.getAppConfig();
+      if (document.getElementById('localVersion')) document.getElementById('localVersion').textContent = 'v' + (appConfig.appVersion || '1.0.0');
     } catch(e) {}
 
     loadDashboard();
     loadSekolahDropdown();
     loadKategoriList();
     loadLog();
+    loadUpdateHistory();
+    initUpdatePreview();
     CimegaMusic.init('../../../assets_music/');
     showToast('success','Sistem Siap','Admin panel berhasil dimuat');
   } catch(e) {
@@ -1108,26 +1204,82 @@ async function saveKonten() {
 // ═══════════════════════════════════
 async function pushUpdate() {
   const { doc, setDoc, addDoc, collection, serverTimestamp } = window._fb;
-  const ver = document.getElementById('newVersion').value.trim();
-  const url = document.getElementById('downloadUrl').value.trim();
+  const ver   = document.getElementById('newVersion').value.trim();
+  const url   = document.getElementById('downloadUrl').value.trim();
   const force = document.getElementById('updateType').value === 'true';
   const notes = document.getElementById('updateNotes').value.trim();
-  if (!ver || !url) { showToast('warn','Peringatan','Versi dan URL download harus diisi!'); return; }
+  const owner = document.getElementById('githubOwner').value.trim();
+  const repo  = document.getElementById('githubRepo').value.trim();
+  if (!ver)  { showToast('warn','Peringatan','Versi baru harus diisi!'); return; }
+  if (!url)  { showToast('warn','Peringatan','URL download .exe harus diisi!'); return; }
   try {
     await setDoc(doc(db,'appConfig','version'), {
       current: ver, forceUpdate: force, downloadUrl: url,
-      notes: notes, updatedAt: serverTimestamp()
+      notes, githubOwner: owner, githubRepo: repo,
+      updatedAt: serverTimestamp(), pushedBy: adminData.nama
     });
     await addDoc(collection(db,'updateHistory'), {
       version: ver, url, forceUpdate: force, notes,
+      githubOwner: owner, githubRepo: repo,
       pushedAt: serverTimestamp(), pushedBy: adminData.nama
     });
     document.getElementById('currentVersion').textContent = 'v' + ver;
     document.getElementById('settingVersion').textContent = 'v' + ver;
+    // Reset form
+    document.getElementById('newVersion').value = '';
+    document.getElementById('updateNotes').value = '';
     addLog('Update', `Push update v${ver} (${force?'WAJIB':'opsional'})`);
-    showToast('success','Update Dikirim!', `Semua pengguna akan mendapat notifikasi update v${ver}`);
+    showToast('success','Update Dikirim! 🚀', `Semua pengguna akan mendapat popup update v${ver} dalam 30 menit`);
     loadUpdateHistory();
   } catch(e) { showToast('error','Error','Gagal push update: '+e.message); }
+}
+
+// Live preview popup saat mengetik
+function updatePreview() {
+  const ver   = document.getElementById('newVersion')?.value || '';
+  const notes = document.getElementById('updateNotes')?.value || '';
+  const force = document.getElementById('updateType')?.value === 'true';
+  const cur   = document.getElementById('currentVersion')?.textContent?.replace('v','') || '1.0.0';
+  if (document.getElementById('previewNew'))  document.getElementById('previewNew').textContent  = ver || '—';
+  if (document.getElementById('previewOld'))  document.getElementById('previewOld').textContent  = cur;
+  if (document.getElementById('previewNotes')) document.getElementById('previewNotes').textContent = notes || 'Catatan update muncul di sini...';
+  if (document.getElementById('previewTitle')) document.getElementById('previewTitle').textContent = force ? 'UPDATE WAJIB' : 'UPDATE TERSEDIA';
+  if (document.getElementById('previewIcon'))  document.getElementById('previewIcon').textContent  = force ? '⚠️' : '🚀';
+  if (document.getElementById('previewSkip'))  document.getElementById('previewSkip').style.display = force ? 'none' : '';
+}
+// Pasang listener preview (dipanggil setelah DOM siap)
+function initUpdatePreview() {
+  ['newVersion','updateNotes','updateType'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updatePreview);
+    if (el) el.addEventListener('change', updatePreview);
+  });
+}
+
+async function cekGithubRelease() {
+  const owner = document.getElementById('githubOwner').value.trim();
+  const repo  = document.getElementById('githubRepo').value.trim();
+  if (!owner || !repo) { showToast('warn','Peringatan','Isi GitHub Owner dan Repo dulu!'); return; }
+  showToast('info','Mengecek...','Menghubungi GitHub Releases...');
+  try {
+    const info = await window.cimegaAPI.checkGithubUpdate({ owner, repo });
+    if (info.error) { showToast('error','Gagal',info.error); return; }
+    document.getElementById('githubLatestVer').textContent  = 'v' + info.latestVersion;
+    document.getElementById('githubLatestDate').textContent = info.publishedAt ? new Date(info.publishedAt).toLocaleDateString('id-ID') : '';
+    // Isi otomatis form
+    document.getElementById('newVersion').value  = info.latestVersion;
+    document.getElementById('downloadUrl').value = info.downloadUrl;
+    document.getElementById('updateNotes').value = info.releaseNotes || '';
+    updatePreview();
+    showToast('success','Berhasil!', `Rilis terbaru: v${info.latestVersion} — form sudah diisi otomatis`);
+  } catch(e) { showToast('error','Error',e.message); }
+}
+
+function bukaGithubRelease() {
+  const owner = document.getElementById('githubOwner').value.trim();
+  const repo  = document.getElementById('githubRepo').value.trim();
+  if (owner && repo) window.cimegaAPI.openExternal(`https://github.com/${owner}/${repo}/releases`);
+  else window.cimegaAPI.openExternal('https://github.com');
 }
 
 async function loadUpdateHistory() {
@@ -1139,10 +1291,14 @@ async function loadUpdateHistory() {
       const data = d.data();
       items.push(`<div class="activity-item">
         <div class="activity-dot" style="background:var(--cyan)"></div>
-        <div>
-          <div class="activity-text"><strong>v${data.version}</strong> — ${data.forceUpdate?'<span style="color:var(--danger)">WAJIB</span>':'Opsional'}</div>
-          <div class="activity-time">${fmtDate(data.pushedAt)} oleh ${data.pushedBy}</div>
-          ${data.notes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">${data.notes}</div>`:''}
+        <div style="flex:1">
+          <div class="activity-text">
+            <strong>v${data.version}</strong>
+            ${data.forceUpdate ? '<span style="color:var(--danger);font-size:10px;margin-left:6px">⚠ WAJIB</span>' : '<span style="color:var(--muted);font-size:10px;margin-left:6px">Opsional</span>'}
+          </div>
+          <div class="activity-time">${fmtDate(data.pushedAt)} · oleh ${data.pushedBy}</div>
+          ${data.notes ? `<div style="font-size:10px;color:var(--muted);margin-top:3px;white-space:pre-line">${data.notes}</div>` : ''}
+          ${data.githubOwner ? `<a href="#" onclick="window.cimegaAPI.openExternal('https://github.com/${data.githubOwner}/${data.githubRepo}/releases/tag/v${data.version}');return false" style="font-size:10px;color:var(--cyan)">🐙 Lihat di GitHub</a>` : ''}
         </div>
       </div>`);
     });
@@ -1330,5 +1486,6 @@ initApp();
     </div>
   </div>
   <script src="../../shared/music.js"></script>
+  <script src="../../shared/updater.js"></script>
 </body>
 </html>

@@ -525,6 +525,7 @@
 </div>
 
 <script src="../../shared/music.js"></script>
+<script src="../../shared/updater.js"></script>
 <script>
 // =============================================
 // CIMEGA SMART OFFICE — DASHBOARD v2
@@ -539,20 +540,110 @@ let pageSettings = { size:'A4', margin:'Normal', orientation:'Portrait' };
 userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
 if (!userData?.role || userData.role === 'admin') window.location.href = '../login/login.html';
 
-// ── Struktur menu ──────────────────────────
+// ── Struktur menu (nama lengkap sesuai file 1.txt) ──
+const _ADM_GURU = [
+  'RPP (Rencana Pelaksanaan Pembelajaran) – Deep Learning',
+  'Modul Ajar – Kurikulum Merdeka (KEMENDIKDASMEN)',
+  'Modul Ajar - Kurikulum Berbasis Cinta (KEMENAG)',
+  'TP (Tujuan Pembelajaran)',
+  'ATP (Tujuan Pembelajaran)',
+  'PROTA (Program Tahunan)',
+  'PROMES (Program Semester)',
+  'Proyek Kokulikuler - Kurikulum Merdeka',
+  'Analisis Soal',
+  'Kisi-Kisi Soal',
+  'Lembar Soal dan Kunci Jawaban',
+  'Daftar Hadir Siswa',
+  'Penilaian Harian (PH)',
+  'Penilaian Tengah Semester (PTS)',
+  'Penilaian Akhir Semester (PAS)',
+  'Rekap Nilai Siswa',
+  'RPP (Rencana Pelaksanaan Pembelajaran) – Kurikulum 2013',
+  'Silabus',
+  'KKM (Kriteria Ketuntasan Minimal)',
+  'Jurnal Mengajar',
+];
+const _ADM_KEPSEK = [
+  'Tugas Pokok dan Fungsi Kepala Sekolah',
+  'Administrasi Manajerial',
+  'Administrasi Supervisi Akademik',
+  'Administrasi Kurikulum',
+  'Administrasi Kesiswaan',
+  'Administrasi Keuangan',
+  'Administrasi Hubungan Masyarakat',
+];
+const _KOSP = [
+  'Karakteristik Satuan Pendidikan',
+  'Visi, Misi, dan Tujuan Satuan Pendidikan',
+  'Pengorganisasian Pembelajaran',
+  'Perencanaan Pembelajaran',
+  'Perencanaan Projek Penguatan Profil 8 dimensi lulusan',
+  'Pendekatan Pembelajaran',
+  'Asesmen',
+  'Pengelolaan Kurikulum',
+];
+const _ADM_UMUM = [
+  'SK Pembagian Tugas Mengajar',
+  'SK Panitia Ujian (UTS, UAS, PAT, PAS, ANBK, USBN)',
+  'SK Wali Kelas',
+  'SK Ekstrakurikuler',
+  'SK Tim Kurikulum',
+  'SK Pengurus OSIS',
+  'SK Tim BOS',
+  'SK Panitia MPLS',
+  'SK Operator Sekolah',
+  'Surat Keputusan Kenaikan Kelas',
+  'Surat Keputusan Kelulusan Siswa',
+  'Daftar Inventaris Barang (Buku Induk Barang)',
+  'Jadwal Pelajaran',
+  'Struktur Organisasi Sekolah',
+  'Kalender Pendidikan',
+  'Tata Tertib Sekolah',
+  'Tata Tertib Guru dan Siswa',
+  'Buku Tamu Kegiatan Sekolah',
+  'Notulen Rapat Dewan Guru',
+];
+const _KEUANGAN = [
+  'Laporan BOS Triwulan',
+  'RKAS (Rencana Kegiatan dan Anggaran Sekolah)',
+  'BKU (Buku Kas Umum)',
+  'Nota Pembelian Barang',
+  'Laporan Realisasi BOS',
+  'Laporan LPJ Dana BOS',
+  'Berita Acara Pembelian/Pengadaan Barang',
+  'Daftar Hadir Penerima Honor BOS',
+];
+const _EVALUASI = [
+  'Evaluasi Diri Sekolah (EDS)',
+  'Instrumen Akreditasi Sekolah',
+  'Laporan Kegiatan Sekolah (MPLS, HUT RI, Pramuka, dll.)',
+  'LPJ Kegiatan (Laporan Pertanggungjawaban)',
+  'Laporan Monitoring & Evaluasi (Monev)',
+  'Laporan Supervisi Kelas',
+  'Berita Acara Rapat',
+  'Berita Acara Penilaian',
+];
+const _PERPUS = [
+  'Administrasi Keanggotaan',
+  'Administrasi Kolektif',
+  'Administrasi Peminjaman',
+  'Administrasi Keuangan',
+  'Administrasi Umum',
+];
+
 const menuData = {
   guru:[
-    {id:'adm_guru',icon:'📚',title:'Administrasi Guru & Pembelajaran',desc:'RPP, Modul Ajar, Penilaian, Jurnal',items:['RPP Deep Learning','Modul Ajar Kurikulum Merdeka','Modul Ajar Kurikulum Berbasis Cinta','TP','ATP','PROTA','PROMES','Proyek Kokulikuler','Analisis Soal','Kisi-Kisi Soal','Lembar Soal & Kunci Jawaban','Daftar Hadir Siswa','PH','PTS','PAS','Rekap Nilai','RPP K13','Silabus','KKM','Jurnal Mengajar']},
-    {id:'perpus',icon:'📖',title:'Administrasi Perpustakaan',desc:'Keanggotaan, Peminjaman, Inventaris',items:['Keanggotaan','Kolektif','Peminjaman','Keuangan Perpustakaan','Administrasi Umum Perpus']}
+    {id:'adm_guru', icon:'📚', title:'Administrasi Guru & Pembelajaran',            desc:'RPP, Modul Ajar, Penilaian, Jurnal',         items:_ADM_GURU},
+    {id:'perpus',   icon:'📖', title:'Administrasi Perpustakaan Lengkap',            desc:'Keanggotaan, Peminjaman, Keuangan',           items:_PERPUS},
   ],
   kepsek:[
-    {id:'adm_guru',icon:'📚',title:'Administrasi Guru & Pembelajaran',desc:'RPP, Modul Ajar, Penilaian',items:['RPP Deep Learning','Modul Ajar Kurikulum Merdeka','Modul Ajar Kurikulum Berbasis Cinta','TP','ATP','PROTA','PROMES','Proyek Kokulikuler','Analisis Soal','Kisi-Kisi Soal','Lembar Soal & Kunci Jawaban','Daftar Hadir Siswa','PH','PTS','PAS','Rekap Nilai','RPP K13','Silabus','KKM','Jurnal Mengajar']},
-    {id:'adm_kepsek',icon:'🏛️',title:'Administrasi Kepala Sekolah',desc:'Tugas Pokok, Supervisi, Manajerial',items:['Tugas Pokok Kepsek','Administrasi Manajerial','Supervisi Akademik','Kurikulum','Kesiswaan','Keuangan','Humas']},
-    {id:'kosp',icon:'📋',title:'Kurikulum Operasional Satuan Pendidikan',desc:'Karakteristik, Visi Misi, Perencanaan',items:['Karakteristik','Visi Misi Tujuan','Pengorganisasian','Perencanaan','Projek 8 Dimensi','Pendekatan','Asesmen','Pengelolaan']},
-    {id:'adm_umum',icon:'🏫',title:'Administrasi Umum Sekolah',desc:'SK, Inventaris, Jadwal, Tata Tertib',items:['SK Pembagian Tugas','SK Panitia Ujian','SK Wali Kelas','SK Ekskul','SK Tim Kurikulum','SK OSIS','SK BOS','SK MPLS','SK Operator','SK Kenaikan Kelas','SK Kelulusan','Inventaris','Jadwal','Struktur Org','Kalender','Tata Tertib','Buku Tamu','Notulen']},
-    {id:'keuangan',icon:'💰',title:'Keuangan & BOS',desc:'Laporan BOS, RKAS, LPJ, Nota',items:['Laporan BOS Triwulan','RKAS','BKU','Nota Pembelian','Realisasi BOS','LPJ BOS','Berita Acara Pengadaan','Daftar Hadir Honor']},
-    {id:'evaluasi',icon:'📊',title:'Evaluasi & Pelaporan',desc:'EDS, Akreditasi, Supervisi, Monev',items:['EDS','Instrumen Akreditasi','Laporan Kegiatan','LPJ Kegiatan','Monev','Supervisi Kelas','Berita Acara Rapat','Berita Acara Penilaian']},
-    {id:'perpus',icon:'📖',title:'Administrasi Perpustakaan',desc:'Keanggotaan, Peminjaman, Inventaris',items:['Keanggotaan','Kolektif','Peminjaman','Keuangan Perpustakaan','Administrasi Umum Perpus']}
+    {id:'adm_guru',   icon:'📚', title:'Administrasi Guru & Pembelajaran',           desc:'RPP, Modul Ajar, Penilaian, Jurnal',         items:_ADM_GURU},
+    {id:'adm_kepsek', icon:'🏛️', title:'Administrasi Kepala Sekolah',               desc:'Tugas Pokok, Supervisi, Manajerial, Humas',  items:_ADM_KEPSEK},
+    {id:'kosp',       icon:'📋', title:'Kurikulum Operasional Satuan Pendidikan',    desc:'Karakteristik, Visi Misi, Perencanaan',      items:_KOSP},
+    {id:'adm_umum',   icon:'🏫', title:'Administrasi Umum Sekolah',                  desc:'SK, Inventaris, Jadwal, Tata Tertib',        items:_ADM_UMUM},
+    {id:'keuangan',   icon:'💰', title:'Keuangan & BOS',                             desc:'Laporan BOS, RKAS, BKU, LPJ, Nota',          items:_KEUANGAN},
+    {id:'evaluasi',   icon:'📊', title:'Evaluasi & Pelaporan Sekolah',               desc:'EDS, Akreditasi, Supervisi, Monev',          items:_EVALUASI},
+    {id:'perpus',     icon:'📖', title:'Administrasi Perpustakaan Lengkap',          desc:'Keanggotaan, Peminjaman, Keuangan',           items:_PERPUS},
   ]
 };
 
@@ -1293,7 +1384,9 @@ async function initApp(){
     buildSidebar();
     loadBeranda();
     loadNotifications();
-    checkUpdate();
+    // Inisialisasi & jalankan auto updater
+    await CimegaUpdater.init({ owner: 'prabu26dev', repo: 'Cimega_Smart_Office' });
+    CimegaUpdater.startChecking(db);
     // Cek pending approval untuk kepsek
     if(userData.role==='kepsek'){
       try{
