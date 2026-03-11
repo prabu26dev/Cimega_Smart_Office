@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Admin Panel - Cimega Smart Office</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --cyan:#00e5ff;--blue:#0066ff;--dark:#020b18;--dark2:#041428;--dark3:#061a35;
+      --card:rgba(4,20,45,0.95);--border:rgba(0,229,255,0.15);--text:#e0f4ff;
+      --muted:#5a8aaa;--success:#00ff88;--danger:#ff4466;--warn:#ffaa00;
+      --sidebar:220px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Exo 2',sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+    /* SIDEBAR */
+    .sidebar{width:var(--sidebar);background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+    .sidebar-header{padding:20px 16px;border-bottom:1px solid var(--border)}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    .sidebar-logo img{width:36px;height:36px;object-fit:contain}
+    .sidebar-logo-text{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.2}
+    .sidebar-logo-text span{color:var(--cyan);display:block}
+    .sidebar-role{font-size:10px;color:var(--cyan);background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:20px;padding:3px 10px;display:inline-block;margin-top:6px;letter-spacing:1px}
+    .sidebar-nav{flex:1;padding:12px 8px;overflow-y:auto}
+    .nav-section{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:8px 8px 4px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:13px;color:var(--muted)}
+    .nav-item:hover{background:rgba(0,229,255,0.08);color:var(--text)}
+    .nav-item.active{background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.2)}
+    .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+    .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700}
+    .sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+    .btn-logout{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;background:rgba(255,68,102,0.08);border:1px solid rgba(255,68,102,0.2);border-radius:10px;color:#ff8899;font-size:13px;cursor:pointer;transition:all .2s}
+    .btn-logout:hover{background:rgba(255,68,102,0.15)}
+
+    /* MAIN */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--dark2);flex-shrink:0}
+    .topbar-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:#fff;letter-spacing:1px}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-time{font-size:12px;color:var(--muted);font-family:'Orbitron',sans-serif}
+    .topbar-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--success)}
+    .topbar-status::before{content:'';width:6px;height:6px;background:var(--success);border-radius:50%;animation:blink 2s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+    .content{flex:1;overflow-y:auto;padding:24px}
+    .content::-webkit-scrollbar{width:6px}
+    .content::-webkit-scrollbar-track{background:var(--dark)}
+    .content::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.3);border-radius:3px}
+
+    /* PAGES */
+    .page{display:none}
+    .page.active{display:block}
+
+    /* STATS CARDS */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:all .3s}
+    .stat-card:hover{border-color:var(--cyan);transform:translateY(-2px)}
+    .stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 14px 0 60px;opacity:.08}
+    .stat-card.blue::before{background:var(--blue)}
+    .stat-card.cyan::before{background:var(--cyan)}
+    .stat-card.green::before{background:var(--success)}
+    .stat-card.red::before{background:var(--danger)}
+    .stat-card-icon{font-size:24px;margin-bottom:12px}
+    .stat-card-num{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;color:#fff;margin-bottom:4px}
+    .stat-card-label{font-size:12px;color:var(--muted)}
+    .stat-card-trend{font-size:11px;margin-top:8px}
+    .stat-card-trend.up{color:var(--success)}
+    .stat-card-trend.down{color:var(--danger)}
+
+    /* SECTION HEADER */
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .section-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:#fff;letter-spacing:1px}
+    .section-title span{color:var(--cyan)}
+
+    /* BUTTONS */
+    .btn{padding:9px 18px;border-radius:10px;border:none;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:13px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+    .btn-primary{background:linear-gradient(135deg,#0044cc,#0066ff);color:#fff}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(0,102,255,0.4)}
+    .btn-success{background:rgba(0,255,136,0.12);color:var(--success);border:1px solid rgba(0,255,136,0.3)}
+    .btn-success:hover{background:rgba(0,255,136,0.2)}
+    .btn-danger{background:rgba(255,68,102,0.12);color:var(--danger);border:1px solid rgba(255,68,102,0.3)}
+    .btn-danger:hover{background:rgba(255,68,102,0.2)}
+    .btn-warn{background:rgba(255,170,0,0.12);color:var(--warn);border:1px solid rgba(255,170,0,0.3)}
+    .btn-warn:hover{background:rgba(255,170,0,0.2)}
+    .btn-ghost{background:rgba(0,229,255,0.06);color:var(--cyan);border:1px solid rgba(0,229,255,0.2)}
+    .btn-ghost:hover{background:rgba(0,229,255,0.12)}
+    .btn-sm{padding:6px 12px;font-size:11px;border-radius:8px}
+
+    /* TABLE */
+    .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    .table-toolbar{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+    .search-input{flex:1;max-width:280px;padding:8px 14px 8px 36px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;color:var(--text);font-size:13px;outline:none;position:relative}
+    .search-wrap{position:relative;flex:1;max-width:280px}
+    .search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.5;pointer-events:none}
+    .search-input:focus{border-color:var(--cyan)}
+    .search-input::placeholder{color:var(--muted)}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:rgba(0,229,255,0.05);border-bottom:1px solid var(--border)}
+    th{padding:12px 16px;text-align:left;font-size:11px;color:var(--cyan);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+    td{padding:13px 16px;font-size:13px;border-bottom:1px solid rgba(0,229,255,0.06)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(0,229,255,0.03)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge::before{content:'';width:5px;height:5px;border-radius:50%}
+    .badge-active{background:rgba(0,255,136,0.1);color:var(--success);border:1px solid rgba(0,255,136,0.2)}
+    .badge-active::before{background:var(--success)}
+    .badge-inactive{background:rgba(255,68,102,0.1);color:var(--danger);border:1px solid rgba(255,68,102,0.2)}
+    .badge-inactive::before{background:var(--danger)}
+    .badge-warn{background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.2)}
+    .badge-warn::before{background:var(--warn)}
+    .badge-guru{background:rgba(0,102,255,0.1);color:#66aaff;border:1px solid rgba(0,102,255,0.2)}
+    .badge-kepsek{background:rgba(180,100,255,0.1);color:#cc88ff;border:1px solid rgba(180,100,255,0.2)}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+    .modal-overlay.show{display:flex}
+    .modal{background:var(--dark3);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;position:relative;animation:modal-in .3s ease}
+    @keyframes modal-in{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .modal-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:#fff}
+    .modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;transition:color .2s}
+    .modal-close:hover{color:var(--danger)}
+    .modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+
+    /* FORM */
+    .form-group{margin-bottom:18px}
+    .form-label{display:block;font-size:11px;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+    .form-control{width:100%;padding:11px 14px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:10px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:13px;outline:none;transition:all .3s}
+    .form-control:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,0.08)}
+    .form-control::placeholder{color:var(--muted)}
+    select.form-control option{background:var(--dark3);color:var(--text)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+    /* NOTIFICATION */
+    .notif-toast{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+    .toast{background:var(--dark3);border:1px solid var(--border);border-radius:12px;padding:14px 18px;min-width:280px;display:flex;align-items:center;gap:12px;animation:toast-in .3s ease;box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+    @keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+    .toast.success{border-color:rgba(0,255,136,0.3)}
+    .toast.error{border-color:rgba(255,68,102,0.3)}
+    .toast.warn{border-color:rgba(255,170,0,0.3)}
+    .toast-icon{font-size:20px}
+    .toast-text{font-size:13px;flex:1}
+    .toast-text strong{display:block;margin-bottom:2px}
+
+    /* ACTIVITY LOG */
+    .activity-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(0,229,255,0.06)}
+    .activity-item:last-child{border-bottom:none}
+    .activity-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+    .activity-text{font-size:13px;color:var(--text)}
+    .activity-time{font-size:11px;color:var(--muted);margin-top:2px}
+
+    /* UPDATE CARD */
+    .update-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px}
+    .update-version{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--cyan);margin-bottom:4px}
+    .update-status{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+
+    /* CONTENT EDITOR */
+    .content-list{display:grid;gap:10px}
+    .content-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;transition:all .2s}
+    .content-item:hover{border-color:var(--cyan)}
+    .content-item-info{flex:1}
+    .content-item-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+    .content-item-cat{font-size:11px;color:var(--muted)}
+    textarea.form-control{min-height:120px;resize:vertical;font-family:'Exo 2',sans-serif}
+
+    /* SPINNER */
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* EMPTY STATE */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+    .empty-state .icon{font-size:48px;margin-bottom:16px;opacity:.5}
+    .empty-state p{font-size:14px}
+
+    /* ── MUSIC WIDGET ── */
+    .music-widget{position:fixed;bottom:20px;right:20px;z-index:999;background:rgba(4,20,45,0.95);border:1px solid rgba(0,229,255,0.2);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,0.4);min-width:230px}
+    .music-widget:hover{border-color:rgba(0,229,255,0.4)}
+    .mw-bars{display:flex;align-items:flex-end;gap:2px;height:14px;flex-shrink:0}
+    .mw-bars .b{width:3px;border-radius:2px;background:#00e5ff;animation:mwbar .8s ease-in-out infinite}
+    .mw-bars .b:nth-child(1){height:6px;animation-delay:0s}.mw-bars .b:nth-child(2){height:12px;animation-delay:.15s}.mw-bars .b:nth-child(3){height:8px;animation-delay:.3s}.mw-bars .b:nth-child(4){height:12px;animation-delay:.1s}.mw-bars .b:nth-child(5){height:6px;animation-delay:.25s}
+    .mw-bars.paused .b{animation-play-state:paused;opacity:.25}
+    @keyframes mwbar{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+    .mw-info{flex:1;min-width:0}
+    .mw-title{font-size:11px;font-weight:600;color:#e0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mw-sub{font-size:10px;color:#5a8aaa;margin-top:1px}
+    .mw-controls{display:flex;align-items:center;gap:5px}
+    .mw-btn{width:26px;height:26px;border-radius:50%;border:1px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.08);color:#00e5ff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .mw-btn:hover{background:rgba(0,229,255,0.2);transform:scale(1.1)}
+    .mw-btn.mute{width:30px;height:30px;font-size:14px}
+  </style>
+</head>
+<body>
+
+<!-- TOAST CONTAINER -->
+<div class="notif-toast" id="toastContainer"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="../../../assets_images/Logo SDN Cimega.png" onerror="this.style.display='none'" alt="logo"/>
+      <div class="sidebar-logo-text">CIMEGA<span>SMART OFFICE</span></div>
+    </div>
+    <div class="sidebar-role">👑 ADMINISTRATOR</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Menu Utama</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-section">Manajemen</div>
+    <div class="nav-item" onclick="showPage('sekolah')">
+      <span class="nav-icon">🏫</span> Kelola Sekolah
+    </div>
+    <div class="nav-item" onclick="showPage('guru')">
+      <span class="nav-icon">👨‍🏫</span> Kelola Pengguna
+    </div>
+    <div class="nav-section">Sistem</div>
+    <div class="nav-item" onclick="showPage('konten')">
+      <span class="nav-icon">📝</span> Kelola Konten
+    </div>
+    <div class="nav-item" onclick="showPage('update')">
+      <span class="nav-icon">🔄</span> Update Aplikasi
+    </div>
+    <div class="nav-item" onclick="showPage('notifikasi')">
+      <span class="nav-icon">🔔</span> Notifikasi
+      <span class="nav-badge" id="notifBadge" style="display:none">!</span>
+    </div>
+    <div class="nav-section">Lainnya</div>
+    <div class="nav-item" onclick="showPage('log')">
+      <span class="nav-icon">📋</span> Log Aktivitas
+    </div>
+    <div class="nav-item" onclick="showPage('pengaturan')">
+      <span class="nav-icon">⚙️</span> Pengaturan
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="btn-logout" onclick="doLogout()">
+      <span>🚪</span> Keluar
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="pageTitle">DASHBOARD</div>
+    <div class="topbar-right">
+      <div class="topbar-status">Online</div>
+      <div class="topbar-time" id="topbarTime">--:--:--</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: DASHBOARD -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-card-icon">🏫</div>
+          <div class="stat-card-num" id="dashSekolah">0</div>
+          <div class="stat-card-label">Total Sekolah</div>
+          <div class="stat-card-trend up" id="dashSekolahAktif">0 aktif</div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="stat-card-icon">👨‍🏫</div>
+          <div class="stat-card-num" id="dashGuru">0</div>
+          <div class="stat-card-label">Total Pengguna</div>
+          <div class="stat-card-trend up" id="dashGuruAktif">0 aktif</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-card-icon">✅</div>
+          <div class="stat-card-num" id="dashAktif">0</div>
+          <div class="stat-card-label">Akun Aktif</div>
+          <div class="stat-card-trend up">berlangganan</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-card-icon">⚠️</div>
+          <div class="stat-card-num" id="dashExpired">0</div>
+          <div class="stat-card-label">Expired / Nonaktif</div>
+          <div class="stat-card-trend down">perlu diperpanjang</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan)">⚡ AKTIVITAS TERBARU</span>
+          </div>
+          <div style="padding:16px" id="activityLog">
+            <div class="empty-state"><div class="icon">📋</div><p>Belum ada aktivitas</p></div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan)">🔴 AKUN AKAN EXPIRED</span>
+          </div>
+          <div style="padding:16px" id="expiredList">
+            <div class="empty-state"><div class="icon">✅</div><p>Semua akun masih aktif</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: SEKOLAH -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page" id="page-sekolah">
+      <div class="section-header">
+        <div class="section-title">Kelola <span>Sekolah</span></div>
+        <button class="btn btn-primary" onclick="openModalSekolah()">+ Tambah Sekolah</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="search-wrap">
+            <input class="search-input" placeholder="Cari sekolah..." oninput="filterTable('tblSekolah',this.value)"/>
+          </div>
+          <span style="font-size:12px;color:var(--muted)" id="sekolahCount">0 sekolah</span>
+        </div>
+        <table id="tblSekolah">
+          <thead><tr><th>Nama Sekolah</th><th>Alamat</th><th>Pengguna</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="sekolahBody"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted)">Memuat data...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: GURU/PENGGUNA -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page" id="page-guru">
+      <div class="section-header">
+        <div class="section-title">Kelola <span>Pengguna</span></div>
+        <div style="display:flex;gap:10px">
+          <select class="form-control" style="width:160px;padding:8px 12px" id="filterRole" onchange="loadUsers()">
+            <option value="">Semua Role</option>
+            <option value="guru">Guru</option>
+            <option value="kepsek">Kepala Sekolah</option>
+          </select>
+          <select class="form-control" style="width:180px;padding:8px 12px" id="filterSekolahUser" onchange="loadUsers()">
+            <option value="">Semua Sekolah</option>
+          </select>
+          <button class="btn btn-primary" onclick="openModalGuru()">+ Tambah Pengguna</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="search-wrap">
+            <input class="search-input" placeholder="Cari nama atau username..." oninput="filterTable('tblGuru',this.value)"/>
+          </div>
+          <span style="font-size:12px;color:var(--muted)" id="guruCount">0 pengguna</span>
+        </div>
+        <table id="tblGuru">
+          <thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Sekolah</th><th>Expired</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="guruBody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Memuat data...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: KONTEN -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page" id="page-konten">
+      <div class="section-header">
+        <div class="section-title">Kelola <span>Konten Dokumen</span></div>
+        <button class="btn btn-primary" onclick="openModalKonten()">+ Tambah Konten</button>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:20px">
+        <div class="table-wrap" style="align-self:start">
+          <div class="table-toolbar"><span style="font-size:12px;color:var(--cyan);font-weight:600">KATEGORI</span></div>
+          <div style="padding:8px" id="kategoriList"></div>
+        </div>
+        <div>
+          <div class="content-list" id="kontenList">
+            <div class="empty-state"><div class="icon">📝</div><p>Pilih kategori</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: UPDATE -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page" id="page-update">
+      <div class="section-header">
+        <div class="section-title">Update <span>Aplikasi</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="update-card">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">VERSI SAAT INI</div>
+          <div class="update-version" id="currentVersion">v1.0.0</div>
+          <div class="update-status">
+            <span class="badge badge-active">Aktif</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Versi Baru</label>
+            <input class="form-control" id="newVersion" placeholder="contoh: 1.1.0"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL Download (.exe)</label>
+            <input class="form-control" id="downloadUrl" placeholder="https://github.com/..."/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipe Update</label>
+            <select class="form-control" id="updateType">
+              <option value="false">Opsional (bisa skip)</option>
+              <option value="true">Wajib (harus update)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catatan Update (Changelog)</label>
+            <textarea class="form-control" id="updateNotes" placeholder="Tuliskan perubahan di versi baru..."></textarea>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="pushUpdate()">
+            🚀 Push Update ke Semua Pengguna
+          </button>
+        </div>
+        <div class="update-card">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--cyan);margin-bottom:16px">📋 RIWAYAT UPDATE</div>
+          <div id="updateHistory">
+            <div class="empty-state"><div class="icon">🔄</div><p>Belum ada riwayat update</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: NOTIFIKASI -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page" id="page-notifikasi">
+      <div class="section-header">
+        <div class="section-title">Kirim <span>Notifikasi</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="update-card">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--cyan);margin-bottom:20px">📢 BROADCAST PESAN</div>
+          <div class="form-group">
+            <label class="form-label">Target Penerima</label>
+            <select class="form-control" id="notifTarget">
+              <option value="all">Semua Pengguna</option>
+              <option value="guru">Hanya Guru</option>
+              <option value="kepsek">Hanya Kepala Sekolah</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Judul Notifikasi</label>
+            <input class="form-control" id="notifTitle" placeholder="contoh: Informasi Penting"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Isi Pesan</label>
+            <textarea class="form-control" id="notifMessage" placeholder="Tulis pesan notifikasi..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipe</label>
+            <select class="form-control" id="notifType">
+              <option value="info">ℹ Info</option>
+              <option value="warn">⚠ Peringatan</option>
+              <option value="success">✅ Sukses</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="sendNotifikasi()">
+            📤 Kirim Notifikasi
+          </button>
+        </div>
+        <div class="update-card">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--cyan);margin-bottom:16px">📬 RIWAYAT NOTIFIKASI</div>
+          <div id="notifHistory">
+            <div class="empty-state"><div class="icon">🔔</div><p>Belum ada notifikasi terkirim</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: LOG -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page" id="page-log">
+      <div class="section-header">
+        <div class="section-title">Log <span>Aktivitas</span></div>
+        <button class="btn btn-danger btn-sm" onclick="clearLog()">🗑 Hapus Log</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Waktu</th><th>Admin</th><th>Aksi</th><th>Detail</th></tr></thead>
+          <tbody id="logBody"><tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">Memuat log...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ -->
+    <!-- PAGE: PENGATURAN -->
+    <!-- ═══════════════════════════════════ -->
+    <div class="page" id="page-pengaturan">
+      <div class="section-header">
+        <div class="section-title">Pengaturan <span>Sistem</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="update-card">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--cyan);margin-bottom:20px">🔒 GANTI PASSWORD ADMIN</div>
+          <div class="form-group">
+            <label class="form-label">Password Lama</label>
+            <input type="password" class="form-control" id="oldPass" placeholder="Password saat ini"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password Baru</label>
+            <input type="password" class="form-control" id="newPass" placeholder="Password baru"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Konfirmasi Password Baru</label>
+            <input type="password" class="form-control" id="confirmPass" placeholder="Ulangi password baru"/>
+          </div>
+          <button class="btn btn-primary" onclick="gantiPassword()">💾 Simpan Password</button>
+        </div>
+        <div class="update-card">
+          <div style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--cyan);margin-bottom:20px">ℹ INFO SISTEM</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border)">
+              <span style="color:var(--muted);font-size:13px">Versi Aplikasi</span>
+              <span style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan)" id="settingVersion">v1.0.0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border)">
+              <span style="color:var(--muted);font-size:13px">Login Sebagai</span>
+              <span style="font-size:13px;color:var(--text)" id="settingAdmin">Admin</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border)">
+              <span style="color:var(--muted);font-size:13px">Total Sekolah</span>
+              <span style="font-size:13px;color:var(--text)" id="settingSekolah">-</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:var(--muted);font-size:13px">Total Pengguna</span>
+              <span style="font-size:13px;color:var(--text)" id="settingGuru">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- ═══════════════════════════════════ -->
+<!-- MODAL: TAMBAH/EDIT SEKOLAH -->
+<!-- ═══════════════════════════════════ -->
+<div class="modal-overlay" id="modalSekolah">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalSekolahTitle">Tambah Sekolah</div>
+      <button class="modal-close" onclick="closeModal('modalSekolah')">✕</button>
+    </div>
+    <input type="hidden" id="sekolahId"/>
+    <div class="form-group">
+      <label class="form-label">Nama Sekolah</label>
+      <input class="form-control" id="sekolahNama" placeholder="contoh: SDN Cimega"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Alamat Lengkap</label>
+      <textarea class="form-control" id="sekolahAlamat" placeholder="Alamat sekolah..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-control" id="sekolahStatus">
+        <option value="aktif">Aktif</option>
+        <option value="nonaktif">Nonaktif</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalSekolah')">Batal</button>
+      <button class="btn btn-primary" onclick="saveSekolah()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- MODAL: TAMBAH/EDIT GURU -->
+<!-- ═══════════════════════════════════ -->
+<div class="modal-overlay" id="modalGuru">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="modalGuruTitle">Tambah Pengguna</div>
+      <button class="modal-close" onclick="closeModal('modalGuru')">✕</button>
+    </div>
+    <input type="hidden" id="guruId"/>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input class="form-control" id="guruNama" placeholder="Nama lengkap"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username / NIP</label>
+        <input class="form-control" id="guruUsername" placeholder="Username atau NIP"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control" id="guruPassword" placeholder="Password akun"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-control" id="guruRole">
+          <option value="guru">Guru</option>
+          <option value="kepsek">Kepala Sekolah</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Sekolah</label>
+        <select class="form-control" id="guruSekolah"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tanggal Expired</label>
+        <input type="date" class="form-control" id="guruExpired"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-control" id="guruStatus">
+        <option value="aktif">Aktif</option>
+        <option value="nonaktif">Nonaktif</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalGuru')">Batal</button>
+      <button class="btn btn-primary" onclick="saveGuru()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- MODAL: EDIT KONTEN -->
+<!-- ═══════════════════════════════════ -->
+<div class="modal-overlay" id="modalKonten">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title" id="modalKontenTitle">Edit Konten</div>
+      <button class="modal-close" onclick="closeModal('modalKonten')">✕</button>
+    </div>
+    <input type="hidden" id="kontenId"/>
+    <div class="form-group">
+      <label class="form-label">Nama Dokumen</label>
+      <input class="form-control" id="kontenNama" placeholder="Nama dokumen"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kategori</label>
+      <select class="form-control" id="kontenKategori">
+        <option value="administrasi_guru">Administrasi Guru & Pembelajaran</option>
+        <option value="administrasi_kepsek">Administrasi Kepala Sekolah</option>
+        <option value="kosp">Kurikulum Operasional Satuan Pendidikan</option>
+        <option value="administrasi_umum">Administrasi Umum Sekolah</option>
+        <option value="keuangan">Keuangan & BOS</option>
+        <option value="evaluasi">Evaluasi & Pelaporan</option>
+        <option value="perpustakaan">Administrasi Perpustakaan</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Deskripsi / Panduan</label>
+      <textarea class="form-control" id="kontenDeskripsi" style="min-height:100px" placeholder="Deskripsi dokumen ini..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Template Konten</label>
+      <textarea class="form-control" id="kontenTemplate" style="min-height:160px" placeholder="Isi template dokumen..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalKonten')">Batal</button>
+      <button class="btn btn-primary" onclick="saveKonten()">💾 Simpan & Live Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KONFIRMASI HAPUS -->
+<div class="modal-overlay" id="modalKonfirmasi">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">⚠ Konfirmasi Hapus</div>
+      <button class="modal-close" onclick="closeModal('modalKonfirmasi')">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:14px" id="konfirmasiText">Apakah Anda yakin ingin menghapus data ini?</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalKonfirmasi')">Batal</button>
+      <button class="btn btn-danger" id="konfirmasiBtn">🗑 Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// CIMEGA SMART OFFICE — ADMIN PANEL
+// API key dari preload.js (.env) — AMAN
+// ============================================
+
+let db, adminData;
+const kontenKategori = {
+  administrasi_guru: 'Administrasi Guru & Pembelajaran',
+  administrasi_kepsek: 'Administrasi Kepala Sekolah',
+  kosp: 'Kurikulum Operasional Satuan Pendidikan',
+  administrasi_umum: 'Administrasi Umum Sekolah',
+  keuangan: 'Keuangan & BOS',
+  evaluasi: 'Evaluasi & Pelaporan',
+  perpustakaan: 'Administrasi Perpustakaan'
+};
+
+// Cek session
+adminData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
+if (!adminData || adminData.role !== 'admin') {
+  window.location.href = '../login/login.html';
+}
+document.getElementById('settingAdmin').textContent = adminData.nama || 'Admin';
+
+// Clock
+setInterval(() => {
+  const now = new Date();
+  document.getElementById('topbarTime').textContent =
+    now.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
+
+// ── INIT FIREBASE ──
+async function initApp() {
+  try {
+    const firebaseConfig = await window.cimegaAPI.getFirebaseConfig();
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+    const fbApp = initializeApp(firebaseConfig);
+    db = getFirestore(fbApp);
+    window._fb = { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp };
+
+    // Load versi
+    try {
+      const v = await getDoc(doc(db,'appConfig','version'));
+      if (v.exists()) {
+        const ver = 'v' + v.data().current;
+        document.getElementById('currentVersion').textContent = ver;
+        document.getElementById('settingVersion').textContent = ver;
+        document.getElementById('newVersion').value = v.data().current;
+        document.getElementById('downloadUrl').value = v.data().downloadUrl || '';
+      }
+    } catch(e) {}
+
+    loadDashboard();
+    loadSekolahDropdown();
+    loadKategoriList();
+    loadLog();
+    CimegaMusic.init('../../../assets_music/');
+    showToast('success','Sistem Siap','Admin panel berhasil dimuat');
+  } catch(e) {
+    showToast('error','Error','Gagal memuat konfigurasi: ' + e.message);
+  }
+}
+
+// ── NAVIGATION ──
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event.currentTarget.classList.add('active');
+  const titles = {dashboard:'DASHBOARD',sekolah:'KELOLA SEKOLAH',guru:'KELOLA PENGGUNA',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  document.getElementById('pageTitle').textContent = titles[page] || page.toUpperCase();
+  if (page === 'guru') loadUsers();
+  if (page === 'sekolah') loadSekolah();
+  if (page === 'log') loadLog();
+  if (page === 'pengaturan') loadPengaturan();
+}
+
+// ── TOAST ──
+function showToast(type, title, msg) {
+  const icons = {success:'✅',error:'❌',warn:'⚠️',info:'ℹ️'};
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><div class="toast-text"><strong>${title}</strong>${msg}</div>`;
+  document.getElementById('toastContainer').appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ── MODAL ──
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+
+// ── FILTER TABLE ──
+function filterTable(tableId, val) {
+  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ── FORMAT DATE ──
+function fmtDate(ts) {
+  if (!ts) return '-';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+}
+function isExpired(ts) {
+  if (!ts) return false;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return new Date() > d;
+}
+function isExpiringSoon(ts) {
+  if (!ts) return false;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = (d - new Date()) / (1000*60*60*24);
+  return diff >= 0 && diff <= 30;
+}
+
+// ═══════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════
+async function loadDashboard() {
+  const { collection, getDocs } = window._fb;
+  try {
+    const [sekolahSnap, userSnap] = await Promise.all([
+      getDocs(collection(db,'sekolah')),
+      getDocs(collection(db,'users'))
+    ]);
+    let totalSekolah=0, aktifSekolah=0, totalUser=0, aktifUser=0, expiredUser=0;
+    const expList = [];
+    sekolahSnap.forEach(d => { totalSekolah++; if(d.data().status==='aktif') aktifSekolah++; });
+    userSnap.forEach(d => {
+      const data = d.data();
+      if (data.role === 'admin') return;
+      totalUser++;
+      if (data.status === 'aktif') aktifUser++;
+      if (data.status === 'nonaktif' || isExpired(data.expired)) expiredUser++;
+      if (isExpiringSoon(data.expired)) expList.push({nama:data.nama, expired:data.expired, sekolah:data.sekolah});
+    });
+    document.getElementById('dashSekolah').textContent = totalSekolah;
+    document.getElementById('dashSekolahAktif').textContent = aktifSekolah + ' aktif';
+    document.getElementById('dashGuru').textContent = totalUser;
+    document.getElementById('dashGuruAktif').textContent = aktifUser + ' aktif';
+    document.getElementById('dashAktif').textContent = aktifUser;
+    document.getElementById('dashExpired').textContent = expiredUser;
+    document.getElementById('settingSekolah').textContent = totalSekolah;
+    document.getElementById('settingGuru').textContent = totalUser;
+    if (expList.length > 0) {
+      document.getElementById('expiredList').innerHTML = expList.map(u =>
+        `<div class="activity-item"><div class="activity-dot" style="background:var(--warn)"></div><div><div class="activity-text">${u.nama}</div><div class="activity-time">${u.sekolah} — Expired: ${fmtDate(u.expired)}</div></div></div>`
+      ).join('');
+    }
+  } catch(e) { showToast('error','Error','Gagal load dashboard'); }
+}
+
+// ═══════════════════════════════════
+// SEKOLAH
+// ═══════════════════════════════════
+async function loadSekolah() {
+  const { collection, getDocs, query, where } = window._fb;
+  try {
+    const snap = await getDocs(collection(db,'sekolah'));
+    const rows = [];
+    let count = 0;
+    for (const d of snap.docs) {
+      const data = d.data(); count++;
+      const userSnap = await getDocs(query(collection(db,'users'), where('sekolah','==',data.nama)));
+      const userCount = userSnap.size;
+      rows.push(`<tr>
+        <td><strong>${data.nama}</strong></td>
+        <td style="color:var(--muted);font-size:12px">${data.alamat||'-'}</td>
+        <td><span class="badge badge-active">${userCount} pengguna</span></td>
+        <td><span class="badge ${data.status==='aktif'?'badge-active':'badge-inactive'}">${data.status}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="editSekolah('${d.id}')">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('sekolah','${d.id}','${data.nama}')">🗑</button>
+        </td>
+      </tr>`);
+    }
+    document.getElementById('sekolahBody').innerHTML = rows.join('') || '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted)">Belum ada sekolah</td></tr>';
+    document.getElementById('sekolahCount').textContent = count + ' sekolah';
+  } catch(e) { showToast('error','Error','Gagal load sekolah: '+e.message); }
+}
+
+async function loadSekolahDropdown() {
+  const { collection, getDocs } = window._fb;
+  try {
+    const snap = await getDocs(collection(db,'sekolah'));
+    const opts = ['<option value="">Pilih Sekolah</option>'];
+    const filterOpts = ['<option value="">Semua Sekolah</option>'];
+    snap.forEach(d => {
+      opts.push(`<option value="${d.data().nama}">${d.data().nama}</option>`);
+      filterOpts.push(`<option value="${d.data().nama}">${d.data().nama}</option>`);
+    });
+    document.getElementById('guruSekolah').innerHTML = opts.join('');
+    document.getElementById('filterSekolahUser').innerHTML = filterOpts.join('');
+  } catch(e) {}
+}
+
+function openModalSekolah() {
+  document.getElementById('sekolahId').value = '';
+  document.getElementById('sekolahNama').value = '';
+  document.getElementById('sekolahAlamat').value = '';
+  document.getElementById('sekolahStatus').value = 'aktif';
+  document.getElementById('modalSekolahTitle').textContent = 'Tambah Sekolah';
+  openModal('modalSekolah');
+}
+
+async function editSekolah(id) {
+  const { doc, getDoc } = window._fb;
+  const snap = await getDoc(doc(db,'sekolah',id));
+  if (!snap.exists()) return;
+  const data = snap.data();
+  document.getElementById('sekolahId').value = id;
+  document.getElementById('sekolahNama').value = data.nama;
+  document.getElementById('sekolahAlamat').value = data.alamat||'';
+  document.getElementById('sekolahStatus').value = data.status;
+  document.getElementById('modalSekolahTitle').textContent = 'Edit Sekolah';
+  openModal('modalSekolah');
+}
+
+async function saveSekolah() {
+  const { doc, setDoc, serverTimestamp } = window._fb;
+  const id = document.getElementById('sekolahId').value;
+  const nama = document.getElementById('sekolahNama').value.trim();
+  const alamat = document.getElementById('sekolahAlamat').value.trim();
+  const status = document.getElementById('sekolahStatus').value;
+  if (!nama) { showToast('warn','Peringatan','Nama sekolah harus diisi!'); return; }
+  try {
+    const docId = id || nama.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    await setDoc(doc(db,'sekolah',docId), { nama, alamat, status, updatedAt: serverTimestamp() }, {merge:true});
+    closeModal('modalSekolah');
+    loadSekolah(); loadSekolahDropdown(); loadDashboard();
+    addLog('Sekolah', id ? `Edit sekolah: ${nama}` : `Tambah sekolah: ${nama}`);
+    showToast('success','Berhasil', id ? `Sekolah ${nama} diperbarui` : `Sekolah ${nama} ditambahkan`);
+  } catch(e) { showToast('error','Error','Gagal simpan: '+e.message); }
+}
+
+// ═══════════════════════════════════
+// PENGGUNA (GURU & KEPSEK)
+// ═══════════════════════════════════
+async function loadUsers() {
+  const { collection, getDocs, query, where } = window._fb;
+  const filterRole = document.getElementById('filterRole').value;
+  const filterSch = document.getElementById('filterSekolahUser').value;
+  try {
+    let q = collection(db,'users');
+    const snap = await getDocs(q);
+    const rows = [];
+    let count = 0;
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.role === 'admin') return;
+      if (filterRole && data.role !== filterRole) return;
+      if (filterSch && data.sekolah !== filterSch) return;
+      count++;
+      const exp = data.expired ? fmtDate(data.expired) : 'Tidak ada';
+      const expClass = isExpired(data.expired) ? 'badge-inactive' : isExpiringSoon(data.expired) ? 'badge-warn' : 'badge-active';
+      rows.push(`<tr>
+        <td><strong>${data.nama}</strong></td>
+        <td style="font-family:monospace;font-size:12px;color:var(--muted)">${data.username}</td>
+        <td><span class="badge ${data.role==='kepsek'?'badge-kepsek':'badge-guru'}">${data.role==='kepsek'?'Kepsek':'Guru'}</span></td>
+        <td>${data.sekolah||'-'}</td>
+        <td><span class="badge ${expClass}">${exp}</span></td>
+        <td><span class="badge ${data.status==='aktif'?'badge-active':'badge-inactive'}">${data.status}</span></td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="editGuru('${d.id}')">✏️</button>
+          <button class="btn btn-${data.status==='aktif'?'warn':'success'} btn-sm" onclick="toggleStatus('${d.id}','${data.status}')">${data.status==='aktif'?'⏸':'▶'}</button>
+          <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('user','${d.id}','${data.nama}')">🗑</button>
+        </td>
+      </tr>`);
+    });
+    document.getElementById('guruBody').innerHTML = rows.join('') || '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Tidak ada pengguna</td></tr>';
+    document.getElementById('guruCount').textContent = count + ' pengguna';
+  } catch(e) { showToast('error','Error','Gagal load pengguna: '+e.message); }
+}
+
+function openModalGuru() {
+  document.getElementById('guruId').value = '';
+  document.getElementById('guruNama').value = '';
+  document.getElementById('guruUsername').value = '';
+  document.getElementById('guruPassword').value = '';
+  document.getElementById('guruRole').value = 'guru';
+  document.getElementById('guruExpired').value = '';
+  document.getElementById('guruStatus').value = 'aktif';
+  document.getElementById('modalGuruTitle').textContent = 'Tambah Pengguna';
+  openModal('modalGuru');
+}
+
+async function editGuru(id) {
+  const { doc, getDoc } = window._fb;
+  const snap = await getDoc(doc(db,'users',id));
+  if (!snap.exists()) return;
+  const data = snap.data();
+  document.getElementById('guruId').value = id;
+  document.getElementById('guruNama').value = data.nama;
+  document.getElementById('guruUsername').value = data.username;
+  document.getElementById('guruPassword').value = data.password;
+  document.getElementById('guruRole').value = data.role;
+  document.getElementById('guruSekolah').value = data.sekolah;
+  document.getElementById('guruStatus').value = data.status;
+  if (data.expired) {
+    const d = data.expired.toDate ? data.expired.toDate() : new Date(data.expired);
+    document.getElementById('guruExpired').value = d.toISOString().split('T')[0];
+  }
+  document.getElementById('modalGuruTitle').textContent = 'Edit Pengguna';
+  openModal('modalGuru');
+}
+
+async function saveGuru() {
+  const { doc, setDoc, Timestamp, serverTimestamp } = window._fb;
+  const id = document.getElementById('guruId').value;
+  const nama = document.getElementById('guruNama').value.trim();
+  const username = document.getElementById('guruUsername').value.trim();
+  const password = document.getElementById('guruPassword').value;
+  const role = document.getElementById('guruRole').value;
+  const sekolah = document.getElementById('guruSekolah').value;
+  const status = document.getElementById('guruStatus').value;
+  const expiredStr = document.getElementById('guruExpired').value;
+  if (!nama || !username || !password || !sekolah) { showToast('warn','Peringatan','Semua field wajib diisi!'); return; }
+  try {
+    const docId = id || 'u' + Date.now();
+    const expired = expiredStr ? Timestamp.fromDate(new Date(expiredStr)) : null;
+    await setDoc(doc(db,'users',docId), { nama, username, password, role, sekolah, status, expired, updatedAt: serverTimestamp() }, {merge:true});
+    closeModal('modalGuru');
+    loadUsers(); loadDashboard();
+    addLog('Pengguna', id ? `Edit pengguna: ${nama} (${role})` : `Tambah pengguna: ${nama} (${role}) - ${sekolah}`);
+    showToast('success','Berhasil', id ? `Data ${nama} diperbarui` : `Pengguna ${nama} ditambahkan`);
+  } catch(e) { showToast('error','Error','Gagal simpan: '+e.message); }
+}
+
+async function toggleStatus(id, currentStatus) {
+  const { doc, updateDoc, serverTimestamp } = window._fb;
+  const newStatus = currentStatus === 'aktif' ? 'nonaktif' : 'aktif';
+  try {
+    await updateDoc(doc(db,'users',id), { status: newStatus, updatedAt: serverTimestamp() });
+    loadUsers(); loadDashboard();
+    addLog('Pengguna', `Status pengguna ${id} diubah ke: ${newStatus}`);
+    showToast('success','Berhasil', `Status diubah ke ${newStatus}`);
+  } catch(e) { showToast('error','Error','Gagal ubah status'); }
+}
+
+// ═══════════════════════════════════
+// KONTEN
+// ═══════════════════════════════════
+function loadKategoriList() {
+  const list = document.getElementById('kategoriList');
+  list.innerHTML = Object.entries(kontenKategori).map(([k,v]) =>
+    `<div class="nav-item" onclick="loadKontenByKat('${k}',this)">${v}</div>`
+  ).join('');
+}
+
+async function loadKontenByKat(kat, el) {
+  document.querySelectorAll('#kategoriList .nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  const { collection, getDocs, query, where } = window._fb;
+  const snap = await getDocs(query(collection(db,'konten'), where('kategori','==',kat)));
+  const items = [];
+  snap.forEach(d => {
+    const data = d.data();
+    items.push(`<div class="content-item">
+      <div class="content-item-info">
+        <div class="content-item-name">📄 ${data.nama}</div>
+        <div class="content-item-cat">${kontenKategori[data.kategori]||data.kategori}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="editKonten('${d.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${data.nama}')">🗑</button>
+      </div>
+    </div>`);
+  });
+  document.getElementById('kontenList').innerHTML = items.join('') ||
+    `<div class="empty-state"><div class="icon">📝</div><p>Belum ada konten di kategori ini</p><button class="btn btn-primary" style="margin-top:16px" onclick="openModalKonten('${kat}')">+ Tambah Konten</button></div>`;
+}
+
+function openModalKonten(kat='') {
+  document.getElementById('kontenId').value = '';
+  document.getElementById('kontenNama').value = '';
+  document.getElementById('kontenDeskripsi').value = '';
+  document.getElementById('kontenTemplate').value = '';
+  if (kat) document.getElementById('kontenKategori').value = kat;
+  document.getElementById('modalKontenTitle').textContent = 'Tambah Konten';
+  openModal('modalKonten');
+}
+
+async function editKonten(id) {
+  const { doc, getDoc } = window._fb;
+  const snap = await getDoc(doc(db,'konten',id));
+  if (!snap.exists()) return;
+  const data = snap.data();
+  document.getElementById('kontenId').value = id;
+  document.getElementById('kontenNama').value = data.nama;
+  document.getElementById('kontenKategori').value = data.kategori;
+  document.getElementById('kontenDeskripsi').value = data.deskripsi||'';
+  document.getElementById('kontenTemplate').value = data.template||'';
+  document.getElementById('modalKontenTitle').textContent = 'Edit Konten';
+  openModal('modalKonten');
+}
+
+async function saveKonten() {
+  const { doc, setDoc, serverTimestamp } = window._fb;
+  const id = document.getElementById('kontenId').value;
+  const nama = document.getElementById('kontenNama').value.trim();
+  const kategori = document.getElementById('kontenKategori').value;
+  const deskripsi = document.getElementById('kontenDeskripsi').value;
+  const template = document.getElementById('kontenTemplate').value;
+  if (!nama) { showToast('warn','Peringatan','Nama dokumen harus diisi!'); return; }
+  try {
+    const docId = id || 'k' + Date.now();
+    await setDoc(doc(db,'konten',docId), { nama, kategori, deskripsi, template, updatedAt: serverTimestamp() }, {merge:true});
+    closeModal('modalKonten');
+    addLog('Konten', `${id?'Edit':'Tambah'} konten: ${nama}`);
+    showToast('success','Berhasil', `Konten "${nama}" berhasil disimpan & live update ke semua pengguna!`);
+    loadKontenByKat(kategori, document.querySelector(`#kategoriList .nav-item.active`) || document.querySelector('#kategoriList .nav-item'));
+  } catch(e) { showToast('error','Error','Gagal simpan: '+e.message); }
+}
+
+// ═══════════════════════════════════
+// UPDATE APP
+// ═══════════════════════════════════
+async function pushUpdate() {
+  const { doc, setDoc, addDoc, collection, serverTimestamp } = window._fb;
+  const ver = document.getElementById('newVersion').value.trim();
+  const url = document.getElementById('downloadUrl').value.trim();
+  const force = document.getElementById('updateType').value === 'true';
+  const notes = document.getElementById('updateNotes').value.trim();
+  if (!ver || !url) { showToast('warn','Peringatan','Versi dan URL download harus diisi!'); return; }
+  try {
+    await setDoc(doc(db,'appConfig','version'), {
+      current: ver, forceUpdate: force, downloadUrl: url,
+      notes: notes, updatedAt: serverTimestamp()
+    });
+    await addDoc(collection(db,'updateHistory'), {
+      version: ver, url, forceUpdate: force, notes,
+      pushedAt: serverTimestamp(), pushedBy: adminData.nama
+    });
+    document.getElementById('currentVersion').textContent = 'v' + ver;
+    document.getElementById('settingVersion').textContent = 'v' + ver;
+    addLog('Update', `Push update v${ver} (${force?'WAJIB':'opsional'})`);
+    showToast('success','Update Dikirim!', `Semua pengguna akan mendapat notifikasi update v${ver}`);
+    loadUpdateHistory();
+  } catch(e) { showToast('error','Error','Gagal push update: '+e.message); }
+}
+
+async function loadUpdateHistory() {
+  const { collection, getDocs, query, orderBy } = window._fb;
+  try {
+    const snap = await getDocs(query(collection(db,'updateHistory'), orderBy('pushedAt','desc')));
+    const items = [];
+    snap.forEach(d => {
+      const data = d.data();
+      items.push(`<div class="activity-item">
+        <div class="activity-dot" style="background:var(--cyan)"></div>
+        <div>
+          <div class="activity-text"><strong>v${data.version}</strong> — ${data.forceUpdate?'<span style="color:var(--danger)">WAJIB</span>':'Opsional'}</div>
+          <div class="activity-time">${fmtDate(data.pushedAt)} oleh ${data.pushedBy}</div>
+          ${data.notes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">${data.notes}</div>`:''}
+        </div>
+      </div>`);
+    });
+    document.getElementById('updateHistory').innerHTML = items.join('') ||
+      '<div class="empty-state"><div class="icon">🔄</div><p>Belum ada riwayat update</p></div>';
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════
+// NOTIFIKASI
+// ═══════════════════════════════════
+async function sendNotifikasi() {
+  const { collection, addDoc, serverTimestamp } = window._fb;
+  const target = document.getElementById('notifTarget').value;
+  const title = document.getElementById('notifTitle').value.trim();
+  const message = document.getElementById('notifMessage').value.trim();
+  const type = document.getElementById('notifType').value;
+  if (!title || !message) { showToast('warn','Peringatan','Judul dan isi pesan harus diisi!'); return; }
+  try {
+    await addDoc(collection(db,'notifications'), {
+      target, title, message, type,
+      sentAt: serverTimestamp(), sentBy: adminData.nama, read: false
+    });
+    document.getElementById('notifTitle').value = '';
+    document.getElementById('notifMessage').value = '';
+    addLog('Notifikasi', `Broadcast: "${title}" ke ${target}`);
+    showToast('success','Notifikasi Terkirim!', `Pesan "${title}" dikirim ke ${target}`);
+    loadNotifHistory();
+  } catch(e) { showToast('error','Error','Gagal kirim notifikasi: '+e.message); }
+}
+
+async function loadNotifHistory() {
+  const { collection, getDocs, query, orderBy } = window._fb;
+  try {
+    const snap = await getDocs(query(collection(db,'notifications'), orderBy('sentAt','desc')));
+    const items = [];
+    snap.forEach(d => {
+      const data = d.data();
+      const icons = {info:'ℹ️',warn:'⚠️',success:'✅'};
+      items.push(`<div class="activity-item">
+        <div class="activity-dot" style="background:var(--cyan)"></div>
+        <div>
+          <div class="activity-text">${icons[data.type]||'ℹ️'} <strong>${data.title}</strong></div>
+          <div style="font-size:12px;color:var(--text);margin-top:2px">${data.message}</div>
+          <div class="activity-time">Ke: ${data.target} — ${fmtDate(data.sentAt)}</div>
+        </div>
+      </div>`);
+    });
+    document.getElementById('notifHistory').innerHTML = items.join('') ||
+      '<div class="empty-state"><div class="icon">🔔</div><p>Belum ada notifikasi</p></div>';
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════
+// LOG AKTIVITAS
+// ═══════════════════════════════════
+async function addLog(aksi, detail) {
+  const { collection, addDoc, serverTimestamp } = window._fb;
+  try {
+    await addDoc(collection(db,'adminLog'), {
+      admin: adminData.nama, aksi, detail,
+      waktu: serverTimestamp()
+    });
+    // Update activity widget di dashboard
+    const el = document.getElementById('activityLog');
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    item.innerHTML = `<div class="activity-dot" style="background:var(--cyan)"></div><div><div class="activity-text">${detail}</div><div class="activity-time">Baru saja</div></div>`;
+    el.prepend(item);
+    const empties = el.querySelectorAll('.empty-state');
+    empties.forEach(e => e.remove());
+  } catch(e) {}
+}
+
+async function loadLog() {
+  const { collection, getDocs, query, orderBy } = window._fb;
+  try {
+    const snap = await getDocs(query(collection(db,'adminLog'), orderBy('waktu','desc')));
+    const rows = [];
+    snap.forEach(d => {
+      const data = d.data();
+      rows.push(`<tr>
+        <td style="font-size:12px;color:var(--muted)">${fmtDate(data.waktu)}</td>
+        <td>${data.admin}</td>
+        <td><span class="badge badge-active">${data.aksi}</span></td>
+        <td style="font-size:12px">${data.detail}</td>
+      </tr>`);
+    });
+    document.getElementById('logBody').innerHTML = rows.join('') ||
+      '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">Belum ada log</td></tr>';
+  } catch(e) {}
+}
+
+async function clearLog() {
+  if (!confirm('Hapus semua log aktivitas?')) return;
+  const { collection, getDocs, deleteDoc, doc } = window._fb;
+  const snap = await getDocs(collection(db,'adminLog'));
+  for (const d of snap.docs) await deleteDoc(doc(db,'adminLog',d.id));
+  loadLog();
+  showToast('success','Berhasil','Log aktivitas dihapus');
+}
+
+// ═══════════════════════════════════
+// HAPUS (konfirmasi)
+// ═══════════════════════════════════
+function konfirmasiHapus(tipe, id, nama) {
+  document.getElementById('konfirmasiText').textContent = `Hapus ${tipe} "${nama}"? Tindakan ini tidak bisa dibatalkan.`;
+  document.getElementById('konfirmasiBtn').onclick = async () => {
+    const { doc, deleteDoc } = window._fb;
+    const col = tipe==='sekolah'?'sekolah':tipe==='user'?'users':'konten';
+    try {
+      await deleteDoc(doc(db, col, id));
+      closeModal('modalKonfirmasi');
+      if (tipe==='sekolah') { loadSekolah(); loadSekolahDropdown(); }
+      if (tipe==='user') loadUsers();
+      addLog('Hapus', `Hapus ${tipe}: ${nama}`);
+      showToast('success','Dihapus',`${nama} berhasil dihapus`);
+      loadDashboard();
+    } catch(e) { showToast('error','Error','Gagal hapus: '+e.message); }
+  };
+  openModal('modalKonfirmasi');
+}
+
+// ═══════════════════════════════════
+// PENGATURAN
+// ═══════════════════════════════════
+async function loadPengaturan() {
+  loadDashboard();
+  loadUpdateHistory();
+  loadNotifHistory();
+}
+
+async function gantiPassword() {
+  const { doc, updateDoc, getDocs, collection, query, where, serverTimestamp } = window._fb;
+  const oldPass = document.getElementById('oldPass').value;
+  const newPass = document.getElementById('newPass').value;
+  const confirmPass = document.getElementById('confirmPass').value;
+  if (!oldPass || !newPass || !confirmPass) { showToast('warn','Peringatan','Semua field harus diisi!'); return; }
+  if (newPass !== confirmPass) { showToast('warn','Peringatan','Password baru tidak cocok!'); return; }
+  if (newPass.length < 6) { showToast('warn','Peringatan','Password minimal 6 karakter!'); return; }
+  try {
+    const snap = await getDocs(query(collection(db,'users'), where('username','==','admin')));
+    if (snap.empty) { showToast('error','Error','Akun admin tidak ditemukan!'); return; }
+    const adminDoc = snap.docs[0];
+    if (adminDoc.data().password !== oldPass) { showToast('error','Gagal','Password lama salah!'); return; }
+    await updateDoc(doc(db,'users',adminDoc.id), { password: newPass, updatedAt: serverTimestamp() });
+    document.getElementById('oldPass').value = '';
+    document.getElementById('newPass').value = '';
+    document.getElementById('confirmPass').value = '';
+    addLog('Pengaturan','Password admin diperbarui');
+    showToast('success','Berhasil','Password berhasil diperbarui!');
+  } catch(e) { showToast('error','Error','Gagal ubah password: '+e.message); }
+}
+
+// ═══════════════════════════════════
+// LOGOUT
+// ═══════════════════════════════════
+function doLogout() {
+  if (confirm('Keluar dari admin panel?')) {
+    localStorage.removeItem('cimega_user');
+    window.location.href = '../login/login.html';
+  }
+}
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+initApp();
+</script>
+
+  <!-- MUSIC WIDGET -->
+  <div class="music-widget">
+    <div class="mw-bars" id="musicBars">
+      <div class="b"></div><div class="b"></div><div class="b"></div>
+      <div class="b"></div><div class="b"></div>
+    </div>
+    <div class="mw-info">
+      <div class="mw-title" id="musicTitle">Memuat...</div>
+      <div class="mw-sub">Track <span id="musicTrackInfo">—</span> — Kang Prabu</div>
+    </div>
+    <div class="mw-controls">
+      <div class="mw-btn" onclick="CimegaMusic.prev()">⏮</div>
+      <div class="mw-btn mute" id="musicMuteBtn" onclick="CimegaMusic.toggleMute()">🔊</div>
+      <div class="mw-btn" onclick="CimegaMusic.next()">⏭</div>
+    </div>
+  </div>
+  <script src="../../shared/music.js"></script>
+</body>
+</html>
