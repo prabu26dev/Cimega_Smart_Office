@@ -13,7 +13,7 @@
 const CimegaMusic = (() => {
 
   let audio      = null;
-  let state      = { index: 0, muted: false, files: [], total: 7 };
+  let state = { index: 0, muted: false, files: [], total: 7, currentTime: 0 };
   let basePath   = '../../../assets_music/';
   let initialized = false;
 
@@ -40,28 +40,34 @@ const CimegaMusic = (() => {
   }
 
   // ── Load & mainkan lagu ──
-  function loadAndPlay(index) {
-    if (!audio || !state.files.length) return;
-    audio.src    = basePath + state.files[index];
-    audio.volume = state.muted ? 0 : 0.4;
-    audio.play().catch(() => {});
-    updateUI();
+  function loadAndPlay(index, startTime = 0) {
+  if (!audio || !state.files.length) return;
+  audio.src    = basePath + state.files[index];
+  audio.volume = state.muted ? 0 : 0.4;
   }
 
   // ── Init: panggil 1x saat halaman dimuat ──
   async function init(path) {
-    if (initialized) return;
-    initialized = true;
-    if (path) basePath = path;
+  if (initialized) return;
+  initialized = true;
+  if (path) basePath = path;
 
-    audio = new Audio();
-    audio.volume = 0.4;
+  audio = new Audio();
+  audio.volume = 0.4;
+
+  state = await window.cimegaAPI.musicGetState();
 
     // Ambil state dari main process
     state = await window.cimegaAPI.musicGetState();
 
     // Load lagu sesuai state
-    loadAndPlay(state.index);
+    loadAndPlay(state.index, state.currentTime);
+
+    setInterval(() => {
+      if (audio && !audio.paused) {
+        window.cimegaAPI.musicUpdateTime(audio.currentTime);
+      }
+    }, 1000);
 
     // Saat lagu selesai → otomatis next
     audio.addEventListener('ended', async () => {

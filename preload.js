@@ -14,3 +14,9 @@ contextBridge.exposeInMainWorld('cimegaAPI', {
   musicNext:     () => ipcRenderer.invoke('music-next'),
   musicPrev:     () => ipcRenderer.invoke('music-prev'),
 });
+
+contextBridge.exposeInMainWorld('cimegaAPI', {
+  // ... (fungsi lain tetap)
+  musicPrev:     () => ipcRenderer.invoke('music-prev'),
+  musicUpdateTime: (t) => ipcRenderer.invoke('music-update-time', t), //
+});
