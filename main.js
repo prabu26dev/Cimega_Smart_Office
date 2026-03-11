@@ -33,8 +33,9 @@ const musicFiles = [
   'Kang Prabu - Senam Kreasi Cimega.mp3',
 ];
 const musicState = {
-  index: Math.floor(Math.random() * musicFiles.length),
-  muted: false,
+  index:    Math.floor(Math.random() * musicFiles.length),
+  muted:    false,
+  position: 0,   // posisi detik lagu, agar tidak mulai dari awal saat pindah halaman
 };
 
 // ── Update state ───────────────────────────
@@ -86,14 +87,16 @@ ipcMain.handle('get-app-config', () => ({
 
 // Musik
 ipcMain.handle('music-get-state', () => ({
-  index: musicState.index,
-  muted: musicState.muted,
-  files: musicFiles,
-  total: musicFiles.length,
+  index:    musicState.index,
+  muted:    musicState.muted,
+  position: musicState.position || 0,
+  files:    musicFiles,
+  total:    musicFiles.length,
 }));
 ipcMain.handle('music-set-state', (e, s) => {
-  if (typeof s.index !== 'undefined') musicState.index = s.index;
-  if (typeof s.muted !== 'undefined') musicState.muted = s.muted;
+  if (typeof s.index    !== 'undefined') musicState.index    = s.index;
+  if (typeof s.muted    !== 'undefined') musicState.muted    = s.muted;
+  if (typeof s.position !== 'undefined') musicState.position = s.position;
   return musicState;
 });
 ipcMain.handle('music-next', () => {

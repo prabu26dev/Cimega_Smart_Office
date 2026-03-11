@@ -7,41 +7,58 @@
   <style>
     :root{--cyan:#00e5ff;--blue:#0066ff;--dark:#020b18;--dark2:#041428;--dark3:#061a35;--card:rgba(4,20,45,0.95);--border:rgba(0,229,255,0.15);--text:#e0f4ff;--muted:#5a8aaa;--success:#00ff88;--danger:#ff4466;--warn:#ffaa00;--purple:#aa55ff;--sidebar:245px}
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Exo 2',sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden}
+    body{font-family:Arial,sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:12px}
     body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 
     /* SIDEBAR */
     .sidebar{width:var(--sidebar);background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;z-index:10}
-    .sidebar-header{padding:14px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
-    .sidebar-logo{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-    .sidebar-logo img{width:30px;height:30px;object-fit:contain}
-    .sidebar-logo-text{font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.3}
+    .sidebar-header{padding:12px 11px;border-bottom:1px solid var(--border);flex-shrink:0}
+    .sidebar-logo{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+    .sidebar-logo img{width:28px;height:28px;object-fit:contain}
+    .sidebar-logo-text{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.3}
     .sidebar-logo-text span{color:var(--cyan);display:block}
-    .user-card{background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.1);border-radius:10px;padding:10px}
-    .user-name{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .user-role-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 7px;border-radius:20px;margin-top:4px;letter-spacing:1px}
+    .user-card{background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.1);border-radius:9px;padding:9px}
+    .user-name{font-size:12px;font-family:Arial,sans-serif;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-role-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-family:Arial,sans-serif;padding:2px 7px;border-radius:20px;margin-top:3px}
     .role-guru{background:rgba(0,102,255,0.12);color:#66aaff;border:1px solid rgba(0,102,255,0.2)}
     .role-kepsek{background:rgba(170,85,255,0.12);color:#cc88ff;border:1px solid rgba(170,85,255,0.2)}
-    .user-sekolah{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .sidebar-nav{flex:1;overflow-y:auto;padding:6px}
+    .role-ops{background:rgba(255,170,0,0.12);color:var(--warn);border:1px solid rgba(255,170,0,0.2)}
+    .user-sekolah{font-size:10px;font-family:Arial,sans-serif;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-nav{flex:1;overflow-y:auto;padding:5px 6px;min-height:0}
     .sidebar-nav::-webkit-scrollbar{width:3px}
     .sidebar-nav::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
-    .nav-section{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:8px 8px 3px;font-weight:600}
-    .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:1px;font-size:12px;color:var(--muted)}
+    .nav-section{font-size:10px;font-family:Arial,sans-serif;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:7px 8px 2px}
+    .nav-item{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:1px;font-size:12px;font-family:Arial,sans-serif;color:var(--muted)}
     .nav-item:hover{background:rgba(0,229,255,0.07);color:var(--text)}
     .nav-item.active{background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.18)}
-    .nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0}
-    .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700}
-    .sidebar-footer{padding:8px;border-top:1px solid var(--border);flex-shrink:0}
-    .school-tag{font-size:9px;color:var(--muted);line-height:1.4;padding:6px 8px;border:1px solid rgba(0,229,255,0.07);border-radius:7px;margin-bottom:6px}
-    .school-tag strong{color:var(--cyan);display:block;font-size:10px;margin-bottom:1px}
-    .page-settings{background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.08);border-radius:7px;padding:7px;margin-bottom:6px}
-    .ps-title{font-size:9px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+    .nav-icon{font-size:13px;width:15px;text-align:center;flex-shrink:0}
+    .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:1px 5px;border-radius:7px;font-weight:700}
+    .sidebar-footer{padding:7px 7px;border-top:1px solid var(--border);flex-shrink:0}
+
+    /* MUSIK DI SIDEBAR */
+    .sidebar-music{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:8px;padding:7px 9px;margin-bottom:6px}
+    .sm-row1{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+    .sm-bars{display:flex;align-items:flex-end;gap:2px;height:10px;flex-shrink:0}
+    .sm-bars .b{width:3px;border-radius:1px;background:#00e5ff;animation:smbar .75s ease-in-out infinite}
+    .sm-bars .b:nth-child(1){height:4px;animation-delay:0s}.sm-bars .b:nth-child(2){height:8px;animation-delay:.13s}
+    .sm-bars .b:nth-child(3){height:5px;animation-delay:.27s}.sm-bars .b:nth-child(4){height:8px;animation-delay:.08s}.sm-bars .b:nth-child(5){height:4px;animation-delay:.22s}
+    .sm-bars.paused .b{animation-play-state:paused;opacity:.2}
+    @keyframes smbar{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+    .sm-title{font-size:11px;font-family:Arial,sans-serif;color:#e0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+    .sm-sub{font-size:10px;font-family:Arial,sans-serif;color:var(--muted);margin-bottom:4px}
+    .sm-controls{display:flex;gap:4px}
+    .sm-btn{flex:1;padding:3px 2px;border-radius:5px;border:1px solid rgba(0,229,255,0.18);background:rgba(0,229,255,0.05);color:#00e5ff;font-size:11px;cursor:pointer;text-align:center;transition:all .15s}
+    .sm-btn:hover{background:rgba(0,229,255,0.18)}
+
+    .school-tag{font-size:10px;font-family:Arial,sans-serif;color:var(--muted);line-height:1.4;padding:5px 8px;border:1px solid rgba(0,229,255,0.07);border-radius:7px;margin-bottom:5px}
+    .school-tag strong{color:var(--cyan);display:block;font-size:11px;margin-bottom:1px}
+    .page-settings{background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.08);border-radius:7px;padding:6px 7px;margin-bottom:5px}
+    .ps-title{font-size:10px;font-family:Arial,sans-serif;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-weight:700}
     .ps-row{display:flex;gap:3px;margin-bottom:3px;flex-wrap:wrap}
-    .ps-label{font-size:9px;color:var(--muted);margin-bottom:2px}
-    .ps-btn{font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(0,229,255,0.12);background:rgba(0,229,255,0.04);color:var(--muted);cursor:pointer;transition:all .2s}
+    .ps-label{font-size:10px;font-family:Arial,sans-serif;color:var(--muted);margin-bottom:2px}
+    .ps-btn{font-size:10px;font-family:Arial,sans-serif;padding:2px 6px;border-radius:4px;border:1px solid rgba(0,229,255,0.12);background:rgba(0,229,255,0.04);color:var(--muted);cursor:pointer;transition:all .2s}
     .ps-btn.active{background:rgba(0,229,255,0.14);color:var(--cyan);border-color:rgba(0,229,255,0.3)}
-    .btn-logout{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:7px;color:#ff8899;font-size:12px;cursor:pointer;transition:all .2s}
+    .btn-logout{display:flex;align-items:center;gap:7px;width:100%;padding:7px 9px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:7px;color:#ff8899;font-size:12px;font-family:Arial,sans-serif;cursor:pointer;transition:all .2s}
     .btn-logout:hover{background:rgba(255,68,102,0.14)}
 
     /* MAIN */
@@ -199,24 +216,9 @@
     .notif-item:hover{background:rgba(0,229,255,0.04)}
     .notif-item:last-child{border-bottom:none}
 
-    /* MUSIC WIDGET */
-    .music-widget{position:fixed;bottom:16px;right:16px;z-index:999;background:rgba(4,20,45,0.96);border:1px solid rgba(0,229,255,0.2);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:9px;backdrop-filter:blur(12px);box-shadow:0 6px 24px rgba(0,0,0,0.4);min-width:210px}
-    .music-widget:hover{border-color:rgba(0,229,255,0.4)}
-    .mw-bars{display:flex;align-items:flex-end;gap:2px;height:13px;flex-shrink:0}
-    .mw-bars .b{width:3px;border-radius:2px;background:#00e5ff;animation:mwbar .8s ease-in-out infinite}
-    .mw-bars .b:nth-child(1){height:5px;animation-delay:0s}.mw-bars .b:nth-child(2){height:11px;animation-delay:.15s}.mw-bars .b:nth-child(3){height:7px;animation-delay:.3s}.mw-bars .b:nth-child(4){height:11px;animation-delay:.1s}.mw-bars .b:nth-child(5){height:5px;animation-delay:.25s}
-    .mw-bars.paused .b{animation-play-state:paused;opacity:.2}
-    @keyframes mwbar{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
-    .mw-title{font-size:10px;font-weight:600;color:#e0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .mw-sub{font-size:9px;color:#5a8aaa;margin-top:1px}
-    .mw-controls{display:flex;align-items:center;gap:4px}
-    .mw-btn{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,229,255,0.18);background:rgba(0,229,255,0.07);color:#00e5ff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-    .mw-btn:hover{background:rgba(0,229,255,0.2);transform:scale(1.1)}
-    .mw-btn.mute{width:28px;height:28px;font-size:13px}
-
     /* TOAST */
     .toast-wrap{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:7px}
-    .toast{background:var(--dark3);border:1px solid var(--border);border-radius:10px;padding:11px 14px;min-width:240px;display:flex;align-items:center;gap:9px;animation:fadein .3s ease;box-shadow:0 6px 24px rgba(0,0,0,0.4);font-size:12px}
+    .toast{background:var(--dark3);border:1px solid var(--border);border-radius:10px;padding:11px 14px;min-width:240px;display:flex;align-items:center;gap:9px;animation:fadein .3s ease;box-shadow:0 6px 24px rgba(0,0,0,0.4);font-size:12px;font-family:Arial,sans-serif}
     .toast.success{border-color:rgba(0,255,136,0.3)}.toast.error{border-color:rgba(255,68,102,0.3)}.toast.info{border-color:rgba(0,229,255,0.3)}
 
     .empty-state{text-align:center;padding:36px 16px;color:var(--muted)}
@@ -333,6 +335,19 @@
       <div class="ps-row">
         <div class="ps-btn active" id="psPortrait" onclick="setOrientation('Portrait')">Portrait</div>
         <div class="ps-btn" id="psLandscape" onclick="setOrientation('Landscape')">Landscape</div>
+      </div>
+    </div>
+    <!-- ══ MUSIK DI SIDEBAR ══ -->
+    <div class="sidebar-music">
+      <div class="sm-row1">
+        <div class="sm-bars" id="musicBars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+        <div class="sm-title" id="musicTitle">Memuat...</div>
+      </div>
+      <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Kang Prabu</div>
+      <div class="sm-controls">
+        <div class="sm-btn" onclick="CimegaMusic.prev()">⏮</div>
+        <div class="sm-btn" id="musicMuteBtn" onclick="CimegaMusic.toggleMute()">🔊</div>
+        <div class="sm-btn" onclick="CimegaMusic.next()">⏭</div>
       </div>
     </div>
     <div class="btn-logout" onclick="doLogout()"><span>🚪</span> Keluar</div>
@@ -510,20 +525,6 @@
   </div><!-- end content -->
 </div><!-- end main -->
 
-<!-- MUSIC WIDGET -->
-<div class="music-widget">
-  <div class="mw-bars" id="musicBars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
-  <div style="flex:1;min-width:0">
-    <div class="mw-title" id="musicTitle">Memuat...</div>
-    <div class="mw-sub">Track <span id="musicTrackInfo">—</span> — Kang Prabu</div>
-  </div>
-  <div class="mw-controls">
-    <div class="mw-btn" onclick="CimegaMusic.prev()">⏮</div>
-    <div class="mw-btn mute" id="musicMuteBtn" onclick="CimegaMusic.toggleMute()">🔊</div>
-    <div class="mw-btn" onclick="CimegaMusic.next()">⏭</div>
-  </div>
-</div>
-
 <script src="../../shared/music.js"></script>
 <script src="../../shared/updater.js"></script>
 <script>
@@ -540,112 +541,67 @@ let pageSettings = { size:'A4', margin:'Normal', orientation:'Portrait' };
 userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
 if (!userData?.role || userData.role === 'admin') window.location.href = '../login/login.html';
 
-// ── Struktur menu (nama lengkap sesuai file 1.txt) ──
-const _ADM_GURU = [
-  'RPP (Rencana Pelaksanaan Pembelajaran) – Deep Learning',
-  'Modul Ajar – Kurikulum Merdeka (KEMENDIKDASMEN)',
-  'Modul Ajar - Kurikulum Berbasis Cinta (KEMENAG)',
-  'TP (Tujuan Pembelajaran)',
-  'ATP (Tujuan Pembelajaran)',
-  'PROTA (Program Tahunan)',
-  'PROMES (Program Semester)',
-  'Proyek Kokulikuler - Kurikulum Merdeka',
-  'Analisis Soal',
-  'Kisi-Kisi Soal',
-  'Lembar Soal dan Kunci Jawaban',
-  'Daftar Hadir Siswa',
-  'Penilaian Harian (PH)',
-  'Penilaian Tengah Semester (PTS)',
-  'Penilaian Akhir Semester (PAS)',
-  'Rekap Nilai Siswa',
-  'RPP (Rencana Pelaksanaan Pembelajaran) – Kurikulum 2013',
-  'Silabus',
-  'KKM (Kriteria Ketuntasan Minimal)',
-  'Jurnal Mengajar',
-];
-const _ADM_KEPSEK = [
-  'Tugas Pokok dan Fungsi Kepala Sekolah',
-  'Administrasi Manajerial',
-  'Administrasi Supervisi Akademik',
-  'Administrasi Kurikulum',
-  'Administrasi Kesiswaan',
-  'Administrasi Keuangan',
-  'Administrasi Hubungan Masyarakat',
-];
-const _KOSP = [
-  'Karakteristik Satuan Pendidikan',
-  'Visi, Misi, dan Tujuan Satuan Pendidikan',
-  'Pengorganisasian Pembelajaran',
-  'Perencanaan Pembelajaran',
-  'Perencanaan Projek Penguatan Profil 8 dimensi lulusan',
-  'Pendekatan Pembelajaran',
-  'Asesmen',
-  'Pengelolaan Kurikulum',
-];
-const _ADM_UMUM = [
-  'SK Pembagian Tugas Mengajar',
-  'SK Panitia Ujian (UTS, UAS, PAT, PAS, ANBK, USBN)',
-  'SK Wali Kelas',
-  'SK Ekstrakurikuler',
-  'SK Tim Kurikulum',
-  'SK Pengurus OSIS',
-  'SK Tim BOS',
-  'SK Panitia MPLS',
-  'SK Operator Sekolah',
-  'Surat Keputusan Kenaikan Kelas',
-  'Surat Keputusan Kelulusan Siswa',
-  'Daftar Inventaris Barang (Buku Induk Barang)',
-  'Jadwal Pelajaran',
-  'Struktur Organisasi Sekolah',
-  'Kalender Pendidikan',
-  'Tata Tertib Sekolah',
-  'Tata Tertib Guru dan Siswa',
-  'Buku Tamu Kegiatan Sekolah',
-  'Notulen Rapat Dewan Guru',
-];
-const _KEUANGAN = [
-  'Laporan BOS Triwulan',
-  'RKAS (Rencana Kegiatan dan Anggaran Sekolah)',
-  'BKU (Buku Kas Umum)',
-  'Nota Pembelian Barang',
-  'Laporan Realisasi BOS',
-  'Laporan LPJ Dana BOS',
-  'Berita Acara Pembelian/Pengadaan Barang',
-  'Daftar Hadir Penerima Honor BOS',
-];
-const _EVALUASI = [
-  'Evaluasi Diri Sekolah (EDS)',
-  'Instrumen Akreditasi Sekolah',
-  'Laporan Kegiatan Sekolah (MPLS, HUT RI, Pramuka, dll.)',
-  'LPJ Kegiatan (Laporan Pertanggungjawaban)',
-  'Laporan Monitoring & Evaluasi (Monev)',
-  'Laporan Supervisi Kelas',
-  'Berita Acara Rapat',
-  'Berita Acara Penilaian',
-];
-const _PERPUS = [
-  'Administrasi Keanggotaan',
-  'Administrasi Kolektif',
-  'Administrasi Peminjaman',
-  'Administrasi Keuangan',
-  'Administrasi Umum',
-];
-
-const menuData = {
-  guru:[
-    {id:'adm_guru', icon:'📚', title:'Administrasi Guru & Pembelajaran',            desc:'RPP, Modul Ajar, Penilaian, Jurnal',         items:_ADM_GURU},
-    {id:'perpus',   icon:'📖', title:'Administrasi Perpustakaan Lengkap',            desc:'Keanggotaan, Peminjaman, Keuangan',           items:_PERPUS},
-  ],
-  kepsek:[
-    {id:'adm_guru',   icon:'📚', title:'Administrasi Guru & Pembelajaran',           desc:'RPP, Modul Ajar, Penilaian, Jurnal',         items:_ADM_GURU},
-    {id:'adm_kepsek', icon:'🏛️', title:'Administrasi Kepala Sekolah',               desc:'Tugas Pokok, Supervisi, Manajerial, Humas',  items:_ADM_KEPSEK},
-    {id:'kosp',       icon:'📋', title:'Kurikulum Operasional Satuan Pendidikan',    desc:'Karakteristik, Visi Misi, Perencanaan',      items:_KOSP},
-    {id:'adm_umum',   icon:'🏫', title:'Administrasi Umum Sekolah',                  desc:'SK, Inventaris, Jadwal, Tata Tertib',        items:_ADM_UMUM},
-    {id:'keuangan',   icon:'💰', title:'Keuangan & BOS',                             desc:'Laporan BOS, RKAS, BKU, LPJ, Nota',          items:_KEUANGAN},
-    {id:'evaluasi',   icon:'📊', title:'Evaluasi & Pelaporan Sekolah',               desc:'EDS, Akreditasi, Supervisi, Monev',          items:_EVALUASI},
-    {id:'perpus',     icon:'📖', title:'Administrasi Perpustakaan Lengkap',          desc:'Keanggotaan, Peminjaman, Keuangan',           items:_PERPUS},
-  ]
+// ── Struktur kategori (label & icon) ──────────
+const katMeta = {
+  adm_guru:   { icon:'📚', title:'Administrasi Guru & Pembelajaran',         desc:'RPP, Modul Ajar, Penilaian, Jurnal' },
+  adm_kepsek: { icon:'🏛️', title:'Administrasi Kepala Sekolah',              desc:'Tugas Pokok, Supervisi, Manajerial, Humas' },
+  kosp:       { icon:'📋', title:'Kurikulum Operasional Satuan Pendidikan',   desc:'Karakteristik, Visi Misi, Perencanaan' },
+  adm_umum:   { icon:'🏫', title:'Administrasi Umum Sekolah',                 desc:'SK, Inventaris, Jadwal, Tata Tertib' },
+  keuangan:   { icon:'💰', title:'Keuangan & BOS',                            desc:'Laporan BOS, RKAS, BKU, LPJ, Nota' },
+  evaluasi:   { icon:'📊', title:'Evaluasi & Pelaporan Sekolah',              desc:'EDS, Akreditasi, Supervisi, Monev' },
+  perpus:     { icon:'📖', title:'Administrasi Perpustakaan Lengkap',         desc:'Keanggotaan, Peminjaman, Keuangan' },
 };
+
+// Kategori yang tampil per role (jika tidak ada konten visibleTo, pakai fallback ini)
+const katByRole = {
+  guru:   ['adm_guru','perpus'],
+  kepsek: ['adm_guru','adm_kepsek','kosp','adm_umum','keuangan','evaluasi','perpus'],
+  ops:    ['adm_umum','keuangan','evaluasi','perpus'],
+};
+
+// Cache konten dari Firestore (key = katId)
+let _kontenCache = {}; // { adm_guru: [{id,nama,visibleTo,...},...], ... }
+let _menuDataDynamic = []; // hasil build setelah load Firestore
+
+// ── Load semua konten dari Firestore (filter visibleTo) ──
+async function loadKontenDynamic() {
+  const { collection, getDocs } = window._fb;
+  const roles = userData.roles || [userData.role || 'guru'];
+  try {
+    const snap = await getDocs(collection(db, 'konten'));
+    const byKat = {};
+    snap.forEach(d => {
+      const data = d.data();
+      // Filter: tampilkan jika visibleTo mengandung salah satu role user
+      // Jika visibleTo tidak ada (dokumen lama), tampilkan ke semua
+      const visible = data.visibleTo || ['guru', 'kepsek', 'ops'];
+      const canSee  = roles.some(r => visible.includes(r));
+      if (!canSee) return;
+      if (!byKat[data.kategori]) byKat[data.kategori] = [];
+      byKat[data.kategori].push({ id: d.id, nama: data.nama, ...data });
+    });
+    _kontenCache = byKat;
+
+    // Susun menu dinamis berdasarkan kategori yang punya konten
+    const orderedKats = katByRole[roles[0]] || katByRole.guru;
+    _menuDataDynamic = [];
+    orderedKats.forEach(katId => {
+      const docs = byKat[katId] || [];
+      if (docs.length === 0) return; // skip kategori kosong
+      const meta = katMeta[katId] || { icon:'📄', title: katId, desc:'' };
+      _menuDataDynamic.push({
+        id: katId,
+        icon: meta.icon,
+        title: meta.title,
+        desc: meta.desc,
+        items: docs.map(d => d.nama),
+        docs: docs,
+      });
+    });
+  } catch(e) {
+    console.error('loadKontenDynamic error', e);
+  }
+}
 
 // ── Clock ──────────────────────────────────
 setInterval(()=>{
@@ -679,20 +635,20 @@ function goBackToList(){showPage('doclist','DAFTAR DOKUMEN');}
 
 // ── Sidebar ────────────────────────────────
 function buildSidebar(){
-  const role=userData.role;
-  const menus=menuData[role]||[];
+  const roles = userData.roles || [userData.role || 'guru'];
+  const role  = roles[0];
   let html=`<div class="nav-section">Menu Utama</div>
   <div class="nav-item active" onclick="navTo(this,'beranda','BERANDA',loadBeranda)"><span class="nav-icon">🏠</span>Beranda</div>
   <div class="nav-section">Dokumen</div>`;
-  menus.forEach(m=>{
-    html+=`<div class="nav-item" onclick="navToMenu(this,'${m.id}')"><span class="nav-icon">${m.icon}</span><span style="flex:1;font-size:11px;line-height:1.3">${m.title}</span></div>`;
+  _menuDataDynamic.forEach(m=>{
+    html+=`<div class="nav-item" onclick="navToMenu(this,'${m.id}')"><span class="nav-icon">${m.icon}</span><span style="flex:1;font-size:11px;font-family:Arial,sans-serif;line-height:1.3">${m.title}</span></div>`;
   });
   html+=`<div class="nav-section">Kolaborasi</div>
   <div class="nav-item" onclick="navTo(this,'shared','DOKUMEN BERSAMA',loadShared)"><span class="nav-icon">📤</span>Dok. Bersama</div>`;
-  if(role==='guru'){
+  if(roles.includes('guru')){
     html+=`<div class="nav-item" onclick="navTo(this,'approval-guru','DIKIRIM KE KEPSEK',loadMySubmissions)"><span class="nav-icon">📬</span>Dikirim ke Kepsek<span class="nav-badge" id="submBadge" style="display:none">!</span></div>`;
   }
-  if(role==='kepsek'){
+  if(roles.includes('kepsek')){
     html+=`<div class="nav-item" onclick="navTo(this,'monitor','MONITOR GURU',loadMonitor)"><span class="nav-icon">👁️</span>Monitor Guru</div>
     <div class="nav-item" onclick="navTo(this,'validasi','VALIDASI DOKUMEN',()=>loadApprovals('pending'))"><span class="nav-icon">✅</span>Validasi Dok.<span class="nav-badge" id="approvalBadge" style="display:none">!</span></div>
     <div class="nav-item" onclick="navTo(this,'rekap','REKAP DOKUMEN',loadRekap)"><span class="nav-icon">📊</span>Rekap Dokumen</div>`;
@@ -713,15 +669,14 @@ function navToMenu(el,menuId){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   el.classList.add('active');
   pageHistory=[];
-  const menus=menuData[userData.role]||[];
-  renderMenuGrid(menus,menuId);
+  renderMenuGrid(_menuDataDynamic, menuId);
   showPage('menu','ADMINISTRASI');
 }
 
 // ── Menu grid ──────────────────────────────
-function renderMenuGrid(menus,focusId){
+function renderMenuGrid(menus, focusId){
   document.getElementById('menuGrid').innerHTML=menus.map(m=>`
-    <div class="menu-card" onclick="openDocList('${m.id}','${m.title}',${JSON.stringify(m.items)})">
+    <div class="menu-card" onclick="openDocList('${m.id}','${m.title.replace(/'/g,"\\'")}',${JSON.stringify(m.items)})">
       <div class="menu-card-count">${m.items.length}</div>
       <div class="menu-card-icon">${m.icon}</div>
       <div class="menu-card-title">${m.title}</div>
@@ -901,8 +856,9 @@ function renderShared(filter){
   let items=allShared;
   if(filter==='school') items=allShared.filter(d=>d.sharedById!==userData.id && d.target==='school');
   if(filter==='mine') items=allShared.filter(d=>d.sharedById===userData.id);
-  // Guru hanya lihat target=school, bukan target kepsek/approval
-  if(userData.role==='guru') items=items.filter(d=>d.target==='school'||d.sharedById===userData.id);
+  // Filter berdasarkan role: guru hanya lihat target=school, kepsek lihat semua
+  const roles = userData.roles || [userData.role || 'guru'];
+  if(!roles.includes('kepsek')) items=items.filter(d=>d.target==='school'||d.sharedById===userData.id);
   if(items.length===0){listEl.innerHTML='<div class="empty-state"><div class="icon">📤</div><p>Tidak ada dokumen</p></div>';return;}
   listEl.innerHTML=items.map(d=>`
     <div class="shared-item">
@@ -1285,25 +1241,28 @@ function doUpdate(){if(window._updateUrl) require('electron').shell.openExternal
 
 // ── Beranda ────────────────────────────────
 function loadBeranda(){
-  const isKepsek=userData.role==='kepsek';
-  document.getElementById('welcomeAvatar').textContent=isKepsek?'🏛️':'👨‍🏫';
-  document.getElementById('welcomeName').textContent='Selamat datang, '+userData.nama+'!';
-  document.getElementById('welcomeSub').textContent=userData.sekolah+' — '+(isKepsek?'Kepala Sekolah':'Guru');
+  const roles  = userData.roles || [userData.role || 'guru'];
+  const isKepsek = roles.includes('kepsek');
+  const isOps    = roles.includes('ops');
+  const roleLabel = isKepsek ? 'Kepala Sekolah' : (isOps ? 'Operator' : 'Guru');
+  const roleIcon  = isKepsek ? '🏛️' : (isOps ? '💻' : '👨‍🏫');
+  document.getElementById('welcomeAvatar').textContent = roleIcon;
+  document.getElementById('welcomeName').textContent   = 'Selamat datang, '+userData.nama+'!';
+  document.getElementById('welcomeSub').textContent    = userData.sekolah+' — '+roleLabel;
   const now=new Date();
   document.getElementById('welcomeDate').innerHTML=now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br/><span style="font-size:10px;color:var(--cyan)">'+now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})+'</span>';
-  const menus=menuData[userData.role]||[];
-  const total=menus.reduce((a,m)=>a+m.items.length,0);
+  const total=_menuDataDynamic.reduce((a,m)=>a+m.items.length,0);
   document.getElementById('homeStats').innerHTML=[
-    {icon:'📂',num:menus.length,label:'Kategori Menu'},
-    {icon:'📄',num:total,label:'Total Dokumen'},
-    {icon:'📤',num:isKepsek?'Monitor':'Share',label:isKepsek?'Monitor Guru':'Dok Bersama'},
-    {icon:'✨',num:'AI',label:'Powered'},
+    {icon:'📂', num:_menuDataDynamic.length, label:'Kategori Menu'},
+    {icon:'📄', num:total,                   label:'Total Dokumen'},
+    {icon:'📤', num:isKepsek?'Monitor':'Share', label:isKepsek?'Monitor Guru':'Dok Bersama'},
+    {icon:'✨', num:'AI',                     label:'Powered'},
   ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
-  document.getElementById('quickMenuHome').innerHTML=menus.slice(0,4).map(m=>`
+  document.getElementById('quickMenuHome').innerHTML=_menuDataDynamic.slice(0,4).map(m=>`
     <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(0,229,255,0.06);cursor:pointer"
-      onclick="openDocList('${m.id}','${m.title}',${JSON.stringify(m.items)})">
+      onclick="openDocList('${m.id}','${m.title.replace(/'/g,"\\'")}',${JSON.stringify(m.items)})">
       <span style="font-size:16px">${m.icon}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${m.title}</div><div style="font-size:10px;color:var(--muted)">${m.items.length} dokumen</div></div>
+      <div style="flex:1"><div style="font-size:12px;font-family:Arial,sans-serif;font-weight:600;color:var(--text)">${m.title}</div><div style="font-size:10px;color:var(--muted)">${m.items.length} dokumen</div></div>
       <span style="color:var(--muted);font-size:11px">▶</span>
     </div>`).join('');
 }
@@ -1315,15 +1274,17 @@ async function loadProfil(){
     const snap=await getDoc(doc(db,'users',userData.id));
     if(!snap.exists()) return;
     const data=snap.data();
-    const isKepsek=data.role==='kepsek';
-    document.getElementById('profilAvatar').textContent=isKepsek?'🏛️':'👨‍🏫';
-    document.getElementById('profilNama').textContent=data.nama;
-    document.getElementById('profilRoleBadge').innerHTML=`<span class="badge ${isKepsek?'badge-shared':'badge-guru'}">${isKepsek?'Kepala Sekolah':'Guru'}</span>`;
-    document.getElementById('profilSekolah').textContent=data.sekolah;
-    document.getElementById('profilUsername').textContent=data.username;
+    const roles  = data.roles || [data.role || 'guru'];
+    const isKepsek = roles.includes('kepsek');
+    const roleMap = {guru:'👨‍🏫 Guru', kepsek:'🏛️ Kepsek', ops:'💻 Operator'};
+    document.getElementById('profilAvatar').textContent = isKepsek?'🏛️':'👨‍🏫';
+    document.getElementById('profilNama').textContent   = data.nama;
+    document.getElementById('profilRoleBadge').innerHTML = roles.map(r=>`<span class="badge badge-approved">${roleMap[r]||r}</span>`).join(' ');
+    document.getElementById('profilSekolah').textContent  = data.sekolah;
+    document.getElementById('profilUsername').textContent = data.username;
     const exp=data.expired?(data.expired.toDate?data.expired.toDate():new Date(data.expired)):null;
-    document.getElementById('profilExpired').textContent=exp?exp.toLocaleDateString('id-ID'):'-';
-    document.getElementById('profilStatus').innerHTML=`<span class="badge ${data.status==='aktif'?'badge-approved':'badge-rejected'}">${data.status}</span>`;
+    document.getElementById('profilExpired').textContent = exp?exp.toLocaleDateString('id-ID'):'-';
+    document.getElementById('profilStatus').innerHTML = `<span class="badge ${data.status==='aktif'?'badge-approved':'badge-rejected'}">${data.status}</span>`;
   }catch(e){}
 }
 
@@ -1362,10 +1323,22 @@ function doLogout(){if(confirm('Keluar dari sistem?')){localStorage.removeItem('
 // ── Setup sidebar user info ─────────────────
 function setupUser(){
   document.getElementById('sidebarNama').textContent=userData.nama||'-';
-  const isKepsek=userData.role==='kepsek';
-  const rb=document.getElementById('sidebarRole');
-  rb.className='user-role-badge '+(isKepsek?'role-kepsek':'role-guru');
-  rb.textContent=isKepsek?'👑 Kepala Sekolah':'👨‍🏫 Guru';
+  const roles = userData.roles || [userData.role || 'guru'];
+  // Tampilkan badge untuk semua jabatan
+  const roleMap = {
+    guru:   { cls:'role-guru',   label:'👨‍🏫 Guru' },
+    kepsek: { cls:'role-kepsek', label:'🏛️ Kepsek' },
+    ops:    { cls:'role-ops',    label:'💻 Operator' },
+  };
+  const rb = document.getElementById('sidebarRole');
+  if(roles.length === 1) {
+    const r = roleMap[roles[0]] || { cls:'role-guru', label: roles[0] };
+    rb.className = 'user-role-badge ' + r.cls;
+    rb.textContent = r.label;
+  } else {
+    rb.className = 'user-role-badge role-guru';
+    rb.textContent = roles.map(r => roleMap[r]?.label || r).join(' · ');
+  }
   document.getElementById('sidebarSekolah').textContent=userData.sekolah||'-';
   document.getElementById('schoolName').textContent=userData.sekolah||'SDN Cimega';
 }
@@ -1373,28 +1346,42 @@ function setupUser(){
 // ── INIT ───────────────────────────────────
 async function initApp(){
   try{
-    CimegaMusic.init('../../../assets_music/');
     const firebaseConfig=await window.cimegaAPI.getFirebaseConfig();
     const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
     const{getFirestore,collection,doc,getDoc,getDocs,addDoc,updateDoc,deleteDoc,query,where,orderBy,serverTimestamp,Timestamp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
     const fbApp=initializeApp(firebaseConfig);
     db=getFirestore(fbApp);
     window._fb={collection,doc,getDoc,getDocs,addDoc,updateDoc,deleteDoc,query,where,orderBy,serverTimestamp,Timestamp};
+
+    // Normalisasi roles dari localStorage
+    if(!userData.roles) userData.roles = userData.role ? [userData.role] : ['guru'];
+
+    // Load konten dari Firestore dengan filter visibleTo
+    await loadKontenDynamic();
+
     setupUser();
     buildSidebar();
     loadBeranda();
     loadNotifications();
-    // Inisialisasi & jalankan auto updater
-    await CimegaUpdater.init({ owner: 'prabu26dev', repo: 'Cimega_Smart_Office' });
-    CimegaUpdater.startChecking(db);
-    // Cek pending approval untuk kepsek
-    if(userData.role==='kepsek'){
+
+    // Musik (lanjut dari posisi terakhir - tanpa jeda)
+    CimegaMusic.init('../../../assets_music/');
+
+    // Auto updater
+    try{
+      await CimegaUpdater.init({ owner: 'prabu26dev', repo: 'Cimega_Smart_Office' });
+      CimegaUpdater.startChecking(db);
+    }catch(e){}
+
+    // Badge approval untuk kepsek/multi-role
+    const roles = userData.roles || [userData.role];
+    if(roles.includes('kepsek')){
       try{
         const snap=await getDocs(query(collection(db,'shared_docs'),where('sekolah','==',userData.sekolah),where('target','==','approval'),where('status','==','pending')));
         if(!snap.empty){const b=document.getElementById('approvalBadge');if(b){b.style.display='';b.textContent=snap.size;}}
       }catch(e){}
     }
-  }catch(e){console.error(e);}
+  }catch(e){console.error('initApp error',e);}
 }
 
 initApp();
