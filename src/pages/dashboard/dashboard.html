@@ -530,6 +530,237 @@
       </div>
     </div>
 
+    <div class="page" id="page-ai">
+      <div class="section-title">✨ AI <span>Asisten</span></div>
+
+      <!-- Tab bar -->
+      <div class="ai-tabs" id="aiTabs">
+        <div class="ai-tab active" data-tab="rpp"     onclick="switchAiTab('rpp',this)">📝 RPP / Modul Ajar</div>
+        <div class="ai-tab"        data-tab="surat"   onclick="switchAiTab('surat',this)">📄 SK & Surat</div>
+        <div class="ai-tab"        data-tab="chat"    onclick="switchAiTab('chat',this)">💬 Chatbot Kurikulum</div>
+        <div class="ai-tab"        data-tab="analisis" onclick="switchAiTab('analisis',this)">📊 Analisis Nilai</div>
+      </div>
+
+      <!-- TAB 1: RPP / MODUL AJAR -->
+      <div class="ai-panel" id="aiPanel-rpp">
+        <div class="grid-2" style="gap:12px;align-items:start">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ PARAMETER DOKUMEN</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Jenis Dokumen</label>
+                <select class="form-control" id="aiDocType">
+                  <option value="rpp_dl">RPP Deep Learning</option>
+                  <option value="modul_merdeka">Modul Ajar – Kurikulum Merdeka</option>
+                  <option value="modul_kemenag">Modul Ajar – Kurikulum Berbasis Cinta</option>
+                  <option value="rpp_k13">RPP Kurikulum 2013</option>
+                  <option value="prota">Program Tahunan (PROTA)</option>
+                  <option value="promes">Program Semester (PROMES)</option>
+                  <option value="atp">Alur Tujuan Pembelajaran (ATP)</option>
+                  <option value="silabus">Silabus</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mata Pelajaran</label>
+                <select class="form-control" id="aiMapel">
+                  <option>Matematika</option>
+                  <option>Bahasa Indonesia</option>
+                  <option>IPA</option>
+                  <option>IPS</option>
+                  <option>PPKN</option>
+                  <option>PJOK</option>
+                  <option>Seni Budaya</option>
+                  <option>Pendidikan Agama Islam</option>
+                  <option>Bahasa Sunda</option>
+                  <option>Bahasa Inggris</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kelas / Fase</label>
+                <select class="form-control" id="aiKelas">
+                  <option>Kelas I / Fase A</option>
+                  <option>Kelas II / Fase A</option>
+                  <option>Kelas III / Fase B</option>
+                  <option>Kelas IV / Fase B</option>
+                  <option>Kelas V / Fase C</option>
+                  <option>Kelas VI / Fase C</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Semester</label>
+                <select class="form-control" id="aiSemester">
+                  <option>Semester 1</option>
+                  <option>Semester 2</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Materi / Tema</label>
+                <input class="form-control" id="aiMateri" placeholder="cth: Bilangan Cacah, Ekosistem, dll."/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Alokasi Waktu</label>
+                <input class="form-control" id="aiWaktu" placeholder="cth: 2 x 35 menit"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Catatan Tambahan <span style="color:var(--muted)">(opsional)</span></label>
+                <textarea class="form-control" id="aiCatatan" rows="2" placeholder="Pendekatan khusus, metode, dll."></textarea>
+              </div>
+              <button class="btn btn-primary" id="aiRppBtn" onclick="generateRPP()" style="width:100%;margin-top:4px">
+                ✨ Generate dengan AI
+              </button>
+            </div>
+          </div>
+          <div class="card" style="height:fit-content">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="card-title">📄 HASIL GENERATE</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" id="aiRppCopyBtn" onclick="copyAiResult('aiRppResult')" style="display:none">📋 Copy</button>
+                <button class="btn btn-ghost btn-sm" id="aiRppSaveBtn" onclick="saveAiResult('aiRppResult','rpp')" style="display:none">💾 Simpan</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="aiRppResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">✨</div>
+                  <div style="font-size:13px">Isi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: SK & SURAT -->
+      <div class="ai-panel" id="aiPanel-surat" style="display:none">
+        <div class="grid-2" style="gap:12px;align-items:start">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ PARAMETER SURAT / SK</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Jenis Dokumen</label>
+                <select class="form-control" id="aiSuratType">
+                  <option value="sk_tugas">SK Pembagian Tugas Mengajar</option>
+                  <option value="sk_wali">SK Wali Kelas</option>
+                  <option value="sk_panitia">SK Panitia Ujian</option>
+                  <option value="sk_ekskul">SK Ekstrakurikuler</option>
+                  <option value="sk_bos">SK Tim BOS</option>
+                  <option value="notulen">Notulen Rapat</option>
+                  <option value="laporan">Laporan Kegiatan</option>
+                  <option value="berita_acara">Berita Acara</option>
+                  <option value="lpj">LPJ Kegiatan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tahun Pelajaran / Anggaran</label>
+                <input class="form-control" id="aiTahun" value="2025/2026"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Detail Isi <span style="color:var(--muted)">(nama guru, kegiatan, dll.)</span></label>
+                <textarea class="form-control" id="aiSuratDetail" rows="5" placeholder="cth: Guru: Cep Suyud mengajar Matematika kelas IV, Heri mengajar IPA kelas V, dst..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Catatan Tambahan <span style="color:var(--muted)">(opsional)</span></label>
+                <textarea class="form-control" id="aiSuratCatatan" rows="2" placeholder="Format khusus, poin penting, dll."></textarea>
+              </div>
+              <button class="btn btn-primary" id="aiSuratBtn" onclick="generateSurat()" style="width:100%;margin-top:4px">
+                ✨ Generate dengan AI
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="card-title">📄 HASIL GENERATE</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" id="aiSuratCopyBtn" onclick="copyAiResult('aiSuratResult')" style="display:none">📋 Copy</button>
+                <button class="btn btn-ghost btn-sm" id="aiSuratSaveBtn" onclick="saveAiResult('aiSuratResult','surat')" style="display:none">💾 Simpan</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="aiSuratResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">📄</div>
+                  <div style="font-size:13px">Isi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: CHATBOT KURIKULUM -->
+      <div class="ai-panel" id="aiPanel-chat" style="display:none">
+        <div class="card" style="height:calc(100vh - 220px);display:flex;flex-direction:column">
+          <div class="card-header"><div class="card-title">💬 CHATBOT KURIKULUM & ADMINISTRASI</div></div>
+          <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0">
+            <div class="chat-msg chat-ai">
+              <div class="chat-bubble">Halo! Saya asisten AI untuk kurikulum dan administrasi SDN Cimega. Silakan tanya apa saja tentang Kurikulum Merdeka, RPP, administrasi sekolah, atau hal lainnya. 😊</div>
+            </div>
+          </div>
+          <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+            <input class="form-control" id="chatInput" placeholder="Ketik pertanyaan... (Enter untuk kirim)"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
+              style="flex:1"/>
+            <button class="btn btn-primary" onclick="sendChat()" style="flex-shrink:0;padding:8px 16px">Kirim ➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: ANALISIS NILAI -->
+      <div class="ai-panel" id="aiPanel-analisis" style="display:none">
+        <div class="grid-2" style="gap:12px;align-items:start">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ INPUT DATA NILAI</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Jenis Analisis</label>
+                <select class="form-control" id="aiAnalisisType">
+                  <option value="rekap">Rekap & Statistik Kelas</option>
+                  <option value="remedial">Identifikasi Siswa Remedial</option>
+                  <option value="rapor">Deskripsi Rapor per Siswa</option>
+                  <option value="progres">Analisis Progres Belajar</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mata Pelajaran</label>
+                <input class="form-control" id="aiAnalisisMapel" placeholder="cth: Matematika"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kelas</label>
+                <input class="form-control" id="aiAnalisisKelas" placeholder="cth: IV A"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">KKM</label>
+                <input class="form-control" id="aiAnalisisKKM" placeholder="cth: 70" type="number"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data Nilai Siswa</label>
+                <textarea class="form-control" id="aiAnalisisNilai" rows="8"
+                  placeholder="Format: Nama Siswa: Nilai&#10;cth:&#10;Ahmad: 85&#10;Budi: 62&#10;Cici: 90&#10;Deni: 55&#10;Eka: 78"></textarea>
+              </div>
+              <button class="btn btn-primary" onclick="generateAnalisis()" style="width:100%;margin-top:4px">
+                ✨ Analisis dengan AI
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="card-title">📊 HASIL ANALISIS</div>
+              <button class="btn btn-ghost btn-sm" id="aiAnalisisCopyBtn" onclick="copyAiResult('aiAnalisisResult')" style="display:none">📋 Copy</button>
+            </div>
+            <div class="card-body">
+              <div id="aiAnalisisResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">📊</div>
+                  <div style="font-size:13px">Masukkan data nilai siswa<br/>lalu klik <strong style="color:var(--cyan)">Analisis dengan AI</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -561,21 +792,24 @@ const katMeta={
   perpus:     {icon:'📖',title:'Administrasi Perpustakaan Lengkap',       desc:'Keanggotaan, Peminjaman, Keuangan'},
 };
 
-// ★ BARU: katByRole mencakup bendahara
+// Kategori per role — urutan standar global
+// visibleTo di setiap dokumen menentukan siapa yang bisa melihat isinya
 const katByRole={
-  guru:      ['adm_guru','perpus'],
+  guru:      ['adm_guru','adm_umum','evaluasi','perpus'],
   kepsek:    ['adm_guru','adm_kepsek','kosp','adm_umum','keuangan','evaluasi','perpus'],
-  bendahara: ['keuangan','evaluasi','perpus'],
+  bendahara: ['keuangan','evaluasi'],
   ops:       ['adm_umum','keuangan','evaluasi','perpus'],
 };
 
-// ── Tentukan urutan kategori berdasarkan semua role user ──
+// Urutan tampil global (dari yang paling sering dipakai guru)
+const KAT_ORDER = ['adm_guru','adm_kepsek','kosp','adm_umum','keuangan','evaluasi','perpus'];
+
+// Gabungkan semua kategori dari semua role yang dimiliki user
+// Ini penting untuk guru merangkap bendahara / ops
 function getOrderedKats(roles){
-  if(roles.includes('kepsek'))    return katByRole.kepsek;
-  if(roles.includes('bendahara')&&roles.includes('ops')) return katByRole.ops; // ops lebih luas
-  if(roles.includes('bendahara')) return katByRole.bendahara;
-  if(roles.includes('ops'))       return katByRole.ops;
-  return katByRole.guru;
+  const merged = new Set();
+  roles.forEach(r => { (katByRole[r]||[]).forEach(k => merged.add(k)); });
+  return KAT_ORDER.filter(k => merged.has(k));
 }
 
 // ── Load konten dari Firestore ─────────────
@@ -1638,235 +1872,3 @@ initApp();
 <script src="../../shared/music.js"></script>
 <script src="../../shared/updater.js"></script>
 </body>
-</html>
-    <!-- ══ AI ASISTEN ══ -->
-    <div class="page" id="page-ai">
-      <div class="section-title">✨ AI <span>Asisten</span></div>
-
-      <!-- Tab bar -->
-      <div class="ai-tabs" id="aiTabs">
-        <div class="ai-tab active" data-tab="rpp"     onclick="switchAiTab('rpp',this)">📝 RPP / Modul Ajar</div>
-        <div class="ai-tab"        data-tab="surat"   onclick="switchAiTab('surat',this)">📄 SK & Surat</div>
-        <div class="ai-tab"        data-tab="chat"    onclick="switchAiTab('chat',this)">💬 Chatbot Kurikulum</div>
-        <div class="ai-tab"        data-tab="analisis" onclick="switchAiTab('analisis',this)">📊 Analisis Nilai</div>
-      </div>
-
-      <!-- TAB 1: RPP / MODUL AJAR -->
-      <div class="ai-panel" id="aiPanel-rpp">
-        <div class="grid-2" style="gap:12px;align-items:start">
-          <div class="card">
-            <div class="card-header"><div class="card-title">⚙️ PARAMETER DOKUMEN</div></div>
-            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
-              <div class="form-group">
-                <label class="form-label">Jenis Dokumen</label>
-                <select class="form-control" id="aiDocType">
-                  <option value="rpp_dl">RPP Deep Learning</option>
-                  <option value="modul_merdeka">Modul Ajar – Kurikulum Merdeka</option>
-                  <option value="modul_kemenag">Modul Ajar – Kurikulum Berbasis Cinta</option>
-                  <option value="rpp_k13">RPP Kurikulum 2013</option>
-                  <option value="prota">Program Tahunan (PROTA)</option>
-                  <option value="promes">Program Semester (PROMES)</option>
-                  <option value="atp">Alur Tujuan Pembelajaran (ATP)</option>
-                  <option value="silabus">Silabus</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Mata Pelajaran</label>
-                <select class="form-control" id="aiMapel">
-                  <option>Matematika</option>
-                  <option>Bahasa Indonesia</option>
-                  <option>IPA</option>
-                  <option>IPS</option>
-                  <option>PPKN</option>
-                  <option>PJOK</option>
-                  <option>Seni Budaya</option>
-                  <option>Pendidikan Agama Islam</option>
-                  <option>Bahasa Sunda</option>
-                  <option>Bahasa Inggris</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Kelas / Fase</label>
-                <select class="form-control" id="aiKelas">
-                  <option>Kelas I / Fase A</option>
-                  <option>Kelas II / Fase A</option>
-                  <option>Kelas III / Fase B</option>
-                  <option>Kelas IV / Fase B</option>
-                  <option>Kelas V / Fase C</option>
-                  <option>Kelas VI / Fase C</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Semester</label>
-                <select class="form-control" id="aiSemester">
-                  <option>Semester 1</option>
-                  <option>Semester 2</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Materi / Tema</label>
-                <input class="form-control" id="aiMateri" placeholder="cth: Bilangan Cacah, Ekosistem, dll."/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Alokasi Waktu</label>
-                <input class="form-control" id="aiWaktu" placeholder="cth: 2 x 35 menit"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Catatan Tambahan <span style="color:var(--muted)">(opsional)</span></label>
-                <textarea class="form-control" id="aiCatatan" rows="2" placeholder="Pendekatan khusus, metode, dll."></textarea>
-              </div>
-              <button class="btn btn-primary" id="aiRppBtn" onclick="generateRPP()" style="width:100%;margin-top:4px">
-                ✨ Generate dengan AI
-              </button>
-            </div>
-          </div>
-          <div class="card" style="height:fit-content">
-            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-              <div class="card-title">📄 HASIL GENERATE</div>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-ghost btn-sm" id="aiRppCopyBtn" onclick="copyAiResult('aiRppResult')" style="display:none">📋 Copy</button>
-                <button class="btn btn-ghost btn-sm" id="aiRppSaveBtn" onclick="saveAiResult('aiRppResult','rpp')" style="display:none">💾 Simpan</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div id="aiRppResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
-                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-                  <div style="font-size:40px;margin-bottom:12px">✨</div>
-                  <div style="font-size:13px">Isi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 2: SK & SURAT -->
-      <div class="ai-panel" id="aiPanel-surat" style="display:none">
-        <div class="grid-2" style="gap:12px;align-items:start">
-          <div class="card">
-            <div class="card-header"><div class="card-title">⚙️ PARAMETER SURAT / SK</div></div>
-            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
-              <div class="form-group">
-                <label class="form-label">Jenis Dokumen</label>
-                <select class="form-control" id="aiSuratType">
-                  <option value="sk_tugas">SK Pembagian Tugas Mengajar</option>
-                  <option value="sk_wali">SK Wali Kelas</option>
-                  <option value="sk_panitia">SK Panitia Ujian</option>
-                  <option value="sk_ekskul">SK Ekstrakurikuler</option>
-                  <option value="sk_bos">SK Tim BOS</option>
-                  <option value="notulen">Notulen Rapat</option>
-                  <option value="laporan">Laporan Kegiatan</option>
-                  <option value="berita_acara">Berita Acara</option>
-                  <option value="lpj">LPJ Kegiatan</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Tahun Pelajaran / Anggaran</label>
-                <input class="form-control" id="aiTahun" value="2025/2026"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Detail Isi <span style="color:var(--muted)">(nama guru, kegiatan, dll.)</span></label>
-                <textarea class="form-control" id="aiSuratDetail" rows="5" placeholder="cth: Guru: Cep Suyud mengajar Matematika kelas IV, Heri mengajar IPA kelas V, dst..."></textarea>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Catatan Tambahan <span style="color:var(--muted)">(opsional)</span></label>
-                <textarea class="form-control" id="aiSuratCatatan" rows="2" placeholder="Format khusus, poin penting, dll."></textarea>
-              </div>
-              <button class="btn btn-primary" id="aiSuratBtn" onclick="generateSurat()" style="width:100%;margin-top:4px">
-                ✨ Generate dengan AI
-              </button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-              <div class="card-title">📄 HASIL GENERATE</div>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-ghost btn-sm" id="aiSuratCopyBtn" onclick="copyAiResult('aiSuratResult')" style="display:none">📋 Copy</button>
-                <button class="btn btn-ghost btn-sm" id="aiSuratSaveBtn" onclick="saveAiResult('aiSuratResult','surat')" style="display:none">💾 Simpan</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div id="aiSuratResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
-                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-                  <div style="font-size:40px;margin-bottom:12px">📄</div>
-                  <div style="font-size:13px">Isi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 3: CHATBOT KURIKULUM -->
-      <div class="ai-panel" id="aiPanel-chat" style="display:none">
-        <div class="card" style="height:calc(100vh - 220px);display:flex;flex-direction:column">
-          <div class="card-header"><div class="card-title">💬 CHATBOT KURIKULUM & ADMINISTRASI</div></div>
-          <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0">
-            <div class="chat-msg chat-ai">
-              <div class="chat-bubble">Halo! Saya asisten AI untuk kurikulum dan administrasi SDN Cimega. Silakan tanya apa saja tentang Kurikulum Merdeka, RPP, administrasi sekolah, atau hal lainnya. 😊</div>
-            </div>
-          </div>
-          <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
-            <input class="form-control" id="chatInput" placeholder="Ketik pertanyaan... (Enter untuk kirim)"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
-              style="flex:1"/>
-            <button class="btn btn-primary" onclick="sendChat()" style="flex-shrink:0;padding:8px 16px">Kirim ➤</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 4: ANALISIS NILAI -->
-      <div class="ai-panel" id="aiPanel-analisis" style="display:none">
-        <div class="grid-2" style="gap:12px;align-items:start">
-          <div class="card">
-            <div class="card-header"><div class="card-title">⚙️ INPUT DATA NILAI</div></div>
-            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
-              <div class="form-group">
-                <label class="form-label">Jenis Analisis</label>
-                <select class="form-control" id="aiAnalisisType">
-                  <option value="rekap">Rekap & Statistik Kelas</option>
-                  <option value="remedial">Identifikasi Siswa Remedial</option>
-                  <option value="rapor">Deskripsi Rapor per Siswa</option>
-                  <option value="progres">Analisis Progres Belajar</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Mata Pelajaran</label>
-                <input class="form-control" id="aiAnalisisMapel" placeholder="cth: Matematika"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Kelas</label>
-                <input class="form-control" id="aiAnalisisKelas" placeholder="cth: IV A"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">KKM</label>
-                <input class="form-control" id="aiAnalisisKKM" placeholder="cth: 70" type="number"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Data Nilai Siswa</label>
-                <textarea class="form-control" id="aiAnalisisNilai" rows="8"
-                  placeholder="Format: Nama Siswa: Nilai&#10;cth:&#10;Ahmad: 85&#10;Budi: 62&#10;Cici: 90&#10;Deni: 55&#10;Eka: 78"></textarea>
-              </div>
-              <button class="btn btn-primary" onclick="generateAnalisis()" style="width:100%;margin-top:4px">
-                ✨ Analisis dengan AI
-              </button>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-              <div class="card-title">📊 HASIL ANALISIS</div>
-              <button class="btn btn-ghost btn-sm" id="aiAnalisisCopyBtn" onclick="copyAiResult('aiAnalisisResult')" style="display:none">📋 Copy</button>
-            </div>
-            <div class="card-body">
-              <div id="aiAnalisisResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
-                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-                  <div style="font-size:40px;margin-bottom:12px">📊</div>
-                  <div style="font-size:13px">Masukkan data nilai siswa<br/>lalu klik <strong style="color:var(--cyan)">Analisis dengan AI</strong></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-

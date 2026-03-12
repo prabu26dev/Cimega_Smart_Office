@@ -342,7 +342,10 @@
     <div class="page" id="page-konten">
       <div class="section-header">
         <div class="section-title">Kelola <span>Konten Dokumen</span></div>
-        <button class="btn btn-primary" onclick="openModalKonten()">+ Tambah Konten</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" onclick="confirmImportDefault()" title="Import semua dokumen default sesuai role">📥 Import Dokumen Default</button>
+          <button class="btn btn-primary" onclick="openModalKonten()">+ Tambah Konten</button>
+        </div>
       </div>
       <div class="konten-layout">
         <div class="kat-list" id="kategoriList">
@@ -1201,6 +1204,180 @@ async function gantiPassword(){
 function fmtDate(ts){if(!ts)return'-';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
 function fmtDateInput(ts){if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);return d.toISOString().split('T')[0];}
 function doLogout(){if(confirm('Keluar dari admin panel?')){localStorage.removeItem('cimega_user');window.location.href='../login/login.html';}}
+
+// ════════════════════════════════════════════
+// IMPORT DOKUMEN DEFAULT
+// Pembagian visibleTo per kategori:
+//   adm_guru   → guru, kepsek
+//   adm_kepsek → kepsek
+//   kosp       → kepsek
+//   adm_umum   → guru, kepsek, ops
+//   keuangan   → bendahara, kepsek, ops
+//   evaluasi   → guru, kepsek, bendahara, ops
+//   perpus     → guru, kepsek, ops
+// ════════════════════════════════════════════
+const DEFAULT_DOKUMEN = [
+  // ── Administrasi Guru & Pembelajaran ── visibleTo: guru, kepsek
+  { kategori:'adm_guru', nama:'RPP (Rencana Pelaksanaan Pembelajaran) – Deep Learning',        visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Modul Ajar – Kurikulum Merdeka (KEMENDIKDASMEN)',               visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Modul Ajar – Kurikulum Berbasis Cinta (KEMENAG)',               visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'TP (Tujuan Pembelajaran)',                                       visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'ATP (Alur Tujuan Pembelajaran)',                                 visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'PROTA (Program Tahunan)',                                        visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'PROMES (Program Semester)',                                      visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Proyek Kokulikuler – Kurikulum Merdeka',                        visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Analisis Soal',                                                  visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Kisi-Kisi Soal',                                                 visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Lembar Soal dan Kunci Jawaban',                                  visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Daftar Hadir Siswa',                                             visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Asesmen Sumatif Akhir Jenjang (ASAJ)',                          visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Sumatif Tengah Semester (STS)',                                  visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Sumatif Akhir Semester (SAT)',                                   visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Rekap Nilai Siswa',                                              visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'RPP (Rencana Pelaksanaan Pembelajaran) – Kurikulum 2013',       visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Silabus',                                                        visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'KKM (Kriteria Ketuntasan Minimal)',                              visibleTo:['guru','kepsek'] },
+  { kategori:'adm_guru', nama:'Jurnal Mengajar',                                                visibleTo:['guru','kepsek'] },
+
+  // ── Administrasi Kepala Sekolah ── visibleTo: kepsek only
+  { kategori:'adm_kepsek', nama:'Satuan Pendidikan',                                            visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Administrasi Kepala Sekolah',                                  visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Tugas Pokok dan Fungsi Kepala Sekolah',                       visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Administrasi Manajerial',                                      visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Administrasi Supervisi Akademik',                              visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Administrasi Kurikulum',                                       visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Administrasi Kesiswaan',                                       visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Administrasi Keuangan (Kepsek)',                               visibleTo:['kepsek'] },
+  { kategori:'adm_kepsek', nama:'Administrasi Hubungan Masyarakat',                             visibleTo:['kepsek'] },
+
+  // ── KOSP ── visibleTo: kepsek only
+  { kategori:'kosp', nama:'Karakteristik Satuan Pendidikan',                                    visibleTo:['kepsek'] },
+  { kategori:'kosp', nama:'Visi, Misi, dan Tujuan Satuan Pendidikan',                          visibleTo:['kepsek'] },
+  { kategori:'kosp', nama:'Pengorganisasian Pembelajaran',                                       visibleTo:['kepsek'] },
+  { kategori:'kosp', nama:'Perencanaan Pembelajaran',                                            visibleTo:['kepsek'] },
+  { kategori:'kosp', nama:'Perencanaan Projek Penguatan Profil 8 Dimensi Lulusan',             visibleTo:['kepsek'] },
+  { kategori:'kosp', nama:'Pendekatan Pembelajaran',                                             visibleTo:['kepsek'] },
+  { kategori:'kosp', nama:'Asesmen (KOSP)',                                                      visibleTo:['kepsek'] },
+  { kategori:'kosp', nama:'Pengelolaan Kurikulum',                                               visibleTo:['kepsek'] },
+
+  // ── Administrasi Umum Sekolah ── visibleTo: guru, kepsek, ops
+  // (guru merangkap ops, wali kelas, panitia ujian perlu dokumen ini)
+  { kategori:'adm_umum', nama:'SK Pembagian Tugas Mengajar',                                    visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Panitia Ujian (UTS, UAS, PAT, PAS, ANBK, USBN)',            visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Wali Kelas',                                                  visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Ekstrakurikuler',                                              visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Tim Kurikulum',                                               visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Pengurus OSIS',                                               visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Tim BOS',                                                     visibleTo:['kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Panitia MPLS',                                                visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'SK Operator Sekolah',                                            visibleTo:['kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Surat Keputusan Kenaikan Kelas',                                visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Surat Keputusan Kelulusan Siswa',                               visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Daftar Inventaris Barang (Buku Induk Barang)',                  visibleTo:['kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Jadwal Pelajaran',                                               visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Struktur Organisasi Sekolah',                                    visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Kalender Pendidikan',                                            visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Tata Tertib Sekolah',                                            visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Tata Tertib Guru dan Siswa',                                    visibleTo:['guru','kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Buku Tamu Kegiatan Sekolah',                                    visibleTo:['kepsek','ops'] },
+  { kategori:'adm_umum', nama:'Notulen Rapat Dewan Guru',                                      visibleTo:['guru','kepsek','ops'] },
+
+  // ── Keuangan & BOS ── visibleTo: bendahara, kepsek, ops
+  // (guru merangkap bendahara otomatis mendapat akses via role bendahara)
+  { kategori:'keuangan', nama:'Laporan BOS Triwulan',                                           visibleTo:['bendahara','kepsek','ops'] },
+  { kategori:'keuangan', nama:'RKAS (Rencana Kegiatan dan Anggaran Sekolah)',                  visibleTo:['bendahara','kepsek','ops'] },
+  { kategori:'keuangan', nama:'BKU (Buku Kas Umum)',                                            visibleTo:['bendahara','kepsek'] },
+  { kategori:'keuangan', nama:'Nota Pembelian Barang',                                          visibleTo:['bendahara','kepsek','ops'] },
+  { kategori:'keuangan', nama:'Laporan Realisasi BOS',                                          visibleTo:['bendahara','kepsek','ops'] },
+  { kategori:'keuangan', nama:'Laporan LPJ Dana BOS',                                           visibleTo:['bendahara','kepsek','ops'] },
+  { kategori:'keuangan', nama:'Berita Acara Pembelian/Pengadaan Barang',                       visibleTo:['bendahara','kepsek','ops'] },
+  { kategori:'keuangan', nama:'Daftar Hadir Penerima Honor BOS',                               visibleTo:['bendahara','kepsek'] },
+
+  // ── Evaluasi & Pelaporan ── visibleTo: semua role
+  // (guru buat laporan kegiatan, bendahara buat LPJ, kepsek supervisi, ops bantu)
+  { kategori:'evaluasi', nama:'Evaluasi Diri Sekolah (EDS)',                                    visibleTo:['guru','kepsek','bendahara','ops'] },
+  { kategori:'evaluasi', nama:'Instrumen Akreditasi Sekolah',                                   visibleTo:['guru','kepsek','ops'] },
+  { kategori:'evaluasi', nama:'Laporan Kegiatan Sekolah (MPLS, HUT RI, Pramuka, dll.)',        visibleTo:['guru','kepsek','bendahara','ops'] },
+  { kategori:'evaluasi', nama:'LPJ Kegiatan (Laporan Pertanggungjawaban)',                     visibleTo:['guru','kepsek','bendahara','ops'] },
+  { kategori:'evaluasi', nama:'Laporan Monitoring & Evaluasi (Monev)',                          visibleTo:['guru','kepsek','ops'] },
+  { kategori:'evaluasi', nama:'Laporan Supervisi Kelas',                                        visibleTo:['guru','kepsek'] },
+  { kategori:'evaluasi', nama:'Berita Acara Rapat',                                             visibleTo:['guru','kepsek','bendahara','ops'] },
+  { kategori:'evaluasi', nama:'Berita Acara Penilaian',                                         visibleTo:['guru','kepsek'] },
+
+  // ── Administrasi Perpustakaan ── visibleTo: guru, kepsek, ops
+  // (pustakawan biasanya guru atau ops)
+  { kategori:'perpus', nama:'Administrasi Keanggotaan Perpustakaan',                           visibleTo:['guru','kepsek','ops'] },
+  { kategori:'perpus', nama:'Administrasi Kolektif Perpustakaan',                              visibleTo:['guru','kepsek','ops'] },
+  { kategori:'perpus', nama:'Administrasi Peminjaman Perpustakaan',                            visibleTo:['guru','kepsek','ops'] },
+  { kategori:'perpus', nama:'Administrasi Keuangan Perpustakaan',                              visibleTo:['guru','kepsek','ops'] },
+  { kategori:'perpus', nama:'Administrasi Umum Perpustakaan',                                  visibleTo:['guru','kepsek','ops'] },
+];
+
+function confirmImportDefault(){
+  document.getElementById('konfirmasiText').innerHTML =
+    `Import <strong style="color:var(--cyan)">${DEFAULT_DOKUMEN.length} dokumen default</strong> ke Firestore?<br>
+    <span style="font-size:11px;color:var(--muted)">Dokumen yang sudah ada dengan nama sama akan dilewati (tidak ditimpa).<br>
+    Pembagian akses sesuai peran: Guru, Kepsek, Bendahara, Operator.</span>`;
+  document.getElementById('konfirmasiBtn').textContent = '📥 Import Sekarang';
+  document.getElementById('konfirmasiBtn').className = 'btn btn-gold';
+  document.getElementById('konfirmasiBtn').onclick = () => {
+    closeModal('modalKonfirmasi');
+    importDefaultDokumen();
+  };
+  openModal('modalKonfirmasi');
+}
+
+async function importDefaultDokumen(){
+  const{collection,getDocs,addDoc,query,where,serverTimestamp}=window._fb;
+  showToast('info','Import Dimulai',`Memproses ${DEFAULT_DOKUMEN.length} dokumen...`);
+
+  let added=0, skipped=0, errors=0;
+
+  // Ambil semua nama yang sudah ada per kategori sekaligus
+  const existingByKat={};
+  try{
+    const snap=await getDocs(collection(db,'konten'));
+    snap.forEach(d=>{
+      const data=d.data();
+      if(!existingByKat[data.kategori]) existingByKat[data.kategori]=new Set();
+      existingByKat[data.kategori].add(data.nama);
+    });
+  }catch(e){}
+
+  for(const dok of DEFAULT_DOKUMEN){
+    const existing=existingByKat[dok.kategori]||new Set();
+    if(existing.has(dok.nama)){
+      skipped++;
+      continue;
+    }
+    try{
+      await addDoc(collection(db,'konten'),{
+        nama:      dok.nama,
+        kategori:  dok.kategori,
+        visibleTo: dok.visibleTo,
+        deskripsi: '',
+        template:  '',
+        createdAt: serverTimestamp(),
+        importedDefault: true,
+      });
+      added++;
+      // Update existing cache to avoid duplicate within batch
+      if(!existingByKat[dok.kategori]) existingByKat[dok.kategori]=new Set();
+      existingByKat[dok.kategori].add(dok.nama);
+    }catch(e){
+      errors++;
+      console.warn('Import error:', dok.nama, e);
+    }
+  }
+
+  addLog('Import','Import dokumen default: '+added+' ditambahkan, '+skipped+' dilewati');
+  showToast('success','Import Selesai ✅',
+    `${added} dokumen ditambahkan · ${skipped} dilewati · ${errors} error`);
+
+  // Reload konten jika sedang ada kategori aktif
+  if(_currentKat) loadKontenByKat(_currentKat);
+  loadDashboard();
+}
 
 // ════════════════════════════════════════════
 // INIT
