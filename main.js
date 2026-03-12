@@ -227,6 +227,82 @@ ipcMain.handle('open-external', (e, url) => {
   shell.openExternal(url);
 });
 
+
+// ══════════════════════════════════════════
+// GEMINI AI API (Google — Free Tier)
+// API key disimpan di .env → GEMINI_API_KEY
+// Gratis: https://aistudio.google.com/apikey
+// Model: gemini-2.0-flash (cepat & gratis)
+// ══════════════════════════════════════════
+ipcMain.handle('claude-ask', async (e, { messages, system, maxTokens }) => {
+  const apiKey = envConfig.GEMINI_API_KEY;
+  if (!apiKey) return { error: 'GEMINI_API_KEY belum diisi di file .env' };
+
+  // Konversi format messages (claude/openai) ke format Gemini
+  const systemInstruction = system ||
+    'Kamu adalah asisten administrasi sekolah dasar di Indonesia yang ahli dalam Kurikulum Merdeka Belajar dan Kurikulum 2013. Jawab dalam Bahasa Indonesia yang formal dan profesional.';
+
+  // Gemini pakai "contents" bukan "messages"
+  // role: "user" | "model" (bukan "assistant")
+  const contents = messages.map(m => ({
+    role:  m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+
+  const body = JSON.stringify({
+    system_instruction: { parts: [{ text: systemInstruction }] },
+    contents,
+    generationConfig: {
+      maxOutputTokens: maxTokens || 2048,
+      temperature:     0.7,
+    },
+  });
+
+  const model = 'gemini-2.0-flash';
+  const path  = `/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'generativelanguage.googleapis.com',
+      path,
+      method:  'POST',
+      headers: {
+        'Content-Type':   'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          // Cek error dari Gemini
+          if (parsed.error) {
+            resolve({ error: parsed.error.message || 'Gemini API error' });
+            return;
+          }
+          // Ambil teks dari response Gemini
+          const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (!text) {
+            resolve({ error: 'Gemini tidak memberikan respons. Coba lagi.' });
+            return;
+          }
+          resolve({ success: true, text });
+        } catch (err) {
+          resolve({ error: 'Parse error: ' + err.message });
+        }
+      });
+    });
+
+    req.on('error', err => resolve({ error: err.message }));
+    req.setTimeout(60000, () => { req.destroy(); resolve({ error: 'Timeout — koneksi lambat, coba lagi' }); });
+    req.write(body);
+    req.end();
+  });
+});
+
 // ══════════════════════════════════════════
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
