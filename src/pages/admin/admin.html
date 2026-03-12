@@ -159,13 +159,13 @@
     .kat-list::-webkit-scrollbar{width:3px}.kat-list::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
     .kat-header{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 8px}
     .kat-header-label{font-size:11px;color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:1px}
-    .kat-item{display:flex;align-items:center;gap:0;border-radius:8px;margin-bottom:1px;transition:all .2s;position:relative}
+    .kat-item{display:flex;align-items:center;border-radius:8px;margin-bottom:1px;transition:all .2s;position:relative}
     .kat-item:hover{background:rgba(0,229,255,0.05)}
     .kat-item.active{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.18)}
-    .kat-item-btn{flex:1;display:flex;align-items:center;gap:6px;padding:7px 8px;cursor:pointer;font-size:12px;color:var(--muted);min-width:0;font-family:Arial,sans-serif;background:none;border:none;text-align:left;border-radius:8px}
+    .kat-item-btn{flex:1;display:flex;align-items:center;gap:6px;padding:7px 8px;cursor:pointer;font-size:11px;color:var(--muted);min-width:0;font-family:Arial,sans-serif;background:none;border:none;text-align:left;border-radius:8px}
     .kat-item.active .kat-item-btn{color:var(--cyan)}
-    .kat-item-icon{font-size:14px;flex-shrink:0}
-    .kat-item-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:1.3}
+    .kat-item-icon{font-size:13px;flex-shrink:0}
+    .kat-item-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
     .kat-item-actions{display:none;gap:2px;padding-right:6px;flex-shrink:0}
     .kat-item:hover .kat-item-actions,.kat-item.active .kat-item-actions{display:flex}
     .kat-act-btn{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,229,255,0.15);background:rgba(0,229,255,0.05);color:var(--muted);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
@@ -359,7 +359,7 @@
         <div class="section-title">Kelola <span>Konten Dokumen</span></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-gold btn-sm" onclick="confirmImportDefault()" title="Import semua dokumen default sesuai role">📥 Import Dokumen Default</button>
-          <button class="btn btn-ghost btn-sm" onclick="openModalKategori()" title="Tambah kategori baru">🗂 + Kategori</button>
+          <button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
           <button class="btn btn-primary" onclick="openModalKonten()">📄 + Konten</button>
         </div>
       </div>
@@ -373,9 +373,9 @@
           </div>
         </div>
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px" id="kontenListHeader" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div style="font-size:12px;color:var(--muted)" id="kontenListLabel"></div>
-            <button class="btn btn-ghost btn-sm" onclick="openModalKonten()" id="btnTambahKontenKat" style="display:none">📄 + Tambah Konten</button>
+            <button class="btn btn-ghost btn-sm" onclick="openModalKonten()" id="btnTambahKontenKat" style="display:none">📄 + Tambah Dokumen</button>
           </div>
           <div class="content-list" id="kontenList">
             <div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>
@@ -559,21 +559,24 @@
     </div>
     <input type="hidden" id="kategoriId"/>
     <div class="form-group">
-      <label class="form-label">ID Kategori <span style="color:var(--muted);font-weight:400">(slug, huruf kecil, garis bawah)</span></label>
-      <input class="form-control" id="kategoriSlug" placeholder="cth: adm_guru, keuangan, perpus" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"/>
-      <div style="font-size:10px;color:var(--muted);margin-top:3px">Tidak bisa diubah setelah disimpan. Digunakan sebagai kunci internal.</div>
+      <label class="form-label">ID Kategori <span style="color:var(--muted);font-weight:400">(slug huruf kecil + garis bawah)</span></label>
+      <input class="form-control" id="kategoriSlug" placeholder="cth: adm_guru, keuangan, perpus"
+        oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"/>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">Tidak bisa diubah setelah disimpan. Dipakai sebagai kunci internal.</div>
     </div>
     <div class="form-group">
       <label class="form-label">Nama Kategori</label>
       <input class="form-control" id="kategoriNama" placeholder="cth: Administrasi Guru & Pembelajaran"/>
     </div>
-    <div class="form-group">
-      <label class="form-label">Ikon (emoji)</label>
-      <input class="form-control" id="kategoriIcon" placeholder="cth: 📚" maxlength="4" style="width:100px"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Urutan Tampil</label>
-      <input class="form-control" id="kategoriUrutan" type="number" placeholder="1" min="1" style="width:100px"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Ikon (emoji)</label>
+        <input class="form-control" id="kategoriIcon" placeholder="📄" maxlength="4"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Urutan Tampil</label>
+        <input class="form-control" id="kategoriUrutan" type="number" placeholder="1" min="1"/>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Akses Default <span style="color:var(--muted);font-weight:400">(siapa yang bisa lihat dokumen di kategori ini)</span></label>
@@ -602,7 +605,7 @@
     <div class="form-group"><label class="form-label">Nama Dokumen</label><input class="form-control" id="kontenNama" placeholder="Nama dokumen"/></div>
     <div class="form-group"><label class="form-label">Kategori</label>
       <select class="form-control" id="kontenKategori">
-        <!-- diisi dinamis oleh rebuildKategoriSelect() saat modal dibuka -->
+        <!-- diisi dinamis rebuildKategoriSelect() -->
         <option value="">Memuat kategori...</option>
       </select>
     </div>
@@ -645,8 +648,7 @@ let _allUsers=[], _allSekolah=[], _roleFilter='all';
 let _currentKat='', _currentKatEl=null;
 let _activeSchoolName='', _activeSchoolId='';
 
-// kontenKategori: diisi dinamis dari Firestore collection 'kategori'
-// Fallback statis dipakai saat belum ada data di Firestore
+// kontenKategori diisi dari Firestore; fallback hardcoded hanya jika Firestore kosong
 let kontenKategori={
   adm_guru:  'Administrasi Guru & Pembelajaran',
   adm_kepsek:'Administrasi Kepala Sekolah',
@@ -656,7 +658,7 @@ let kontenKategori={
   evaluasi:  'Evaluasi & Pelaporan',
   perpus:    'Administrasi Perpustakaan',
 };
-let kontenKategoriMeta={}; // {id: {nama, icon, urutan, visibleTo, deskripsi}}
+let kontenKategoriMeta={}; // {id:{nama,icon,urutan,visibleTo,deskripsi}}
 
 // ── Clock ──────────────────────────────────
 setInterval(()=>{const el=document.getElementById('topbarTime');if(el)el.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});},1000);
@@ -1012,17 +1014,18 @@ async function saveSekolah(){
 }
 
 // ════════════════════════════════════════════
-// KONTEN DOKUMEN — Kategori CRUD + Firestore
+// KONTEN DOKUMEN — Kategori CRUD
 // ════════════════════════════════════════════
 
-// ── Muat kategori dari Firestore, fallback ke hardcoded ──────────────────────
+// Muat kategori dari Firestore — TIDAK auto-seed
+// Jika kosong (admin hapus semua), tampilkan empty state saja
 async function loadKategoriFromFirestore(){
   const{collection,getDocs,orderBy,query}=window._fb;
   try{
     const snap=await getDocs(query(collection(db,'kategori'),orderBy('urutan','asc')));
-    if(snap.empty) return false; // pakai fallback hardcoded
     kontenKategori={};
     kontenKategoriMeta={};
+    if(snap.empty) return false;
     snap.forEach(d=>{
       const data=d.data();
       kontenKategori[d.id]=data.nama||d.id;
@@ -1036,38 +1039,36 @@ async function loadKategoriFromFirestore(){
   }catch(e){ return false; }
 }
 
-// ── Seed kategori default ke Firestore jika belum ada ────────────────────────
+// Seed default — HANYA dipanggil manual oleh admin lewat tombol,
+// BUKAN dipanggil otomatis ketika collection kosong
 async function seedKategoriDefault(){
-  const{collection,doc,setDoc,serverTimestamp}=window._fb;
+  const{doc,setDoc,serverTimestamp}=window._fb;
   const defaults=[
-    {id:'adm_guru',  nama:'Administrasi Guru & Pembelajaran',        icon:'📚',urutan:1, visibleTo:['guru','kepsek'],             deskripsi:'RPP, Modul Ajar, Penilaian, Jurnal'},
-    {id:'adm_kepsek',nama:'Administrasi Kepala Sekolah',             icon:'🏛️',urutan:2, visibleTo:['kepsek'],                    deskripsi:'Tugas Pokok, Supervisi, Manajerial'},
-    {id:'kosp',      nama:'Kurikulum Operasional Satuan Pendidikan', icon:'📋',urutan:3, visibleTo:['kepsek'],                    deskripsi:'Karakteristik, Visi Misi, Perencanaan'},
-    {id:'adm_umum',  nama:'Administrasi Umum Sekolah',               icon:'🏫',urutan:4, visibleTo:['guru','kepsek','ops'],        deskripsi:'SK, Inventaris, Jadwal, Tata Tertib'},
-    {id:'keuangan',  nama:'Keuangan & BOS',                          icon:'💰',urutan:5, visibleTo:['bendahara','kepsek','ops'],   deskripsi:'Laporan BOS, RKAS, BKU, LPJ'},
-    {id:'evaluasi',  nama:'Evaluasi & Pelaporan',                    icon:'📊',urutan:6, visibleTo:['guru','kepsek','bendahara','ops'], deskripsi:'EDS, Akreditasi, Monev, Supervisi'},
-    {id:'perpus',    nama:'Administrasi Perpustakaan',               icon:'📖',urutan:7, visibleTo:['guru','kepsek','ops'],        deskripsi:'Keanggotaan, Peminjaman, Keuangan'},
+    {id:'adm_guru',  nama:'Administrasi Guru & Pembelajaran',        icon:'📚',urutan:1, visibleTo:['guru','kepsek'],                    deskripsi:'RPP, Modul Ajar, Penilaian, Jurnal'},
+    {id:'adm_kepsek',nama:'Administrasi Kepala Sekolah',             icon:'🏛️',urutan:2, visibleTo:['kepsek'],                            deskripsi:'Tugas Pokok, Supervisi, Manajerial'},
+    {id:'kosp',      nama:'Kurikulum Operasional Satuan Pendidikan', icon:'📋',urutan:3, visibleTo:['kepsek'],                            deskripsi:'Karakteristik, Visi Misi, Perencanaan'},
+    {id:'adm_umum',  nama:'Administrasi Umum Sekolah',               icon:'🏫',urutan:4, visibleTo:['guru','kepsek','ops'],               deskripsi:'SK, Inventaris, Jadwal, Tata Tertib'},
+    {id:'keuangan',  nama:'Keuangan & BOS',                          icon:'💰',urutan:5, visibleTo:['bendahara','kepsek','ops'],          deskripsi:'Laporan BOS, RKAS, BKU, LPJ'},
+    {id:'evaluasi',  nama:'Evaluasi & Pelaporan',                    icon:'📊',urutan:6, visibleTo:['guru','kepsek','bendahara','ops'],   deskripsi:'EDS, Akreditasi, Monev, Supervisi'},
+    {id:'perpus',    nama:'Administrasi Perpustakaan',               icon:'📖',urutan:7, visibleTo:['guru','kepsek','ops'],               deskripsi:'Keanggotaan, Peminjaman, Keuangan'},
   ];
   for(const kat of defaults){
     await setDoc(doc(db,'kategori',kat.id),{
-      nama:kat.nama, icon:kat.icon, urutan:kat.urutan,
-      visibleTo:kat.visibleTo, deskripsi:kat.deskripsi,
+      nama:kat.nama,icon:kat.icon,urutan:kat.urutan,
+      visibleTo:kat.visibleTo,deskripsi:kat.deskripsi,
       createdAt:serverTimestamp()
     });
   }
+  addLog('Kategori','Seed 7 kategori default');
 }
 
-// ── Render daftar kategori di sidebar kiri ────────────────────────────────────
+// Render daftar kategori di sidebar kiri
 async function loadKategoriList(){
   const container=document.getElementById('katItemsContainer');
+  if(!container) return;
   container.innerHTML=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:11px">Memuat...</div>`;
 
-  // Coba dari Firestore; jika kosong, seed dulu
-  let ok=await loadKategoriFromFirestore();
-  if(!ok){
-    await seedKategoriDefault();
-    ok=await loadKategoriFromFirestore();
-  }
+  await loadKategoriFromFirestore();
 
   // Hitung jumlah konten per kategori
   const{collection,getDocs}=window._fb;
@@ -1077,12 +1078,22 @@ async function loadKategoriList(){
     snap.forEach(d=>{const k=d.data().kategori;countByKat[k]=(countByKat[k]||0)+1;});
   }catch(e){}
 
-  // Render
-  const sorted=Object.entries(kontenKategoriMeta).sort((a,b)=>(a[1].urutan||99)-(b[1].urutan||99));
+  const sorted=Object.entries(kontenKategoriMeta)
+    .sort((a,b)=>(a[1].urutan||99)-(b[1].urutan||99));
+
   if(sorted.length===0){
-    container.innerHTML=`<div class="empty-state" style="padding:20px"><div class="icon">🗂️</div><p style="font-size:11px">Belum ada kategori</p></div>`;
+    container.innerHTML=`
+      <div class="empty-state" style="padding:24px 12px">
+        <div class="icon">🗂️</div>
+        <p style="font-size:11px;margin-bottom:10px">Belum ada kategori</p>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:6px"
+          onclick="openModalKategori()">+ Buat Kategori Baru</button>
+        <button class="btn btn-gold btn-sm" style="width:100%;font-size:10px"
+          onclick="konfirmasiSeedDefault()">↩ Pulihkan 7 Kategori Default</button>
+      </div>`;
     return;
   }
+
   container.innerHTML='';
   sorted.forEach(([k,meta])=>{
     const count=countByKat[k]||0;
@@ -1095,42 +1106,40 @@ async function loadKategoriList(){
         ${count>0?`<span class="kat-count">${count}</span>`:''}
       </button>
       <div class="kat-item-actions">
-        <button class="kat-act-btn" onclick="openEditKategori('${k}')" title="Edit kategori">✏️</button>
-        <button class="kat-act-btn del" onclick="konfirmasiHapusKategori('${k}','${meta.nama.replace(/'/g,"\'")}',${count})" title="Hapus kategori">🗑</button>
+        <button class="kat-act-btn" onclick="openEditKategori('${k}')" title="Edit">✏️</button>
+        <button class="kat-act-btn del" onclick="konfirmasiHapusKategori('${k}','${meta.nama.replace(/'/g,"\'")}',${count})" title="Hapus">🗑</button>
       </div>`;
     container.appendChild(item);
   });
-
-  // Update dropdown kategori di modal konten
   rebuildKategoriSelect();
 }
 
-function selectKategori(k, itemEl){
+function selectKategori(k,itemEl){
   document.querySelectorAll('.kat-item').forEach(n=>n.classList.remove('active'));
   itemEl.classList.add('active');
   _currentKat=k;_currentKatEl=itemEl;
-  const label=document.getElementById('kontenListLabel');
-  if(label) label.textContent=(kontenKategoriMeta[k]?.nama||k);
-  const btnKat=document.getElementById('btnTambahKontenKat');
-  if(btnKat) btnKat.style.display='';
+  const lbl=document.getElementById('kontenListLabel');
+  if(lbl) lbl.textContent=(kontenKategoriMeta[k]?.icon||'')+'  '+(kontenKategoriMeta[k]?.nama||k);
+  const btn=document.getElementById('btnTambahKontenKat');
+  if(btn) btn.style.display='';
   loadKontenByKat(k);
 }
 
-// ── Rebuild dropdown kategori di modal konten ─────────────────────────────────
 function rebuildKategoriSelect(){
   const sel=document.getElementById('kontenKategori');
   if(!sel) return;
+  const prev=sel.value;
   sel.innerHTML='';
   Object.entries(kontenKategori).forEach(([k,v])=>{
     const opt=document.createElement('option');
-    opt.value=k;
-    opt.textContent=v;
+    opt.value=k; opt.textContent=(kontenKategoriMeta[k]?.icon||'')+'  '+v;
     sel.appendChild(opt);
   });
-  if(_currentKat) sel.value=_currentKat;
+  if(prev&&kontenKategori[prev]) sel.value=prev;
+  else if(_currentKat&&kontenKategori[_currentKat]) sel.value=_currentKat;
 }
 
-// ── Modal: Tambah Kategori ────────────────────────────────────────────────────
+// ── Modal Tambah Kategori ──────────────────────────────────────────────────
 function openModalKategori(){
   document.getElementById('kategoriId').value='';
   document.getElementById('kategoriSlug').value='';
@@ -1138,14 +1147,13 @@ function openModalKategori(){
   document.getElementById('kategoriNama').value='';
   document.getElementById('kategoriIcon').value='📄';
   document.getElementById('kategoriDeskripsi').value='';
-  const nextUrutan=Object.keys(kontenKategoriMeta).length+1;
-  document.getElementById('kategoriUrutan').value=nextUrutan;
+  document.getElementById('kategoriUrutan').value=Object.keys(kontenKategoriMeta).length+1;
   setCheckedRoles('kategoriVisibleTo',['guru','kepsek']);
   document.getElementById('modalKategoriTitle').textContent='🗂 Tambah Kategori Baru';
   openModal('modalKategori');
 }
 
-// ── Modal: Edit Kategori ──────────────────────────────────────────────────────
+// ── Modal Edit Kategori ────────────────────────────────────────────────────
 async function openEditKategori(katId){
   const{doc,getDoc}=window._fb;
   try{
@@ -1153,7 +1161,7 @@ async function openEditKategori(katId){
     const data=snap.exists()?snap.data():(kontenKategoriMeta[katId]||{});
     document.getElementById('kategoriId').value=katId;
     document.getElementById('kategoriSlug').value=katId;
-    document.getElementById('kategoriSlug').disabled=true; // ID tidak bisa diubah
+    document.getElementById('kategoriSlug').disabled=true;
     document.getElementById('kategoriNama').value=data.nama||'';
     document.getElementById('kategoriIcon').value=data.icon||'📄';
     document.getElementById('kategoriDeskripsi').value=data.deskripsi||'';
@@ -1164,9 +1172,9 @@ async function openEditKategori(katId){
   }catch(e){showToast('error','Error',e.message);}
 }
 
-// ── Simpan Kategori (Tambah / Edit) ──────────────────────────────────────────
+// ── Simpan Kategori ────────────────────────────────────────────────────────
 async function saveKategori(){
-  const{collection,doc,setDoc,updateDoc,serverTimestamp}=window._fb;
+  const{doc,setDoc,updateDoc,serverTimestamp}=window._fb;
   const existingId=document.getElementById('kategoriId').value.trim();
   const slug=existingId||document.getElementById('kategoriSlug').value.trim();
   const nama=document.getElementById('kategoriNama').value.trim();
@@ -1174,60 +1182,68 @@ async function saveKategori(){
   const deskripsi=document.getElementById('kategoriDeskripsi').value.trim();
   const urutan=parseInt(document.getElementById('kategoriUrutan').value)||99;
   const visibleTo=getCheckedRoles('kategoriVisibleTo');
-
   if(!slug){showToast('warn','Peringatan','ID kategori wajib diisi!');return;}
   if(!nama){showToast('warn','Peringatan','Nama kategori wajib diisi!');return;}
-  if(visibleTo.length===0){showToast('warn','Peringatan','Pilih minimal satu akses role!');return;}
-
+  if(visibleTo.length===0){showToast('warn','Peringatan','Pilih minimal satu role!');return;}
   try{
     const payload={nama,icon,deskripsi,urutan,visibleTo,updatedAt:serverTimestamp()};
-    if(existingId){
-      await updateDoc(doc(db,'kategori',existingId),payload);
-    } else {
-      await setDoc(doc(db,'kategori',slug),{...payload,createdAt:serverTimestamp()});
-    }
+    if(existingId) await updateDoc(doc(db,'kategori',existingId),payload);
+    else           await setDoc(doc(db,'kategori',slug),{...payload,createdAt:serverTimestamp()});
     closeModal('modalKategori');
     addLog('Kategori',`${existingId?'Edit':'Tambah'} kategori: ${nama} (${slug})`);
     showToast('success','Berhasil',`Kategori "${nama}" ${existingId?'diperbarui':'ditambahkan'}`);
-    await loadKategoriList(); // Reload sidebar
+    await loadKategoriList();
     if(existingId&&_currentKat===existingId) loadKontenByKat(existingId);
   }catch(e){showToast('error','Error',e.message);}
 }
 
-// ── Konfirmasi & Hapus Kategori ───────────────────────────────────────────────
+// ── Konfirmasi Hapus Kategori (dengan peringatan cascade) ──────────────────
 function konfirmasiHapusKategori(katId,katNama,kontenCount){
-  const warningExtra=kontenCount>0
-    ? `<br/><span style="color:var(--danger);font-size:11px">⚠️ ${kontenCount} dokumen di kategori ini juga akan ikut dihapus!</span>`
-    : `<br/><span style="color:var(--muted);font-size:11px">Kategori ini kosong, aman untuk dihapus.</span>`;
+  const warn=kontenCount>0
+    ?`<br/><span style="color:var(--danger);font-size:11px">⚠️ ${kontenCount} dokumen di dalamnya juga akan ikut terhapus!</span>`
+    :`<br/><span style="color:var(--muted);font-size:11px">Kategori ini kosong, aman untuk dihapus.</span>`;
   document.getElementById('konfirmasiText').innerHTML=
-    `Hapus kategori <strong style="color:var(--cyan)">"${katNama}"</strong>? Tindakan ini tidak bisa dibatalkan.${warningExtra}`;
+    `Hapus kategori <strong style="color:var(--cyan)">"${katNama}"</strong>?${warn}`;
   document.getElementById('konfirmasiBtn').textContent='🗑 Hapus Kategori';
   document.getElementById('konfirmasiBtn').className='btn btn-danger';
   document.getElementById('konfirmasiBtn').onclick=async()=>{
     const{collection,doc,deleteDoc,getDocs,query,where}=window._fb;
     try{
-      // Hapus semua konten dalam kategori ini
       if(kontenCount>0){
         const snap=await getDocs(query(collection(db,'konten'),where('kategori','==',katId)));
-        const delJobs=snap.docs.map(d=>deleteDoc(doc(db,'konten',d.id)));
-        await Promise.all(delJobs);
+        await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'konten',d.id))));
       }
-      // Hapus kategori itu sendiri
       await deleteDoc(doc(db,'kategori',katId));
       closeModal('modalKonfirmasi');
-      addLog('Hapus',`Hapus kategori: ${katNama} beserta ${kontenCount} konten`);
-      showToast('success','Dihapus',`Kategori "${katNama}" dan ${kontenCount} dokumen berhasil dihapus`);
-      // Reset state jika kategori aktif
+      addLog('Hapus',`Hapus kategori: ${katNama} + ${kontenCount} dokumen`);
+      showToast('success','Dihapus',`"${katNama}" berhasil dihapus`);
       if(_currentKat===katId){
-        _currentKat=''; _currentKatEl=null;
+        _currentKat='';_currentKatEl=null;
         document.getElementById('kontenList').innerHTML=
           `<div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>`;
-        const btnKat=document.getElementById('btnTambahKontenKat');
-        if(btnKat) btnKat.style.display='none';
+        document.getElementById('kontenListLabel').textContent='';
+        const btn=document.getElementById('btnTambahKontenKat');
+        if(btn) btn.style.display='none';
       }
       await loadKategoriList();
       loadDashboard();
     }catch(e){showToast('error','Error',e.message);}
+  };
+  openModal('modalKonfirmasi');
+}
+
+// ── Konfirmasi Seed Default (dipanggil dari empty state) ───────────────────
+function konfirmasiSeedDefault(){
+  document.getElementById('konfirmasiText').innerHTML=
+    `Pulihkan <strong style="color:var(--cyan)">7 kategori default</strong> ke Firestore?<br/>
+    <span style="font-size:11px;color:var(--muted)">Kategori yang sudah ada tidak akan ditimpa.</span>`;
+  document.getElementById('konfirmasiBtn').textContent='↩ Pulihkan Sekarang';
+  document.getElementById('konfirmasiBtn').className='btn btn-gold';
+  document.getElementById('konfirmasiBtn').onclick=async()=>{
+    closeModal('modalKonfirmasi');
+    await seedKategoriDefault();
+    showToast('success','Selesai','7 kategori default berhasil dipulihkan');
+    await loadKategoriList();
   };
   openModal('modalKonfirmasi');
 }
@@ -1239,9 +1255,8 @@ async function loadKontenByKat(kat){
     const items=[];
     snap.forEach(d=>{
       const data=d.data();
-      const roles=data.visibleTo||['guru','kepsek','bendahara','ops'];
-      const meta=kontenKategoriMeta[data.kategori];
-      const icon=meta?.icon||'📄';
+      const roles=data.visibleTo||['guru','kepsek'];
+      const icon=kontenKategoriMeta[data.kategori]?.icon||'📄';
       items.push(`<div class="content-item" id="konten-item-${d.id}">
         <div class="content-item-icon">${icon}</div>
         <div class="content-item-body">
@@ -1251,12 +1266,13 @@ async function loadKontenByKat(kat){
         </div>
         <div class="content-item-actions">
           <button class="btn btn-ghost btn-sm" onclick="editKonten('${d.id}')">✏️ Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${(data.nama||'').replace(/'/g,"\'")}')">🗑</button>
+          <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${(data.nama||'').replace(/'/g,"\\'")}')">🗑</button>
         </div>
       </div>`);
     });
     document.getElementById('kontenList').innerHTML=items.join('')||
-      `<div class="empty-state"><div class="icon">📝</div><p>Belum ada dokumen di kategori ini</p>
+      `<div class="empty-state"><div class="icon">📝</div>
+       <p>Belum ada dokumen di kategori ini</p>
        <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="openModalKonten()">+ Tambah Dokumen Pertama</button></div>`;
     // Update count badge di sidebar
     const katItem=document.getElementById('kat-item-'+kat);
@@ -1275,12 +1291,10 @@ function openModalKonten(){
   document.getElementById('kontenNama').value='';
   document.getElementById('kontenDeskripsi').value='';
   document.getElementById('kontenTemplate').value='';
-  rebuildKategoriSelect(); // populate dropdown dinamis
-  if(_currentKat) document.getElementById('kontenKategori').value=_currentKat;
-  // Set visibleTo default dari meta kategori aktif
+  rebuildKategoriSelect();
+  if(_currentKat&&kontenKategori[_currentKat]) document.getElementById('kontenKategori').value=_currentKat;
   const defVisible=_currentKat&&kontenKategoriMeta[_currentKat]?.visibleTo?.length>0
-    ? kontenKategoriMeta[_currentKat].visibleTo
-    : ['guru','kepsek'];
+    ? kontenKategoriMeta[_currentKat].visibleTo : ['guru','kepsek'];
   setCheckedRoles('kontenVisibleTo',defVisible);
   document.getElementById('modalKontenTitle').textContent='📄 Tambah Dokumen';
   openModal('modalKonten');
@@ -1294,7 +1308,7 @@ async function editKonten(id){
     document.getElementById('kontenNama').value=data.nama||'';
     document.getElementById('kontenDeskripsi').value=data.deskripsi||'';
     document.getElementById('kontenTemplate').value=data.template||'';
-    rebuildKategoriSelect(); // populate dropdown dinamis
+    rebuildKategoriSelect();
     document.getElementById('kontenKategori').value=data.kategori||Object.keys(kontenKategori)[0]||'adm_guru';
     setCheckedRoles('kontenVisibleTo',data.visibleTo||['guru','kepsek']);
     document.getElementById('modalKontenTitle').textContent='✏️ Edit Dokumen';
