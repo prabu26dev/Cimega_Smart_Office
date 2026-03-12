@@ -14,46 +14,41 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:12px}
 
-    /* ══ SIDEBAR ══ */
+    /* SIDEBAR */
     .sidebar{width:var(--sidebar);background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
     .sidebar-header{padding:14px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
     .sidebar-logo{display:flex;align-items:center;gap:9px;margin-bottom:4px}
     .sidebar-logo img{width:32px;height:32px;object-fit:contain}
     .sidebar-logo-text{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.3}
     .sidebar-logo-text span{color:var(--cyan);display:block}
-    .sidebar-role{font-size:11px;font-family:Arial,sans-serif;color:var(--cyan);background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:20px;padding:3px 10px;display:inline-block;margin-top:5px}
+    .sidebar-role{font-size:11px;color:var(--cyan);background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:20px;padding:3px 10px;display:inline-block;margin-top:5px}
     .sidebar-nav{flex:1;padding:8px 7px;overflow-y:auto;min-height:0}
     .sidebar-nav::-webkit-scrollbar{width:3px}
     .sidebar-nav::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
-    .nav-section{font-size:10px;font-family:Arial,sans-serif;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:7px 8px 3px}
-    .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:12px;font-family:Arial,sans-serif;color:var(--muted)}
+    .nav-section{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:7px 8px 3px}
+    .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:12px;color:var(--muted)}
     .nav-item:hover{background:rgba(0,229,255,0.08);color:var(--text)}
     .nav-item.active{background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.2)}
     .nav-icon{font-size:14px;width:17px;text-align:center;flex-shrink:0}
     .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:1px 5px;border-radius:8px;font-weight:700}
     .sidebar-footer{padding:8px 7px;border-top:1px solid var(--border);flex-shrink:0}
-
-    /* Musik di sidebar */
     .sidebar-music{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:8px;padding:8px 9px;margin-bottom:7px}
     .sm-row1{display:flex;align-items:center;gap:6px;margin-bottom:4px}
     .sm-bars{display:flex;align-items:flex-end;gap:2px;height:11px;flex-shrink:0}
     .sm-bars .b{width:3px;border-radius:1px;background:#00e5ff;animation:smbar .75s ease-in-out infinite}
-    .sm-bars .b:nth-child(1){height:4px;animation-delay:0s}
-    .sm-bars .b:nth-child(2){height:9px;animation-delay:.13s}
-    .sm-bars .b:nth-child(3){height:5px;animation-delay:.27s}
-    .sm-bars .b:nth-child(4){height:9px;animation-delay:.08s}
-    .sm-bars .b:nth-child(5){height:4px;animation-delay:.22s}
+    .sm-bars .b:nth-child(1){height:4px;animation-delay:0s}.sm-bars .b:nth-child(2){height:9px;animation-delay:.13s}
+    .sm-bars .b:nth-child(3){height:5px;animation-delay:.27s}.sm-bars .b:nth-child(4){height:9px;animation-delay:.08s}.sm-bars .b:nth-child(5){height:4px;animation-delay:.22s}
     .sm-bars.paused .b{animation-play-state:paused;opacity:.2}
     @keyframes smbar{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
-    .sm-title{font-size:11px;font-family:Arial,sans-serif;color:#e0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
-    .sm-sub{font-size:10px;color:var(--muted);font-family:Arial,sans-serif;margin-bottom:5px}
+    .sm-title{font-size:11px;color:#e0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+    .sm-sub{font-size:10px;color:var(--muted);margin-bottom:5px}
     .sm-controls{display:flex;gap:4px}
-    .sm-btn{flex:1;padding:4px 2px;border-radius:6px;border:1px solid rgba(0,229,255,0.18);background:rgba(0,229,255,0.05);color:#00e5ff;font-size:11px;cursor:pointer;text-align:center;transition:all .15s;font-family:Arial,sans-serif}
+    .sm-btn{flex:1;padding:4px 2px;border-radius:6px;border:1px solid rgba(0,229,255,0.18);background:rgba(0,229,255,0.05);color:#00e5ff;font-size:11px;cursor:pointer;text-align:center;transition:all .15s}
     .sm-btn:hover{background:rgba(0,229,255,0.18)}
-    .btn-logout{display:flex;align-items:center;gap:7px;width:100%;padding:8px 10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.18);border-radius:8px;color:#ff8899;font-size:12px;font-family:Arial,sans-serif;cursor:pointer;transition:all .2s}
+    .btn-logout{display:flex;align-items:center;gap:7px;width:100%;padding:8px 10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.18);border-radius:8px;color:#ff8899;font-size:12px;cursor:pointer;transition:all .2s}
     .btn-logout:hover{background:rgba(255,68,102,0.15)}
 
-    /* ══ MAIN ══ */
+    /* MAIN */
     .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
     .topbar{padding:11px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--dark2);flex-shrink:0}
     .topbar-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#fff;letter-spacing:1px}
@@ -67,14 +62,13 @@
     .content::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.3);border-radius:3px}
     .page{display:none}.page.active{display:block}
 
-    /* STAT CARDS */
+    /* STAT */
     .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
     .stat-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px;position:relative;overflow:hidden;transition:all .3s}
     .stat-card:hover{border-color:var(--cyan);transform:translateY(-2px)}
     .stat-card::before{content:'';position:absolute;top:0;right:0;width:55px;height:55px;border-radius:0 13px 0 55px;opacity:.09}
     .stat-card.blue::before{background:var(--blue)}.stat-card.cyan::before{background:var(--cyan)}
-    .stat-card.green::before{background:var(--success)}.stat-card.red::before{background:var(--danger)}
-    .stat-card.gold::before{background:var(--gold)}
+    .stat-card.green::before{background:var(--success)}.stat-card.gold::before{background:var(--gold)}
     .stat-card-icon{font-size:22px;margin-bottom:10px}
     .stat-card-num{font-family:'Orbitron',sans-serif;font-size:26px;font-weight:700;color:#fff;margin-bottom:3px}
     .stat-card-label{font-size:12px;color:var(--muted)}
@@ -93,6 +87,8 @@
     .btn-warn{background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.3)}
     .btn-ghost{background:rgba(0,229,255,0.06);color:var(--cyan);border:1px solid rgba(0,229,255,0.2)}
     .btn-ghost:hover{background:rgba(0,229,255,0.12)}
+    .btn-gold{background:rgba(255,208,0,0.08);color:var(--gold);border:1px solid rgba(255,208,0,0.3)}
+    .btn-gold:hover{background:rgba(255,208,0,0.16)}
     .btn-sm{padding:5px 10px;font-size:11px;border-radius:7px}
     .btn:disabled{opacity:.5;cursor:not-allowed}
 
@@ -100,63 +96,87 @@
     .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
     .table-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .search-wrap{flex:1;min-width:160px}
-    .search-input{width:100%;padding:7px 12px;background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:8px;color:var(--text);font-size:12px;font-family:Arial,sans-serif;outline:none;transition:border .2s}
+    .search-input{width:100%;padding:7px 12px;background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:8px;color:var(--text);font-size:12px;outline:none;transition:border .2s}
     .search-input:focus{border-color:var(--cyan)}
     table{width:100%;border-collapse:collapse}
-    thead th{padding:10px 14px;text-align:left;font-size:11px;color:var(--muted);font-family:Arial,sans-serif;font-weight:700;border-bottom:1px solid var(--border);background:rgba(0,229,255,0.03);text-transform:uppercase;letter-spacing:.5px}
-    tbody td{padding:10px 14px;font-size:12px;font-family:Arial,sans-serif;border-bottom:1px solid rgba(0,229,255,0.05)}
+    thead th{padding:10px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);background:rgba(0,229,255,0.03);text-transform:uppercase;letter-spacing:.5px}
+    tbody td{padding:10px 14px;font-size:12px;border-bottom:1px solid rgba(0,229,255,0.05)}
     tbody tr:last-child td{border-bottom:none}
     tbody tr:hover td{background:rgba(0,229,255,0.03)}
 
     /* BADGES */
-    .badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:20px;font-family:Arial,sans-serif;font-weight:600}
+    .badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
     .badge-active{background:rgba(0,255,136,0.1);color:var(--success);border:1px solid rgba(0,255,136,0.2)}
     .badge-inactive{background:rgba(255,68,102,0.1);color:var(--danger);border:1px solid rgba(255,68,102,0.2)}
     .badge-guru{background:rgba(0,102,255,0.12);color:#66aaff;border:1px solid rgba(0,102,255,0.2)}
     .badge-kepsek{background:rgba(170,85,255,0.12);color:#cc88ff;border:1px solid rgba(170,85,255,0.2)}
-    /* ★ BARU: badge bendahara */
     .badge-bendahara{background:rgba(255,208,0,0.12);color:var(--gold);border:1px solid rgba(255,208,0,0.25)}
     .badge-ops{background:rgba(255,170,0,0.12);color:var(--warn);border:1px solid rgba(255,170,0,0.2)}
 
-    /* FILTER ROLE BAR */
+    /* ROLE FILTER */
     .role-filter-bar{display:flex;gap:6px;flex-wrap:wrap}
-    .rf-btn{padding:4px 12px;border-radius:20px;font-size:11px;font-family:Arial,sans-serif;border:1px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.04);color:var(--muted);cursor:pointer;transition:all .2s}
+    .rf-btn{padding:4px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.04);color:var(--muted);cursor:pointer;transition:all .2s}
     .rf-btn.active{background:rgba(0,229,255,0.14);color:var(--cyan);border-color:var(--cyan)}
 
-    /* JABATAN GANDA CHECKBOX */
+    /* ROLE CHECKBOXES */
     .roles-checkboxes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-    .role-cb{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;cursor:pointer;font-size:12px;font-family:Arial,sans-serif;color:var(--muted);transition:all .2s;user-select:none}
+    .role-cb{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;cursor:pointer;font-size:12px;color:var(--muted);transition:all .2s;user-select:none}
     .role-cb input{display:none}
     .role-cb.checked{background:rgba(0,229,255,0.12);border-color:var(--cyan);color:var(--cyan)}
-    /* ★ BARU: highlight bendahara saat checked */
     .role-cb[data-role="bendahara"].checked{background:rgba(255,208,0,0.1);border-color:var(--gold);color:var(--gold)}
+
+    /* ══ SCHOOL CARDS ══ */
+    .school-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-top:4px}
+    .school-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+    .school-card::after{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:0 14px 0 80px;background:var(--cyan);opacity:.04;transition:.3s}
+    .school-card:hover{border-color:var(--cyan);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,229,255,0.09)}
+    .school-card:hover::after{opacity:.08}
+    .school-card-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+    .school-card-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(0,102,255,0.18),rgba(0,229,255,0.09));border:1px solid rgba(0,229,255,0.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .school-card-info{flex:1;min-width:0}
+    .school-card-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .school-card-addr{font-size:11px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .school-card-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 0;border-top:1px solid rgba(0,229,255,0.08);border-bottom:1px solid rgba(0,229,255,0.08);margin-bottom:12px}
+    .school-stat{text-align:center}
+    .school-stat-num{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--cyan)}
+    .school-stat-label{font-size:10px;color:var(--muted);margin-top:2px}
+    .school-card-footer{display:flex;align-items:center;justify-content:space-between}
+    .school-card-arrow{color:var(--cyan);font-size:18px;opacity:.45;transition:.2s}
+    .school-card:hover .school-card-arrow{opacity:1;transform:translateX(5px)}
+
+    /* ══ USERS PER SCHOOL HEADER ══ */
+    .users-view-header{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+    .back-btn{width:36px;height:36px;border-radius:50%;background:rgba(0,229,255,0.07);border:1px solid rgba(0,229,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--cyan);flex-shrink:0;transition:all .2s}
+    .back-btn:hover{background:rgba(0,229,255,0.16);transform:scale(1.08)}
+    .users-view-school{flex:1;min-width:0}
+    .users-view-school-name{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px}
+    .users-view-school-sub{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .users-view-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
 
     /* KONTEN */
     .konten-layout{display:grid;grid-template-columns:200px 1fr;gap:16px}
     .kat-list{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px;height:fit-content;position:sticky;top:0}
-    .kat-list .nav-item{font-size:12px;font-family:Arial,sans-serif;padding:7px 10px}
+    .kat-list .nav-item{font-size:12px;padding:7px 10px}
     .content-list{display:flex;flex-direction:column;gap:10px}
     .content-item{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;transition:all .2s}
     .content-item:hover{border-color:rgba(0,229,255,0.3)}
     .content-item-icon{font-size:20px;width:36px;height:36px;background:rgba(0,102,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .content-item-body{flex:1;min-width:0}
-    .content-item-name{font-size:12px;font-weight:700;color:#fff;margin-bottom:4px;font-family:Arial,sans-serif}
-    .content-item-cat{font-size:11px;color:var(--muted);margin-bottom:6px;font-family:Arial,sans-serif}
+    .content-item-name{font-size:12px;font-weight:700;color:#fff;margin-bottom:4px}
+    .content-item-cat{font-size:11px;color:var(--muted);margin-bottom:6px}
     .content-item-roles{display:flex;gap:4px;flex-wrap:wrap}
     .content-item-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
     .empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
     .empty-state .icon{font-size:40px;margin-bottom:10px}
 
-    /* UPDATE */
+    /* UPDATE & ACTIVITY */
     .update-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px}
     .update-version{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:700;color:#fff;margin:6px 0}
-
-    /* ACTIVITY */
     .activity-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(0,229,255,0.06)}
     .activity-item:last-child{border-bottom:none}
     .activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
-    .activity-text{font-size:12px;color:var(--text);font-family:Arial,sans-serif}
-    .activity-time{font-size:11px;color:var(--muted);margin-top:2px;font-family:Arial,sans-serif}
+    .activity-text{font-size:12px;color:var(--text)}
+    .activity-time{font-size:11px;color:var(--muted);margin-top:2px}
 
     /* MODAL */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
@@ -168,15 +188,15 @@
     .modal-close{background:rgba(255,68,102,0.1);border:1px solid rgba(255,68,102,0.2);border-radius:7px;color:#ff8899;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
     .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
     .form-group{margin-bottom:14px}
-    .form-label{display:block;font-size:12px;color:var(--cyan);font-family:Arial,sans-serif;margin-bottom:5px;font-weight:600}
-    .form-control{width:100%;padding:9px 12px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;color:var(--text);font-size:12px;font-family:Arial,sans-serif;outline:none;transition:border .2s}
+    .form-label{display:block;font-size:12px;color:var(--cyan);margin-bottom:5px;font-weight:600}
+    .form-control{width:100%;padding:9px 12px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;color:var(--text);font-size:12px;outline:none;transition:border .2s}
     .form-control:focus{border-color:var(--cyan)}
     textarea.form-control{resize:vertical;min-height:80px}
     select.form-control option{background:var(--dark2)}
 
     /* TOAST */
     .notif-toast{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
-    .toast{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:11px;backdrop-filter:blur(12px);border:1px solid;font-size:12px;font-family:Arial,sans-serif;min-width:240px;max-width:340px;animation:toastin .3s ease}
+    .toast{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:11px;backdrop-filter:blur(12px);border:1px solid;font-size:12px;min-width:240px;max-width:340px;animation:toastin .3s ease}
     @keyframes toastin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
     .toast.success{background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.3);color:var(--success)}
     .toast.error{background:rgba(255,68,102,0.1);border-color:rgba(255,68,102,0.3);color:var(--danger)}
@@ -185,10 +205,9 @@
   </style>
 </head>
 <body>
-
 <div class="notif-toast" id="toastContainer"></div>
 
-<!-- ══ SIDEBAR ══ -->
+<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
@@ -197,12 +216,10 @@
     </div>
     <div class="sidebar-role">👑 ADMINISTRATOR</div>
   </div>
-
   <nav class="sidebar-nav">
     <div class="nav-section">Menu Utama</div>
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-section">Manajemen</div>
-    <div class="nav-item" onclick="showPage('sekolah',this)"><span class="nav-icon">🏫</span>Kelola Sekolah</div>
     <div class="nav-item" onclick="showPage('guru',this)"><span class="nav-icon">👥</span>Kelola Pengguna</div>
     <div class="nav-section">Sistem</div>
     <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📝</span>Kelola Konten</div>
@@ -212,7 +229,6 @@
     <div class="nav-item" onclick="showPage('log',this)"><span class="nav-icon">📋</span>Log Aktivitas</div>
     <div class="nav-item" onclick="showPage('pengaturan',this)"><span class="nav-icon">⚙️</span>Pengaturan</div>
   </nav>
-
   <div class="sidebar-footer">
     <div class="sidebar-music">
       <div class="sm-row1">
@@ -230,7 +246,7 @@
   </div>
 </div>
 
-<!-- ══ MAIN ══ -->
+<!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-title" id="pageTitle">DASHBOARD</div>
@@ -239,7 +255,6 @@
       <div class="topbar-time" id="topbarTime">--:--</div>
     </div>
   </div>
-
   <div class="content">
 
     <!-- PAGE: DASHBOARD -->
@@ -253,65 +268,75 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="update-card">
           <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px">📋 LOG AKTIVITAS TERBARU</div>
-          <div id="activityLog"><div class="empty-state"><div class="icon">📋</div><p>Belum ada aktivitas</p></div></div>
+          <div id="activityLog"><div class="empty-state" style="padding:20px"><div class="icon">📋</div><p>Belum ada aktivitas</p></div></div>
         </div>
         <div class="update-card">
           <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px">⚙️ INFO SISTEM</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px">
-              <span style="color:var(--muted)">Versi Aplikasi</span><span id="settingVersion" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px">
-              <span style="color:var(--muted)">Database</span><span style="color:var(--success)">Firebase Firestore</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px">
-              <span style="color:var(--muted)">Versi Lokal</span><span id="settingVersion2" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px">
-              <span style="color:var(--muted)">Status</span><span style="color:var(--success)">● Aktif</span>
-            </div>
+            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px"><span style="color:var(--muted)">Versi Firebase</span><span id="settingVersion" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px"><span style="color:var(--muted)">Database</span><span style="color:var(--success)">Firebase Firestore</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px"><span style="color:var(--muted)">Versi Lokal</span><span id="settingVersion2" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px"><span style="color:var(--muted)">Status</span><span style="color:var(--success)">● Aktif</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PAGE: SEKOLAH -->
-    <div class="page" id="page-sekolah">
-      <div class="section-header">
-        <div class="section-title">Kelola <span>Sekolah</span></div>
-        <button class="btn btn-primary" onclick="openModalSekolah()">+ Tambah Sekolah</button>
-      </div>
-      <div class="table-wrap">
-        <div class="table-toolbar">
-          <div class="search-wrap"><input class="search-input" id="searchSekolah" placeholder="Cari sekolah..." oninput="filterSekolah()"/></div>
-        </div>
-        <table><thead><tr><th>Nama Sekolah</th><th>Alamat</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="sekolahBody"><tr><td colspan="4" style="text-align:center;padding:30px;color:var(--muted)">Memuat...</td></tr></tbody></table>
-      </div>
-    </div>
-
-    <!-- PAGE: PENGGUNA -->
+    <!-- ══════════════════════════════════════════
+         PAGE: KELOLA PENGGUNA
+         Level 1 = kartu per sekolah  (#view-schools)
+         Level 2 = tabel user sekolah (#view-users)
+    ══════════════════════════════════════════ -->
     <div class="page" id="page-guru">
-      <div class="section-header">
-        <div class="section-title">Kelola <span>Pengguna</span></div>
-        <button class="btn btn-primary" onclick="openModalUser()">+ Tambah Pengguna</button>
-      </div>
-      <div class="table-wrap">
-        <div class="table-toolbar">
-          <div class="search-wrap"><input class="search-input" id="searchUser" placeholder="Cari pengguna..." oninput="filterUsers()"/></div>
-          <!-- ★ ROLE FILTER: tambah Bendahara -->
-          <div class="role-filter-bar">
-            <div class="rf-btn active" onclick="filterByRole('all',this)">Semua</div>
-            <div class="rf-btn" onclick="filterByRole('guru',this)">👨‍🏫 Guru</div>
-            <div class="rf-btn" onclick="filterByRole('kepsek',this)">🏛️ Kepsek</div>
-            <div class="rf-btn" onclick="filterByRole('bendahara',this)">💰 Bendahara</div>
-            <div class="rf-btn" onclick="filterByRole('ops',this)">💻 Operator</div>
+
+      <!-- LEVEL 1 — DAFTAR KARTU SEKOLAH -->
+      <div id="view-schools">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Kelola <span>Pengguna</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">Pilih sekolah untuk melihat &amp; mengelola penggunanya</div>
+          </div>
+          <button class="btn btn-gold" onclick="openModalSekolah()">🏫 + Tambah Sekolah</button>
+        </div>
+        <div class="school-grid" id="schoolGrid">
+          <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
+            <div style="font-size:32px;margin-bottom:10px">⏳</div>Memuat data sekolah...
           </div>
         </div>
-        <table><thead><tr><th>Nama</th><th>Username</th><th>Jabatan</th><th>Sekolah</th><th>Status</th><th>Expired</th><th>Aksi</th></tr></thead>
-        <tbody id="userBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">Memuat...</td></tr></tbody></table>
       </div>
-    </div>
+
+      <!-- LEVEL 2 — PENGGUNA PER SEKOLAH -->
+      <div id="view-users" style="display:none">
+        <div class="users-view-header">
+          <div class="back-btn" onclick="backToSchools()" title="Kembali ke daftar sekolah">←</div>
+          <div class="users-view-school">
+            <div class="users-view-school-name" id="activeSchoolName">—</div>
+            <div class="users-view-school-sub" id="activeSchoolSub">—</div>
+          </div>
+          <div class="users-view-actions">
+            <button class="btn btn-gold btn-sm" id="btnEditSchool" onclick="editActiveSchool()">✏️ Edit Sekolah</button>
+            <button class="btn btn-primary btn-sm" onclick="openModalUser()">+ Tambah Pengguna</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <div class="search-wrap"><input class="search-input" id="searchUser" placeholder="Cari nama / username..." oninput="filterUsers()"/></div>
+            <div class="role-filter-bar">
+              <div class="rf-btn active" onclick="filterByRole('all',this)">Semua</div>
+              <div class="rf-btn" onclick="filterByRole('guru',this)">👨‍🏫 Guru</div>
+              <div class="rf-btn" onclick="filterByRole('kepsek',this)">🏛️ Kepsek</div>
+              <div class="rf-btn" onclick="filterByRole('bendahara',this)">💰 Bendahara</div>
+              <div class="rf-btn" onclick="filterByRole('ops',this)">💻 Operator</div>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Nama</th><th>Username</th><th>Jabatan</th><th>Status</th><th>Expired</th><th>Aksi</th></tr></thead>
+            <tbody id="userBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-guru -->
 
     <!-- PAGE: KONTEN -->
     <div class="page" id="page-konten">
@@ -321,7 +346,7 @@
       </div>
       <div class="konten-layout">
         <div class="kat-list" id="kategoriList">
-          <div style="font-size:11px;color:var(--cyan);font-weight:700;padding:4px 8px 8px;font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:1px">Kategori</div>
+          <div style="font-size:11px;color:var(--cyan);font-weight:700;padding:4px 8px 8px;text-transform:uppercase;letter-spacing:1px">Kategori</div>
         </div>
         <div>
           <div class="content-list" id="kontenList">
@@ -370,11 +395,11 @@
             <input type="checkbox" id="forceUpdate" style="accent-color:var(--cyan)"/>
             <label for="forceUpdate" class="form-label" style="margin:0">Force Update (wajib)</label>
           </div>
-          <div id="updatePreviewBox" style="display:none;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;padding:12px;margin-bottom:14px;font-size:11px;font-family:Arial,sans-serif;color:var(--muted)"></div>
+          <div id="updatePreviewBox" style="display:none;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:8px;padding:12px;margin-bottom:14px;font-size:11px;color:var(--muted)"></div>
           <button class="btn btn-primary" style="width:100%" onclick="pushUpdate()">🚀 Push Update ke Firebase</button>
         </div>
         <div class="update-card">
-          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px" id="updateHistory">📜 RIWAYAT UPDATE</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px">📜 RIWAYAT UPDATE</div>
           <div id="updateHistory"><div class="empty-state"><div class="icon">🔄</div><p>Belum ada riwayat</p></div></div>
         </div>
       </div>
@@ -390,7 +415,6 @@
               <option value="all">Semua Pengguna</option>
               <option value="guru">Guru Saja</option>
               <option value="kepsek">Kepala Sekolah Saja</option>
-              <!-- ★ BARU: target bendahara -->
               <option value="bendahara">Bendahara Saja</option>
               <option value="ops">Operator Saja</option>
             </select>
@@ -433,22 +457,16 @@
         <div class="update-card">
           <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:14px">🔒 GANTI PASSWORD ADMIN</div>
           <div class="form-group"><label class="form-label">Password Lama</label><input class="form-control" type="password" id="oldPass" placeholder="Password saat ini"/></div>
-          <div class="form-group"><label class="form-label">Password Baru</label><input class="form-control" type="password" id="newPass" placeholder="Password baru (min 6 karakter)"/></div>
+          <div class="form-group"><label class="form-label">Password Baru</label><input class="form-control" type="password" id="newPass" placeholder="Min 6 karakter"/></div>
           <div class="form-group"><label class="form-label">Konfirmasi Password Baru</label><input class="form-control" type="password" id="confirmPass" placeholder="Ulangi password baru"/></div>
           <button class="btn btn-primary" onclick="gantiPassword()">🔒 Ganti Password</button>
         </div>
         <div class="update-card">
           <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px">ℹ️ INFO APLIKASI</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px">
-              <span style="color:var(--muted)">Versi Firebase</span><span id="settingVersion" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px">
-              <span style="color:var(--muted)">Versi Lokal</span><span id="settingVersion2" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px">
-              <span style="color:var(--muted)">Status Server</span><span style="color:var(--success)">● Online</span>
-            </div>
+            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px"><span style="color:var(--muted)">Versi Firebase</span><span id="settingVersion3" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px"><span style="color:var(--muted)">Versi Lokal</span><span id="settingVersion4" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:11px">v1.0.0</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 12px;background:rgba(0,229,255,0.04);border-radius:8px"><span style="color:var(--muted)">Status Server</span><span style="color:var(--success)">● Online</span></div>
           </div>
         </div>
       </div>
@@ -457,7 +475,7 @@
   </div><!-- /content -->
 </div><!-- /main -->
 
-<!-- ══ MODAL SEKOLAH ══ -->
+<!-- MODAL SEKOLAH -->
 <div class="modal-overlay" id="modalSekolah">
   <div class="modal" style="max-width:480px">
     <div class="modal-header"><div class="modal-title" id="modalSekolahTitle">Tambah Sekolah</div><button class="modal-close" onclick="closeModal('modalSekolah')">✕</button></div>
@@ -471,7 +489,7 @@
   </div>
 </div>
 
-<!-- ══ MODAL USER (jabatan ganda + bendahara) ══ -->
+<!-- MODAL USER -->
 <div class="modal-overlay" id="modalUser">
   <div class="modal" style="max-width:560px">
     <div class="modal-header"><div class="modal-title" id="modalUserTitle">Tambah Pengguna</div><button class="modal-close" onclick="closeModal('modalUser')">✕</button></div>
@@ -480,16 +498,21 @@
     <div class="form-group"><label class="form-label">Username</label><input class="form-control" id="userUsername" placeholder="Username untuk login"/></div>
     <div class="form-group"><label class="form-label">Password</label><input class="form-control" type="password" id="userPassword" placeholder="Kosongkan jika tidak diubah"/></div>
     <div class="form-group">
-      <label class="form-label">Jabatan <span style="color:var(--muted);font-weight:400">(boleh pilih lebih dari satu)</span></label>
-      <!-- ★ BARU: ditambah Bendahara -->
+      <label class="form-label">Jabatan <span style="color:var(--muted);font-weight:400">(boleh lebih dari satu)</span></label>
+      <!-- FIX: onclick meneruskan event untuk mencegah double-fire -->
       <div class="roles-checkboxes" id="rolesCheckboxes">
-        <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
-        <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this)"><input type="checkbox" value="kepsek"/>   🏛️ Kepala Sekolah</label>
-        <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
-        <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this)"><input type="checkbox" value="ops"/>      💻 Operator</label>
+        <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
+        <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>   🏛️ Kepala Sekolah</label>
+        <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
+        <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>      💻 Operator</label>
       </div>
     </div>
-    <div class="form-group"><label class="form-label">Sekolah</label><select class="form-control" id="userSekolah"></select></div>
+    <!-- Sekolah readonly, terisi otomatis dari konteks sekolah yang dipilih -->
+    <div class="form-group">
+      <label class="form-label">Sekolah</label>
+      <input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>
+      <input type="hidden" id="userSekolah"/>
+    </div>
     <div class="form-group"><label class="form-label">Status</label>
       <select class="form-control" id="userStatus"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select>
     </div>
@@ -498,7 +521,7 @@
   </div>
 </div>
 
-<!-- ══ MODAL KONTEN ══ -->
+<!-- MODAL KONTEN -->
 <div class="modal-overlay" id="modalKonten">
   <div class="modal" style="max-width:580px">
     <div class="modal-header"><div class="modal-title" id="modalKontenTitle">Tambah Konten</div><button class="modal-close" onclick="closeModal('modalKonten')">✕</button></div>
@@ -506,32 +529,31 @@
     <div class="form-group"><label class="form-label">Nama Dokumen</label><input class="form-control" id="kontenNama" placeholder="Nama dokumen"/></div>
     <div class="form-group"><label class="form-label">Kategori</label>
       <select class="form-control" id="kontenKategori">
-        <option value="adm_guru">Administrasi Guru & Pembelajaran</option>
+        <option value="adm_guru">Administrasi Guru &amp; Pembelajaran</option>
         <option value="adm_kepsek">Administrasi Kepala Sekolah</option>
         <option value="kosp">Kurikulum Operasional Satuan Pendidikan</option>
         <option value="adm_umum">Administrasi Umum Sekolah</option>
-        <option value="keuangan">Keuangan & BOS</option>
-        <option value="evaluasi">Evaluasi & Pelaporan</option>
+        <option value="keuangan">Keuangan &amp; BOS</option>
+        <option value="evaluasi">Evaluasi &amp; Pelaporan</option>
         <option value="perpus">Administrasi Perpustakaan</option>
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">Terlihat Oleh <span style="color:var(--muted);font-weight:400">(boleh pilih lebih dari satu)</span></label>
-      <!-- ★ BARU: ditambah Bendahara -->
+      <label class="form-label">Terlihat Oleh <span style="color:var(--muted);font-weight:400">(boleh lebih dari satu)</span></label>
       <div class="roles-checkboxes" id="kontenVisibleTo">
-        <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
-        <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this)"><input type="checkbox" value="kepsek"/>   🏛️ Kepsek</label>
-        <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
-        <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this)"><input type="checkbox" value="ops"/>      💻 Operator</label>
+        <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
+        <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>   🏛️ Kepsek</label>
+        <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
+        <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>      💻 Operator</label>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Deskripsi / Panduan</label><textarea class="form-control" id="kontenDeskripsi" style="min-height:70px" placeholder="Deskripsi..."></textarea></div>
     <div class="form-group"><label class="form-label">Template Konten</label><textarea class="form-control" id="kontenTemplate" style="min-height:140px" placeholder="Isi template dokumen..."></textarea></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalKonten')">Batal</button><button class="btn btn-primary" onclick="saveKonten()">💾 Simpan & Live Update</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalKonten')">Batal</button><button class="btn btn-primary" onclick="saveKonten()">💾 Simpan &amp; Live Update</button></div>
   </div>
 </div>
 
-<!-- ══ MODAL KONFIRMASI HAPUS ══ -->
+<!-- MODAL KONFIRMASI HAPUS -->
 <div class="modal-overlay" id="modalKonfirmasi">
   <div class="modal" style="max-width:400px">
     <div class="modal-header"><div class="modal-title">⚠ Konfirmasi Hapus</div><button class="modal-close" onclick="closeModal('modalKonfirmasi')">✕</button></div>
@@ -544,28 +566,27 @@
 'use strict';
 // ══════════════════════════════════════════
 // ADMIN PANEL — CIMEGA SMART OFFICE
-// Versi: Role Bendahara Integrated
+// Versi: School-Based User Management
+// Perbaikan: Role checkbox double-fire, nav scope, school drill-down
 // ══════════════════════════════════════════
 
-let db, adminData = {};
-let _allUsers = [], _allSekolah = [], _roleFilter = 'all';
-let _currentKat = '', _currentKatEl = null;
+let db, adminData={};
+let _allUsers=[], _allSekolah=[], _roleFilter='all';
+let _currentKat='', _currentKatEl=null;
+let _activeSchoolName='', _activeSchoolId='';
 
-const kontenKategori = {
-  adm_guru:   'Administrasi Guru & Pembelajaran',
-  adm_kepsek: 'Administrasi Kepala Sekolah',
-  kosp:       'Kurikulum Operasional Satuan Pendidikan',
-  adm_umum:   'Administrasi Umum Sekolah',
-  keuangan:   'Keuangan & BOS',
-  evaluasi:   'Evaluasi & Pelaporan',
-  perpus:     'Administrasi Perpustakaan',
+const kontenKategori={
+  adm_guru:  'Administrasi Guru & Pembelajaran',
+  adm_kepsek:'Administrasi Kepala Sekolah',
+  kosp:      'Kurikulum Operasional Satuan Pendidikan',
+  adm_umum:  'Administrasi Umum Sekolah',
+  keuangan:  'Keuangan & BOS',
+  evaluasi:  'Evaluasi & Pelaporan',
+  perpus:    'Administrasi Perpustakaan',
 };
 
 // ── Clock ──────────────────────────────────
-setInterval(()=>{
-  const el=document.getElementById('topbarTime');
-  if(el) el.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-},1000);
+setInterval(()=>{const el=document.getElementById('topbarTime');if(el)el.textContent=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});},1000);
 
 // ── Toast ──────────────────────────────────
 function showToast(type,title,msg){
@@ -576,47 +597,48 @@ function showToast(type,title,msg){
   document.getElementById('toastContainer').appendChild(t);
   setTimeout(()=>t.remove(),4000);
 }
-
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 function openModal(id){document.getElementById(id).classList.add('show');}
 
-// ── Toggle checkbox jabatan ─────────────────
-function toggleRoleCb(el){
+// ── Role Checkbox ──────────────────────────
+// FIX: event.preventDefault() mencegah double-fire label→input→label
+function toggleRoleCb(el,event){
+  if(event) event.preventDefault();
   el.classList.toggle('checked');
   el.querySelector('input').checked=el.classList.contains('checked');
 }
-function getCheckedRoles(containerId){
-  return Array.from(document.querySelectorAll(`#${containerId} .role-cb.checked`)).map(el=>el.dataset.role);
+function getCheckedRoles(cid){
+  return Array.from(document.querySelectorAll(`#${cid} .role-cb.checked`)).map(el=>el.dataset.role);
 }
-function setCheckedRoles(containerId,roles){
-  document.querySelectorAll(`#${containerId} .role-cb`).forEach(el=>{
-    const checked=(roles||[]).includes(el.dataset.role);
-    el.classList.toggle('checked',checked);
-    el.querySelector('input').checked=checked;
+function setCheckedRoles(cid,roles){
+  document.querySelectorAll(`#${cid} .role-cb`).forEach(el=>{
+    const on=(roles||[]).includes(el.dataset.role);
+    el.classList.toggle('checked',on);
+    el.querySelector('input').checked=on;
   });
 }
 
 // ── Navigation ─────────────────────────────
+// FIX: scope ke .sidebar-nav agar tidak menyentuh #kategoriList
 function showPage(page,navEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'DASHBOARD',sekolah:'KELOLA SEKOLAH',guru:'KELOLA PENGGUNA',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
-  if(page==='guru')    loadUsers();
-  if(page==='sekolah') loadSekolah();
-  if(page==='konten')  loadKategoriList();
-  if(page==='log')     loadLog();
+  if(page==='guru')       loadSchoolCards();
+  if(page==='konten')     loadKategoriList();
+  if(page==='log')        loadLog();
   if(page==='pengaturan') loadPengaturan();
-  if(page==='update')  loadUpdateHistory();
+  if(page==='update')     loadUpdateHistory();
 }
 
 // ════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════
 async function loadDashboard(){
-  const{collection,getDocs}=window._fb;
+  const{collection,getDocs,query,orderBy,limit}=window._fb;
   try{
     const[skolSnap,usrSnap,konSnap]=await Promise.all([
       getDocs(collection(db,'sekolah')),
@@ -626,61 +648,268 @@ async function loadDashboard(){
     document.getElementById('statSekolah').textContent=skolSnap.size;
     document.getElementById('statGuru').textContent=usrSnap.size;
     document.getElementById('statKonten').textContent=konSnap.size;
-    // ★ BARU: hitung bendahara aktif
     let bendaharaAktif=0;
-    usrSnap.forEach(d=>{
-      const data=d.data();
-      const roles=data.roles||[data.role];
-      if(roles.includes('bendahara')&&data.status==='aktif') bendaharaAktif++;
-    });
+    usrSnap.forEach(d=>{const data=d.data();const roles=data.roles||[data.role];if(roles.includes('bendahara')&&data.status==='aktif')bendaharaAktif++;});
     document.getElementById('statBendahara').textContent=bendaharaAktif;
+    try{
+      const logSnap=await getDocs(query(collection(db,'adminLog'),orderBy('time','desc'),limit(5)));
+      const logItems=[];
+      logSnap.forEach(d=>{const data=d.data();logItems.push(`<div class="activity-item"><div class="activity-dot" style="background:var(--cyan)"></div><div style="flex:1"><div class="activity-text"><strong>${data.aksi||'-'}</strong>: ${data.detail||''}</div><div class="activity-time">${fmtDate(data.time)} · ${data.admin||'-'}</div></div></div>`);});
+      document.getElementById('activityLog').innerHTML=logItems.join('')||'<div class="empty-state" style="padding:20px"><div class="icon">📋</div><p>Belum ada aktivitas</p></div>';
+    }catch(e){}
   }catch(e){}
 }
 
 // ════════════════════════════════════════════
-// SEKOLAH
+// KELOLA PENGGUNA — LEVEL 1: KARTU SEKOLAH
 // ════════════════════════════════════════════
-async function loadSekolah(){
+async function loadSchoolCards(){
+  document.getElementById('view-schools').style.display='';
+  document.getElementById('view-users').style.display='none';
+  _roleFilter='all';
+  _allUsers=[];
+
   const{collection,getDocs}=window._fb;
+  const grid=document.getElementById('schoolGrid');
+  grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)"><div style="font-size:32px;margin-bottom:10px">⏳</div>Memuat data sekolah...</div>`;
+
   try{
-    const snap=await getDocs(collection(db,'sekolah'));
+    const[skolSnap,usrSnap]=await Promise.all([
+      getDocs(collection(db,'sekolah')),
+      getDocs(collection(db,'users')),
+    ]);
+
     _allSekolah=[];
-    snap.forEach(d=>_allSekolah.push({id:d.id,...d.data()}));
-    renderSekolah(_allSekolah);
-  }catch(e){}
+    skolSnap.forEach(d=>_allSekolah.push({id:d.id,...d.data()}));
+
+    // Hitung statistik per sekolah
+    const statBySchool={};
+    usrSnap.forEach(d=>{
+      const u=d.data();
+      if(!u.roles) u.roles=u.role?[u.role]:['guru'];
+      _allUsers.push({id:d.id,...u});
+      const sk=u.sekolah||'—';
+      if(!statBySchool[sk]) statBySchool[sk]={total:0,aktif:0,guru:0,kepsek:0,bendahara:0,ops:0};
+      statBySchool[sk].total++;
+      if(u.status==='aktif') statBySchool[sk].aktif++;
+      (u.roles||[]).forEach(r=>{if(statBySchool[sk][r]!==undefined)statBySchool[sk][r]++;});
+    });
+
+    if(_allSekolah.length===0){
+      grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--muted)">
+        <div style="font-size:44px;margin-bottom:14px">🏫</div>
+        <div style="font-size:14px;color:#fff;margin-bottom:6px">Belum ada sekolah terdaftar</div>
+        <div style="font-size:12px;margin-bottom:20px">Tambahkan sekolah pertama untuk mulai mengelola pengguna</div>
+        <button class="btn btn-gold" onclick="openModalSekolah()">🏫 + Tambah Sekolah Sekarang</button>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML=_allSekolah.map(s=>{
+      const st=statBySchool[s.nama]||{total:0,aktif:0,kepsek:0};
+      return `<div class="school-card" onclick="openSchoolUsers('${s.id}','${(s.nama||'').replace(/'/g,"\\'")}')">
+        <div class="school-card-top">
+          <div class="school-card-icon">🏫</div>
+          <div class="school-card-info">
+            <div class="school-card-name">${s.nama||'-'}</div>
+            <div class="school-card-addr">${s.alamat||'Alamat belum diisi'}</div>
+          </div>
+        </div>
+        <div class="school-card-stats">
+          <div class="school-stat"><div class="school-stat-num">${st.total}</div><div class="school-stat-label">Pengguna</div></div>
+          <div class="school-stat"><div class="school-stat-num" style="color:var(--success)">${st.aktif}</div><div class="school-stat-label">Aktif</div></div>
+          <div class="school-stat"><div class="school-stat-num" style="color:var(--gold)">${st.kepsek}</div><div class="school-stat-label">Kepsek</div></div>
+        </div>
+        <div class="school-card-footer">
+          <span class="badge ${s.status==='aktif'?'badge-active':'badge-inactive'}">${s.status||'aktif'}</span>
+          <span class="school-card-arrow">→</span>
+        </div>
+      </div>`;
+    }).join('');
+
+  }catch(e){
+    grid.innerHTML=`<div style="grid-column:1/-1" class="empty-state"><div class="icon">⚠️</div><p>Gagal memuat: ${e.message}</p></div>`;
+  }
 }
-function renderSekolah(list){
+
+// ── Buka pengguna per sekolah ──────────────
+function openSchoolUsers(schoolId, schoolName){
+  _activeSchoolId=schoolId;
+  _activeSchoolName=schoolName;
+
+  const sekolah=_allSekolah.find(s=>s.id===schoolId)||{};
+  document.getElementById('activeSchoolName').textContent=schoolName;
+  document.getElementById('activeSchoolSub').textContent=
+    (sekolah.alamat||'Alamat belum diisi')+' · Status: '+(sekolah.status||'aktif');
+
+  // Reset filter & search
+  _roleFilter='all';
+  document.getElementById('searchUser').value='';
+  document.querySelectorAll('.rf-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+
+  document.getElementById('view-schools').style.display='none';
+  document.getElementById('view-users').style.display='';
+
+  const schoolUsers=_allUsers.filter(u=>u.sekolah===schoolName);
+  renderUsers(applyRoleFilter(schoolUsers));
+}
+
+// ── Kembali ke daftar sekolah ──────────────
+function backToSchools(){
+  document.getElementById('view-users').style.display='none';
+  document.getElementById('view-schools').style.display='';
+  _activeSchoolId='';
+  _activeSchoolName='';
+}
+
+// ── Edit sekolah aktif (dari tombol di level 2) ──
+function editActiveSchool(){
+  openModalSekolah(_activeSchoolId);
+}
+
+// ════════════════════════════════════════════
+// KELOLA PENGGUNA — LEVEL 2: TABEL USER
+// ════════════════════════════════════════════
+function applyRoleFilter(list){
+  if(_roleFilter==='all') return list;
+  return list.filter(u=>(u.roles||[u.role]).includes(_roleFilter));
+}
+function filterByRole(role,el){
+  _roleFilter=role;
+  document.querySelectorAll('.rf-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const q=document.getElementById('searchUser').value.toLowerCase();
+  let list=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
+  if(q) list=list.filter(u=>(u.nama||'').toLowerCase().includes(q)||(u.username||'').toLowerCase().includes(q));
+  renderUsers(applyRoleFilter(list));
+}
+function filterUsers(){
+  const q=document.getElementById('searchUser').value.toLowerCase();
+  let list=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
+  if(q) list=list.filter(u=>(u.nama||'').toLowerCase().includes(q)||(u.username||'').toLowerCase().includes(q));
+  renderUsers(applyRoleFilter(list));
+}
+function roleBadgeHtml(roles){
+  const map={guru:'<span class="badge badge-guru">👨‍🏫 Guru</span>',kepsek:'<span class="badge badge-kepsek">🏛️ Kepsek</span>',bendahara:'<span class="badge badge-bendahara">💰 Bendahara</span>',ops:'<span class="badge badge-ops">💻 Operator</span>'};
+  return (roles||[]).map(r=>map[r]||`<span class="badge">${r}</span>`).join(' ');
+}
+function renderUsers(list){
   const rows=list.map(d=>`<tr>
     <td><strong>${d.nama||'-'}</strong></td>
-    <td style="color:var(--muted)">${d.alamat||'-'}</td>
+    <td style="color:var(--muted);font-size:11px">${d.username||'-'}</td>
+    <td>${roleBadgeHtml(d.roles||[d.role])}</td>
     <td><span class="badge ${d.status==='aktif'?'badge-active':'badge-inactive'}">${d.status||'-'}</span></td>
+    <td style="font-size:11px;color:var(--muted)">${d.expired?fmtDate(d.expired):'-'}</td>
     <td><div style="display:flex;gap:5px">
-      <button class="btn btn-ghost btn-sm" onclick="editSekolah('${d.id}')">✏️</button>
-      <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('sekolah','${d.id}','${d.nama||''}')">🗑</button>
+      <button class="btn btn-ghost btn-sm" onclick="editUser('${d.id}')">✏️</button>
+      <button class="btn btn-${d.status==='aktif'?'warn':'success'} btn-sm" onclick="toggleUserStatus('${d.id}','${d.status}')">${d.status==='aktif'?'🔒':'🔓'}</button>
+      <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('user','${d.id}','${(d.nama||'').replace(/'/g,"\\'")}')">🗑</button>
     </div></td>
   </tr>`).join('');
-  document.getElementById('sekolahBody').innerHTML=rows||`<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--muted)">Belum ada sekolah</td></tr>`;
+  document.getElementById('userBody').innerHTML=rows||`<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Belum ada pengguna di sekolah ini.<br><br><button class="btn btn-primary btn-sm" onclick="openModalUser()">+ Tambah Pengguna Pertama</button></td></tr>`;
 }
-function filterSekolah(){
-  const q=document.getElementById('searchSekolah').value.toLowerCase();
-  renderSekolah(_allSekolah.filter(d=>(d.nama||'').toLowerCase().includes(q)));
+
+// ── Modal Pengguna ─────────────────────────
+function openModalUser(){
+  if(!_activeSchoolName){showToast('warn','Perhatian','Pilih sekolah terlebih dahulu!');return;}
+  document.getElementById('userId').value='';
+  document.getElementById('userNama').value='';
+  document.getElementById('userUsername').value='';
+  document.getElementById('userPassword').value='';
+  document.getElementById('userStatus').value='aktif';
+  document.getElementById('userExpired').value='';
+  document.getElementById('userSekolah').value=_activeSchoolName;
+  document.getElementById('userSekolahDisplay').value=_activeSchoolName;
+  setCheckedRoles('rolesCheckboxes',[]);
+  document.getElementById('modalUserTitle').textContent='Tambah Pengguna — '+_activeSchoolName;
+  openModal('modalUser');
 }
-function openModalSekolah(){
-  document.getElementById('sekolahId').value='';
-  document.getElementById('sekolahNama').value='';
-  document.getElementById('sekolahAlamat').value='';
-  document.getElementById('sekolahStatus').value='aktif';
-  document.getElementById('modalSekolahTitle').textContent='Tambah Sekolah';
-  openModal('modalSekolah');
-}
-function editSekolah(id){
-  const d=_allSekolah.find(s=>s.id===id);
+function editUser(id){
+  const d=_allUsers.find(u=>u.id===id);
   if(!d) return;
-  document.getElementById('sekolahId').value=id;
-  document.getElementById('sekolahNama').value=d.nama||'';
-  document.getElementById('sekolahAlamat').value=d.alamat||'';
-  document.getElementById('sekolahStatus').value=d.status||'aktif';
-  document.getElementById('modalSekolahTitle').textContent='Edit Sekolah';
+  document.getElementById('userId').value=id;
+  document.getElementById('userNama').value=d.nama||'';
+  document.getElementById('userUsername').value=d.username||'';
+  document.getElementById('userPassword').value='';
+  document.getElementById('userStatus').value=d.status||'aktif';
+  document.getElementById('userExpired').value=d.expired?fmtDateInput(d.expired):'';
+  document.getElementById('userSekolah').value=d.sekolah||_activeSchoolName;
+  document.getElementById('userSekolahDisplay').value=d.sekolah||_activeSchoolName;
+  setCheckedRoles('rolesCheckboxes',d.roles||[d.role]);
+  document.getElementById('modalUserTitle').textContent='Edit Pengguna — '+(d.nama||'');
+  openModal('modalUser');
+}
+async function saveUser(){
+  const{collection,doc,addDoc,updateDoc,serverTimestamp,Timestamp}=window._fb;
+  const id=document.getElementById('userId').value;
+  const nama=document.getElementById('userNama').value.trim();
+  const username=document.getElementById('userUsername').value.trim();
+  const password=document.getElementById('userPassword').value;
+  const sekolah=document.getElementById('userSekolah').value||_activeSchoolName;
+  const status=document.getElementById('userStatus').value;
+  const expiredStr=document.getElementById('userExpired').value;
+  const roles=getCheckedRoles('rolesCheckboxes');
+  if(!nama||!username){showToast('warn','Peringatan','Nama dan username wajib diisi!');return;}
+  if(roles.length===0){showToast('warn','Peringatan','Pilih minimal satu jabatan!');return;}
+  if(!id&&!password){showToast('warn','Peringatan','Password wajib untuk pengguna baru!');return;}
+  if(!sekolah){showToast('warn','Peringatan','Sekolah tidak diketahui. Kembali dan pilih sekolah.');return;}
+  try{
+    const role=roles[0];
+    const payload={nama,username,roles,role,sekolah,status,updatedAt:serverTimestamp()};
+    if(password) payload.password=password;
+    payload.expired=expiredStr?Timestamp.fromDate(new Date(expiredStr)):null;
+    if(id){
+      await updateDoc(doc(db,'users',id),payload);
+      const idx=_allUsers.findIndex(u=>u.id===id);
+      if(idx>-1) _allUsers[idx]={..._allUsers[idx],...payload,id};
+    } else {
+      const ref=await addDoc(collection(db,'users'),{...payload,createdAt:serverTimestamp()});
+      _allUsers.push({id:ref.id,...payload});
+    }
+    closeModal('modalUser');
+    const schoolUsers=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
+    renderUsers(applyRoleFilter(schoolUsers));
+    loadDashboard();
+    addLog('Pengguna',`${id?'Edit':'Tambah'} pengguna: ${nama} (${roles.join('+')}) @ ${sekolah}`);
+    showToast('success','Berhasil',`Pengguna ${nama} ${id?'diperbarui':'ditambahkan'}`);
+  }catch(e){showToast('error','Error',e.message);}
+}
+async function toggleUserStatus(id,currentStatus){
+  const{doc,updateDoc,serverTimestamp}=window._fb;
+  const newStatus=currentStatus==='aktif'?'nonaktif':'aktif';
+  try{
+    await updateDoc(doc(db,'users',id),{status:newStatus,updatedAt:serverTimestamp()});
+    const u=_allUsers.find(u=>u.id===id);if(u) u.status=newStatus;
+    const schoolUsers=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
+    renderUsers(applyRoleFilter(schoolUsers));
+    addLog('Pengguna',`Status pengguna → ${newStatus}`);
+    showToast('info','Status Diubah',`Pengguna di${newStatus==='aktif'?'aktifkan':'nonaktifkan'}`);
+  }catch(e){showToast('error','Error',e.message);}
+}
+
+// ════════════════════════════════════════════
+// SEKOLAH (modal tambah/edit)
+// ════════════════════════════════════════════
+async function loadSekolahDropdown(){
+  const{collection,getDocs}=window._fb;
+  try{const snap=await getDocs(collection(db,'sekolah'));_allSekolah=[];snap.forEach(d=>_allSekolah.push({id:d.id,...d.data()}));}catch(e){}
+}
+function openModalSekolah(schoolId){
+  if(schoolId){
+    const d=_allSekolah.find(s=>s.id===schoolId);
+    if(!d) return;
+    document.getElementById('sekolahId').value=schoolId;
+    document.getElementById('sekolahNama').value=d.nama||'';
+    document.getElementById('sekolahAlamat').value=d.alamat||'';
+    document.getElementById('sekolahStatus').value=d.status||'aktif';
+    document.getElementById('modalSekolahTitle').textContent='Edit Sekolah';
+  } else {
+    document.getElementById('sekolahId').value='';
+    document.getElementById('sekolahNama').value='';
+    document.getElementById('sekolahAlamat').value='';
+    document.getElementById('sekolahStatus').value='aktif';
+    document.getElementById('modalSekolahTitle').textContent='Tambah Sekolah';
+  }
   openModal('modalSekolah');
 }
 async function saveSekolah(){
@@ -694,140 +923,18 @@ async function saveSekolah(){
     if(id) await setDoc(doc(db,'sekolah',id),{nama,alamat,status,updatedAt:serverTimestamp()});
     else   await addDoc(collection(db,'sekolah'),{nama,alamat,status,createdAt:serverTimestamp()});
     closeModal('modalSekolah');
-    loadSekolah();loadSekolahDropdown();loadDashboard();
     addLog('Sekolah',`${id?'Edit':'Tambah'} sekolah: ${nama}`);
     showToast('success','Berhasil',`Sekolah ${nama} ${id?'diperbarui':'ditambahkan'}`);
-  }catch(e){showToast('error','Error',e.message);}
-}
-async function loadSekolahDropdown(){
-  const{collection,getDocs}=window._fb;
-  try{
-    const snap=await getDocs(collection(db,'sekolah'));
-    const sel=document.getElementById('userSekolah');
-    sel.innerHTML='<option value="">-- Pilih Sekolah --</option>';
-    snap.forEach(d=>{ const opt=document.createElement('option'); opt.value=d.data().nama; opt.textContent=d.data().nama; sel.appendChild(opt); });
-  }catch(e){}
-}
-
-// ════════════════════════════════════════════
-// PENGGUNA (jabatan ganda + bendahara)
-// ════════════════════════════════════════════
-async function loadUsers(){
-  const{collection,getDocs}=window._fb;
-  try{
-    const snap=await getDocs(collection(db,'users'));
-    _allUsers=[];
-    snap.forEach(d=>{
-      const data=d.data();
-      if(!data.roles) data.roles=data.role?[data.role]:['guru'];
-      _allUsers.push({id:d.id,...data});
-    });
-    renderUsers(applyRoleFilter(_allUsers));
-  }catch(e){}
-}
-function applyRoleFilter(list){
-  if(_roleFilter==='all') return list;
-  return list.filter(u=>(u.roles||[u.role]).includes(_roleFilter));
-}
-function filterByRole(role,el){
-  _roleFilter=role;
-  document.querySelectorAll('.rf-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderUsers(applyRoleFilter(_allUsers));
-}
-function filterUsers(){
-  const q=document.getElementById('searchUser').value.toLowerCase();
-  const filtered=_allUsers.filter(u=>(u.nama||'').toLowerCase().includes(q)||(u.username||'').toLowerCase().includes(q));
-  renderUsers(applyRoleFilter(filtered));
-}
-
-// ★ BARU: roleBadgeHtml mencakup bendahara
-function roleBadgeHtml(roles){
-  const map={
-    guru:      '<span class="badge badge-guru">👨‍🏫 Guru</span>',
-    kepsek:    '<span class="badge badge-kepsek">🏛️ Kepsek</span>',
-    bendahara: '<span class="badge badge-bendahara">💰 Bendahara</span>',
-    ops:       '<span class="badge badge-ops">💻 Operator</span>',
-  };
-  return (roles||[]).map(r=>map[r]||`<span class="badge">${r}</span>`).join(' ');
-}
-
-function renderUsers(list){
-  const rows=list.map(d=>`<tr>
-    <td><strong>${d.nama||'-'}</strong></td>
-    <td style="color:var(--muted);font-size:11px">${d.username||'-'}</td>
-    <td>${roleBadgeHtml(d.roles||[d.role])}</td>
-    <td style="font-size:11px">${d.sekolah||'-'}</td>
-    <td><span class="badge ${d.status==='aktif'?'badge-active':'badge-inactive'}">${d.status||'-'}</span></td>
-    <td style="font-size:11px;color:var(--muted)">${d.expired?fmtDate(d.expired):'-'}</td>
-    <td><div style="display:flex;gap:5px">
-      <button class="btn btn-ghost btn-sm" onclick="editUser('${d.id}')">✏️</button>
-      <button class="btn btn-${d.status==='aktif'?'warn':'success'} btn-sm" onclick="toggleUserStatus('${d.id}','${d.status}')">${d.status==='aktif'?'🔒':'🔓'}</button>
-      <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('user','${d.id}','${d.nama||''}')">🗑</button>
-    </div></td>
-  </tr>`).join('');
-  document.getElementById('userBody').innerHTML=rows||`<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">Belum ada pengguna</td></tr>`;
-}
-function openModalUser(){
-  document.getElementById('userId').value='';
-  document.getElementById('userNama').value='';
-  document.getElementById('userUsername').value='';
-  document.getElementById('userPassword').value='';
-  document.getElementById('userStatus').value='aktif';
-  document.getElementById('userExpired').value='';
-  setCheckedRoles('rolesCheckboxes',[]);
-  document.getElementById('modalUserTitle').textContent='Tambah Pengguna';
-  openModal('modalUser');
-}
-function editUser(id){
-  const d=_allUsers.find(u=>u.id===id);
-  if(!d) return;
-  document.getElementById('userId').value=id;
-  document.getElementById('userNama').value=d.nama||'';
-  document.getElementById('userUsername').value=d.username||'';
-  document.getElementById('userPassword').value='';
-  document.getElementById('userStatus').value=d.status||'aktif';
-  document.getElementById('userExpired').value=d.expired?fmtDateInput(d.expired):'';
-  document.getElementById('userSekolah').value=d.sekolah||'';
-  setCheckedRoles('rolesCheckboxes',d.roles||[d.role]);
-  document.getElementById('modalUserTitle').textContent='Edit Pengguna';
-  openModal('modalUser');
-}
-async function saveUser(){
-  const{collection,doc,addDoc,updateDoc,serverTimestamp,Timestamp}=window._fb;
-  const id=document.getElementById('userId').value;
-  const nama=document.getElementById('userNama').value.trim();
-  const username=document.getElementById('userUsername').value.trim();
-  const password=document.getElementById('userPassword').value;
-  const sekolah=document.getElementById('userSekolah').value;
-  const status=document.getElementById('userStatus').value;
-  const expiredStr=document.getElementById('userExpired').value;
-  const roles=getCheckedRoles('rolesCheckboxes');
-  if(!nama||!username){showToast('warn','Peringatan','Nama dan username wajib diisi!');return;}
-  if(roles.length===0){showToast('warn','Peringatan','Pilih minimal satu jabatan!');return;}
-  if(!id&&!password){showToast('warn','Peringatan','Password wajib untuk pengguna baru!');return;}
-  try{
-    const role=roles[0]; // role utama untuk backward compat
-    const payload={nama,username,roles,role,sekolah,status,updatedAt:serverTimestamp()};
-    if(password) payload.password=password;
-    if(expiredStr) payload.expired=Timestamp.fromDate(new Date(expiredStr));
-    else payload.expired=null;
-    if(id) await updateDoc(doc(db,'users',id),payload);
-    else   await addDoc(collection(db,'users'),{...payload,createdAt:serverTimestamp()});
-    closeModal('modalUser');
-    loadUsers();loadDashboard();
-    addLog('Pengguna',`${id?'Edit':'Tambah'} pengguna: ${nama} (${roles.join('+')})`);
-    showToast('success','Berhasil',`Pengguna ${nama} ${id?'diperbarui':'ditambahkan'}`);
-  }catch(e){showToast('error','Error',e.message);}
-}
-async function toggleUserStatus(id,currentStatus){
-  const{doc,updateDoc,serverTimestamp}=window._fb;
-  const newStatus=currentStatus==='aktif'?'nonaktif':'aktif';
-  try{
-    await updateDoc(doc(db,'users',id),{status:newStatus,updatedAt:serverTimestamp()});
-    loadUsers();
-    addLog('Pengguna',`Status pengguna → ${newStatus}`);
-    showToast('info','Status Diubah',`Pengguna di${newStatus==='aktif'?'aktifkan':'nonaktifkan'}`);
+    // Update header level-2 jika sekolah aktif yang diedit
+    if(id&&_activeSchoolId===id){
+      _activeSchoolName=nama;
+      document.getElementById('activeSchoolName').textContent=nama;
+      document.getElementById('activeSchoolSub').textContent=alamat+' · Status: '+status;
+    }
+    await loadSekolahDropdown();
+    // Refresh kartu sekolah jika level-1 tampil
+    if(document.getElementById('view-schools').style.display!=='none') loadSchoolCards();
+    loadDashboard();
   }catch(e){showToast('error','Error',e.message);}
 }
 
@@ -836,16 +943,12 @@ async function toggleUserStatus(id,currentStatus){
 // ════════════════════════════════════════════
 function loadKategoriList(){
   const list=document.getElementById('kategoriList');
-  list.innerHTML=`<div style="font-size:11px;color:var(--cyan);font-weight:700;padding:4px 8px 8px;font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:1px">Kategori</div>`;
+  list.innerHTML=`<div style="font-size:11px;color:var(--cyan);font-weight:700;padding:4px 8px 8px;text-transform:uppercase;letter-spacing:1px">Kategori</div>`;
   Object.entries(kontenKategori).forEach(([k,v])=>{
-    const el=document.createElement('div');
-    el.className='nav-item';
-    el.textContent=v;
+    const el=document.createElement('div');el.className='nav-item';el.textContent=v;
     el.onclick=()=>{
       document.querySelectorAll('#kategoriList .nav-item').forEach(n=>n.classList.remove('active'));
-      el.classList.add('active');
-      _currentKat=k;_currentKatEl=el;
-      loadKontenByKat(k);
+      el.classList.add('active');_currentKat=k;_currentKatEl=el;loadKontenByKat(k);
     };
     list.appendChild(el);
   });
@@ -888,8 +991,7 @@ function openModalKonten(){
 async function editKonten(id){
   const{doc,getDoc}=window._fb;
   try{
-    const snap=await getDoc(doc(db,'konten',id));
-    if(!snap.exists()) return;
+    const snap=await getDoc(doc(db,'konten',id));if(!snap.exists())return;
     const data=snap.data();
     document.getElementById('kontenId').value=id;
     document.getElementById('kontenNama').value=data.nama||'';
@@ -924,7 +1026,7 @@ async function saveKonten(){
 }
 
 // ════════════════════════════════════════════
-// HAPUS (universal dengan auto-refresh)
+// HAPUS UNIVERSAL
 // ════════════════════════════════════════════
 function konfirmasiHapus(tipe,id,nama){
   document.getElementById('konfirmasiText').textContent=`Hapus "${nama}"? Tindakan ini tidak bisa dibatalkan.`;
@@ -933,9 +1035,19 @@ function konfirmasiHapus(tipe,id,nama){
     try{
       await deleteDoc(doc(db,tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten',id));
       closeModal('modalKonfirmasi');
-      if(tipe==='user'){loadUsers();loadDashboard();}
-      else if(tipe==='sekolah'){loadSekolah();loadDashboard();}
-      else if(tipe==='konten'){ document.getElementById(`konten-item-${id}`)?.remove(); loadDashboard(); }
+      if(tipe==='user'){
+        const idx=_allUsers.findIndex(u=>u.id===id);if(idx>-1)_allUsers.splice(idx,1);
+        renderUsers(applyRoleFilter(_allUsers.filter(u=>u.sekolah===_activeSchoolName)));
+        loadDashboard();
+      } else if(tipe==='sekolah'){
+        await loadSekolahDropdown();
+        if(_activeSchoolId===id) backToSchools();
+        else loadSchoolCards();
+        loadDashboard();
+      } else if(tipe==='konten'){
+        document.getElementById(`konten-item-${id}`)?.remove();
+        loadDashboard();
+      }
       addLog('Hapus',`Hapus ${tipe}: ${nama}`);
       showToast('success','Dihapus',`${nama} berhasil dihapus`);
     }catch(e){showToast('error','Error',e.message);}
@@ -999,14 +1111,7 @@ async function loadUpdateHistory(){
     const items=[];
     snap.forEach(d=>{
       const data=d.data();
-      items.push(`<div class="activity-item">
-        <div class="activity-dot" style="background:var(--cyan)"></div>
-        <div style="flex:1">
-          <div class="activity-text"><strong>v${data.version}</strong> ${data.forceUpdate?'<span style="color:var(--danger);font-size:10px">⚠ WAJIB</span>':'<span style="color:var(--muted);font-size:10px">Opsional</span>'}</div>
-          <div class="activity-time">${fmtDate(data.pushedAt)} · ${data.pushedBy}</div>
-          ${data.notes?`<div style="font-size:10px;color:var(--muted);margin-top:2px">${data.notes}</div>`:''}
-        </div>
-      </div>`);
+      items.push(`<div class="activity-item"><div class="activity-dot" style="background:var(--cyan)"></div><div style="flex:1"><div class="activity-text"><strong>v${data.version}</strong> ${data.forceUpdate?'<span style="color:var(--danger);font-size:10px">⚠ WAJIB</span>':'<span style="color:var(--muted);font-size:10px">Opsional</span>'}</div><div class="activity-time">${fmtDate(data.pushedAt)} · ${data.pushedBy}</div>${data.notes?`<div style="font-size:10px;color:var(--muted);margin-top:2px">${data.notes}</div>`:''}</div></div>`);
     });
     document.getElementById('updateHistory').innerHTML=items.join('')||'<div class="empty-state"><div class="icon">🔄</div><p>Belum ada riwayat</p></div>';
   }catch(e){}
@@ -1024,8 +1129,7 @@ async function sendNotifikasi(){
   if(!title||!message){showToast('warn','Peringatan','Judul dan isi pesan harus diisi!');return;}
   try{
     await addDoc(collection(db,'notifications'),{target,title,message,type,sentAt:serverTimestamp(),sentBy:adminData.nama||'Admin'});
-    document.getElementById('notifTitle').value='';
-    document.getElementById('notifMessage').value='';
+    document.getElementById('notifTitle').value='';document.getElementById('notifMessage').value='';
     addLog('Notifikasi',`Broadcast: "${title}" ke ${target}`);
     showToast('success','Terkirim!',`Notifikasi "${title}" dikirim ke ${target}`);
     loadNotifHistory();
@@ -1036,16 +1140,7 @@ async function loadNotifHistory(){
   try{
     const snap=await getDocs(query(collection(db,'notifications'),orderBy('sentAt','desc')));
     const items=[];
-    snap.forEach(d=>{
-      const data=d.data();
-      items.push(`<div class="activity-item">
-        <div class="activity-dot" style="background:var(--${data.type==='success'?'success':data.type==='error'?'danger':data.type==='warn'?'warn':'cyan'})"></div>
-        <div style="flex:1">
-          <div class="activity-text"><strong>${data.title}</strong> → ${data.target}</div>
-          <div class="activity-time">${fmtDate(data.sentAt)} · ${data.sentBy}</div>
-        </div>
-      </div>`);
-    });
+    snap.forEach(d=>{const data=d.data();items.push(`<div class="activity-item"><div class="activity-dot" style="background:var(--${data.type==='success'?'success':data.type==='error'?'danger':data.type==='warn'?'warn':'cyan'})"></div><div style="flex:1"><div class="activity-text"><strong>${data.title}</strong> → ${data.target}</div><div class="activity-time">${fmtDate(data.sentAt)} · ${data.sentBy}</div></div></div>`);});
     document.getElementById('notifHistory').innerHTML=items.join('')||'<div class="empty-state"><div class="icon">🔔</div><p>Belum ada notifikasi</p></div>';
   }catch(e){}
 }
@@ -1055,24 +1150,14 @@ async function loadNotifHistory(){
 // ════════════════════════════════════════════
 async function addLog(aksi,detail){
   const{collection,addDoc,serverTimestamp}=window._fb;
-  try{
-    await addDoc(collection(db,'adminLog'),{admin:adminData.nama||'Admin',aksi,detail,time:serverTimestamp()});
-  }catch(e){}
+  try{await addDoc(collection(db,'adminLog'),{admin:adminData.nama||'Admin',aksi,detail,time:serverTimestamp()});}catch(e){}
 }
 async function loadLog(){
   const{collection,getDocs,query,orderBy}=window._fb;
   try{
     const snap=await getDocs(query(collection(db,'adminLog'),orderBy('time','desc')));
     const rows=[];
-    snap.forEach(d=>{
-      const data=d.data();
-      rows.push(`<tr>
-        <td style="color:var(--muted);font-size:11px">${fmtDate(data.time)}</td>
-        <td>${data.admin||'-'}</td>
-        <td><span class="badge badge-guru">${data.aksi||'-'}</span></td>
-        <td style="color:var(--muted)">${data.detail||'-'}</td>
-      </tr>`);
-    });
+    snap.forEach(d=>{const data=d.data();rows.push(`<tr><td style="color:var(--muted);font-size:11px">${fmtDate(data.time)}</td><td>${data.admin||'-'}</td><td><span class="badge badge-guru">${data.aksi||'-'}</span></td><td style="color:var(--muted)">${data.detail||'-'}</td></tr>`);});
     document.getElementById('logBody').innerHTML=rows.join('')||`<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--muted)">Belum ada log</td></tr>`;
   }catch(e){}
 }
@@ -1081,16 +1166,13 @@ async function clearLog(){
   const{collection,getDocs,deleteDoc,doc}=window._fb;
   const snap=await getDocs(collection(db,'adminLog'));
   for(const d of snap.docs) await deleteDoc(doc(db,'adminLog',d.id));
-  loadLog();
-  showToast('success','Berhasil','Log aktivitas dihapus');
+  loadLog();showToast('success','Berhasil','Log aktivitas dihapus');
 }
 
 // ════════════════════════════════════════════
 // PENGATURAN
 // ════════════════════════════════════════════
-async function loadPengaturan(){
-  loadUpdateHistory();loadNotifHistory();
-}
+async function loadPengaturan(){loadUpdateHistory();loadNotifHistory();}
 async function gantiPassword(){
   const{collection,query,where,getDocs,doc,updateDoc,serverTimestamp}=window._fb;
   const oldPass=document.getElementById('oldPass').value;
@@ -1114,19 +1196,9 @@ async function gantiPassword(){
 // ════════════════════════════════════════════
 // HELPER
 // ════════════════════════════════════════════
-function fmtDate(ts){
-  if(!ts) return '-';
-  const d=ts.toDate?ts.toDate():new Date(ts);
-  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
-}
-function fmtDateInput(ts){
-  if(!ts) return '';
-  const d=ts.toDate?ts.toDate():new Date(ts);
-  return d.toISOString().split('T')[0];
-}
-function doLogout(){
-  if(confirm('Keluar dari admin panel?')){ localStorage.removeItem('cimega_user'); window.location.href='../login/login.html'; }
-}
+function fmtDate(ts){if(!ts)return'-';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtDateInput(ts){if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);return d.toISOString().split('T')[0];}
+function doLogout(){if(confirm('Keluar dari admin panel?')){localStorage.removeItem('cimega_user');window.location.href='../login/login.html';}}
 
 // ════════════════════════════════════════════
 // INIT
@@ -1135,32 +1207,27 @@ async function initApp(){
   try{
     const firebaseConfig=await window.cimegaAPI.getFirebaseConfig();
     const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-    const{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,serverTimestamp,Timestamp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
     const fbApp=initializeApp(firebaseConfig);
     db=getFirestore(fbApp);
-    window._fb={collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,serverTimestamp,Timestamp};
+    window._fb={collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp};
 
-    try{
-      const snap=await getDocs(query(collection(db,'users'),where('username','==','admin')));
-      if(!snap.empty) adminData=snap.docs[0].data();
-    }catch(e){}
+    try{const snap=await getDocs(query(collection(db,'users'),where('username','==','admin')));if(!snap.empty)adminData=snap.docs[0].data();}catch(e){}
 
     try{
       const v=await getDoc(doc(db,'appConfig','version'));
       if(v.exists()){
-        const data=v.data();
-        const ver='v'+data.current;
-        ['currentVersion','settingVersion','settingVersion2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=ver; });
-        if(data.githubOwner) document.getElementById('githubOwner').value=data.githubOwner;
-        if(data.githubRepo)  document.getElementById('githubRepo').value=data.githubRepo;
+        const data=v.data();const ver='v'+data.current;
+        ['currentVersion','settingVersion','settingVersion3'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ver;});
+        if(data.githubOwner)document.getElementById('githubOwner').value=data.githubOwner;
+        if(data.githubRepo)document.getElementById('githubRepo').value=data.githubRepo;
       }
     }catch(e){}
 
     try{
       const cfg=await window.cimegaAPI.getAppConfig();
       const lv='v'+(cfg.appVersion||'1.0.0');
-      document.getElementById('localVersion').textContent=lv;
-      document.getElementById('settingVersion2').textContent=lv;
+      ['localVersion','settingVersion2','settingVersion4'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lv;});
     }catch(e){}
 
     loadDashboard();
@@ -1170,16 +1237,10 @@ async function initApp(){
     loadUpdateHistory();
 
     CimegaMusic.init('../../../assets_music/');
-
-    try{
-      await CimegaUpdater.init({owner:'prabu26dev',repo:'Cimega_Smart_Office'});
-      CimegaUpdater.startChecking(db);
-    }catch(e){}
+    try{await CimegaUpdater.init({owner:'prabu26dev',repo:'Cimega_Smart_Office'});CimegaUpdater.startChecking(db);}catch(e){}
 
     showToast('success','Sistem Siap','Admin panel berhasil dimuat');
-  }catch(e){
-    showToast('error','Error','Gagal memuat: '+e.message);
-  }
+  }catch(e){showToast('error','Error','Gagal memuat: '+e.message);}
 }
 
 initApp();

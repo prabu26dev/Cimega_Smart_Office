@@ -683,12 +683,14 @@ function setupUser(){
 }
 
 // ── Menu Grid ──────────────────────────────
+// FIX: onclick hanya meneruskan m.id (string aman), BUKAN JSON.stringify(m.items)
+// yang mengandung tanda " dan merusak atribut onclick HTML.
 function renderMenuGrid(menus){
   const roles=userData.roles;
   const isBendahara=roles.includes('bendahara');
   document.getElementById('menuGrid').innerHTML=menus.map(m=>`
     <div class="menu-card${isBendahara&&m.id==='keuangan'?' keuangan-highlight':''}"
-      onclick="openDocList('${m.id}','${m.title.replace(/'/g,"\\'")}',${JSON.stringify(m.items)})">
+      onclick="openDocList('${m.id}')">
       <div class="menu-card-count">${m.items.length}</div>
       <div class="menu-card-icon">${m.icon}</div>
       <div class="menu-card-title">${m.title}</div>
@@ -697,7 +699,13 @@ function renderMenuGrid(menus){
 }
 
 // ── Doc list ───────────────────────────────
-function openDocList(katId,katTitle,items){
+// FIX: Tidak lagi menerima items via parameter (menghindari JSON.stringify
+// yang merusak atribut onclick HTML). Data dicari langsung dari _menuDataDynamic.
+function openDocList(katId){
+  const menu=_menuDataDynamic.find(m=>m.id===katId);
+  if(!menu){ console.warn('openDocList: kategori tidak ditemukan →',katId); return; }
+  const katTitle=menu.title;
+  const items=menu.items;
   currentKat=katId;
   pageHistory.push({id:'menu',title:'ADMINISTRASI'});
   const icons=['📄','📝','📋','🗒️','📃','📑','🗃️'];
@@ -1167,9 +1175,10 @@ function loadBeranda(){
     statsHtml+=`<div class="stat-card"><div class="stat-icon">👁️</div><div class="stat-num">Monitor</div><div class="stat-label">Aktivitas Guru</div></div>`;
   }
   document.getElementById('homeStats').innerHTML=statsHtml;
+  // FIX: onclick hanya pakai m.id, bukan JSON.stringify(m.items)
   document.getElementById('quickMenuHome').innerHTML=_menuDataDynamic.slice(0,4).map(m=>`
     <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(0,229,255,0.06);cursor:pointer"
-      onclick="openDocList('${m.id}','${m.title.replace(/'/g,"\\'")}',${JSON.stringify(m.items)})">
+      onclick="openDocList('${m.id}')">
       <span style="font-size:16px">${m.icon}</span>
       <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${m.title}</div><div style="font-size:10px;color:var(--muted)">${m.items.length} dokumen</div></div>
       <span style="color:var(--muted);font-size:11px">▶</span>
