@@ -1,12 +1,11 @@
 // ============================================
-// CIMEGA SMART OFFICE - shared/music.js v3.3
+// CIMEGA SMART OFFICE - shared/music.js v3.4
 // Simpan ke: src/shared/music.js
 //
-// FIX v3.3:
-// - updateUI() dipanggil saat event 'play' audio
-//   → menjamin title update SETELAH musik benar jalan
-// - setTimeout fallback 500ms jika event lambat
-// - Tidak bergantung pada urutan DOM render
+// FIX v3.4:
+// - updateUI() support 2 set ID:
+//     Login       → mwTitle, mwBars, mwMuteBtn
+//     Dashboard   → musicTitle, musicBars, musicMuteBtn, musicTrackInfo
 // ============================================
 
 const CimegaMusic = (() => {
@@ -34,20 +33,32 @@ const CimegaMusic = (() => {
     return (f || '').replace('Kang Prabu - ', '').replace('.mp3', '') || '...';
   }
 
-  // ── Update UI — dengan retry jika elemen belum ada ──
+  // ── updateUI — support ID login (mw*) DAN dashboard/admin (music*) ──
   function updateUI() {
+    const title = shortTitle(PLAYLIST[currentIndex]);
+    const track = (currentIndex + 1) + ' / ' + PLAYLIST.length;
+    const icon  = isMuted ? '🔇' : '🔊';
+
+    // Dashboard & Admin
     const t    = document.getElementById('musicTitle');
     const info = document.getElementById('musicTrackInfo');
     const btn  = document.getElementById('musicMuteBtn');
     const bars = document.getElementById('musicBars');
-
-    if (t)    t.textContent    = shortTitle(PLAYLIST[currentIndex]);
-    if (info) info.textContent = `${currentIndex + 1} / ${PLAYLIST.length}`;
-    if (btn)  btn.textContent  = isMuted ? '🔇' : '🔊';
+    if (t)    t.textContent    = title;
+    if (info) info.textContent = track;
+    if (btn)  btn.textContent  = icon;
     if (bars) isMuted ? bars.classList.add('paused') : bars.classList.remove('paused');
 
-    // Jika elemen belum ada, retry setelah 300ms
-    if (!t || !info) {
+    // Login (ID berbeda: mwTitle, mwMuteBtn, mwBars)
+    const mwT    = document.getElementById('mwTitle');
+    const mwBtn  = document.getElementById('mwMuteBtn');
+    const mwBars = document.getElementById('mwBars');
+    if (mwT)    mwT.textContent   = title;
+    if (mwBtn)  mwBtn.textContent = icon;
+    if (mwBars) isMuted ? mwBars.classList.add('paused') : mwBars.classList.remove('paused');
+
+    // Retry jika semua elemen belum ada di DOM
+    if (!t && !mwT) {
       if (_uiTimer) clearTimeout(_uiTimer);
       _uiTimer = setTimeout(updateUI, 300);
     }
@@ -68,7 +79,6 @@ const CimegaMusic = (() => {
     if (!audio) return;
     currentIndex = ((index % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
 
-    // Pasang listener SEBELUM src & load (fix race condition)
     audio.oncanplay = () => {
       audio.oncanplay = null;
       if (seekTo && seekTo > 2) {
@@ -80,8 +90,6 @@ const CimegaMusic = (() => {
     audio.src    = basePath + PLAYLIST[currentIndex];
     audio.volume = isMuted ? 0 : 0.8;
     audio.load();
-
-    // Update UI langsung (judul, track info)
     updateUI();
   }
 
@@ -107,25 +115,17 @@ const CimegaMusic = (() => {
     audio.preload = 'auto';
     audio.volume  = isMuted ? 0 : 0.8;
 
-    // ★ FIX: event 'play' dipanggil tepat saat musik mulai
-    //   → updateUI() pasti jalan setelah audio aktif
-    audio.addEventListener('play', () => {
-      updateUI();
-    });
+    // Update UI saat audio benar-benar mulai play
+    audio.addEventListener('play', () => updateUI());
 
     // Auto next saat lagu selesai
-    audio.addEventListener('ended', () => {
-      loadTrack(currentIndex + 1, 0);
-    });
+    audio.addEventListener('ended', () => loadTrack(currentIndex + 1, 0));
 
-    // Mulai dari posisi terakhir
     loadTrack(currentIndex, lastPosition);
 
-    // Simpan posisi tiap 2 detik
     if (_saveInterval) clearInterval(_saveInterval);
     _saveInterval = setInterval(savePosition, 2000);
 
-    // Update UI langsung + fallback 500ms (jika DOM belum siap)
     updateUI();
     setTimeout(updateUI, 500);
   }
