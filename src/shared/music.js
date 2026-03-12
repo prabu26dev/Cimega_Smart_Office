@@ -44,7 +44,7 @@ const CimegaMusic = (() => {
   function loadTrack(index, seekTo) {
     if(!audio || !state.files.length) return;
     audio.src    = basePath + state.files[index];
-    audio.volume = state.muted ? 0 : 0.45;
+    audio.volume = state.muted ? 0 : 1;
     audio.addEventListener('canplay', function handler() {
       audio.removeEventListener('canplay', handler);
       if(seekTo && seekTo > 1) audio.currentTime = seekTo;
@@ -62,7 +62,7 @@ const CimegaMusic = (() => {
     if(audio) { audio.pause(); audio.src = ''; }
     audio = new Audio();
     audio.preload = 'auto';
-    audio.volume  = state.muted ? 0 : 0.45;
+    audio.volume  = state.muted ? 0 : 1;
 
     audio.addEventListener('ended', async () => {
       const r = await window.cimegaAPI.musicNext();
@@ -88,7 +88,7 @@ const CimegaMusic = (() => {
 
   async function toggleMute() {
     state.muted = !state.muted;
-    if(audio) audio.volume = state.muted ? 0 : 0.45;
+    if(audio) audio.volume = state.muted ? 0 : 1;
     await window.cimegaAPI.musicSetState({ muted: state.muted });
     updateUI();
   }
