@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <title>Dashboard - Cimega Smart Office</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root{--cyan:#00e5ff;--blue:#0066ff;--dark:#020b18;--dark2:#041428;--dark3:#061a35;--card:rgba(4,20,45,0.95);--border:rgba(0,229,255,0.15);--text:#e0f4ff;--muted:#5a8aaa;--success:#00ff88;--danger:#ff4466;--warn:#ffaa00;--gold:#ffd000;--purple:#aa55ff;--sidebar:245px}
     *{margin:0;padding:0;box-sizing:border-box}
@@ -227,6 +228,31 @@
     .chat-msg.chat-user .chat-bubble{background:linear-gradient(135deg,rgba(0,102,255,0.3),rgba(0,229,255,0.2));border:1px solid rgba(0,229,255,0.2);color:#e0f4ff;border-bottom-right-radius:3px}
     .chat-msg.chat-ai .chat-bubble{background:rgba(4,20,45,0.8);border:1px solid rgba(0,229,255,0.1);color:var(--text);border-bottom-left-radius:3px}
     .chat-typing .chat-bubble{display:flex;align-items:center;gap:5px;padding:12px 16px}
+
+    /* AI DOC CONTROLS (NEW) */
+    .ai-doc-controls {
+      background: rgba(0,229,255,0.05);
+      border: 1px solid rgba(0,229,255,0.15);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 14px;
+      display: none;
+      animation: toastin .3s ease;
+    }
+    .ai-doc-controls.show { display: block; }
+    .adc-header {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .adc-group { margin-bottom: 10px; }
+    .adc-label { font-size: 10px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; }
+    .adc-export-row { display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid rgba(0,229,255,0.1); padding-top: 12px; }
+    .btn-export { flex:1; }
   </style>
 </head>
 <body>
@@ -300,7 +326,7 @@
       <strong id="schoolName">SDN Cimega</strong>
       <span id="schoolAddr">Kp.Bojongloa Desa Sarinagen, Kec.Cipongkor</span>
     </div>
-    <div class="page-settings">
+    <div class="page-settings" style="display:none">
       <div class="ps-title">⚙ Halaman Dokumen</div>
       <div class="ps-label">Ukuran</div>
       <div class="ps-row">
@@ -534,11 +560,14 @@
       <div class="section-title">✨ AI <span>Asisten</span></div>
 
       <!-- Tab bar -->
-      <div class="ai-tabs" id="aiTabs">
+      <div class="ai-tabs" id="aiTabs" style="overflow-x:auto;white-space:nowrap;display:flex;padding-bottom:5px;">
         <div class="ai-tab active" data-tab="rpp"     onclick="switchAiTab('rpp',this)">📝 RPP / Modul Ajar</div>
         <div class="ai-tab"        data-tab="surat"   onclick="switchAiTab('surat',this)">📄 SK & Surat</div>
         <div class="ai-tab"        data-tab="chat"    onclick="switchAiTab('chat',this)">💬 Chatbot Kurikulum</div>
         <div class="ai-tab"        data-tab="analisis" onclick="switchAiTab('analisis',this)">📊 Analisis Nilai</div>
+        <div class="ai-tab"        data-tab="kepsek"  onclick="switchAiTab('kepsek',this)">🏛️ Kepsek</div>
+        <div class="ai-tab"        data-tab="bendahara" onclick="switchAiTab('bendahara',this)">💰 Bendahara</div>
+        <div class="ai-tab"        data-tab="ops"     onclick="switchAiTab('ops',this)">💻 Ops/TU</div>
       </div>
 
       <!-- TAB 1: RPP / MODUL AJAR -->
@@ -621,8 +650,33 @@
             <div class="card-body">
               <div id="aiRppResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-                  <div style="font-size:40px;margin-bottom:12px">✨</div>
-                  <div style="font-size:13px">Isi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
+                  <div style="font-size:40px;margin-bottom:12px">📝</div>
+                  <div style="font-size:13px">Lengkapi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
+                </div>
+              </div>
+              <!-- Control Area (RPP) -->
+              <div class="ai-doc-controls" id="aiRppControls">
+                <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div>
+                    <div class="adc-label">Ukuran & Margin</div>
+                    <select class="form-control" onchange="setPageSize(this.value)">
+                      <option value="A4">A4 (Standar)</option>
+                      <option value="F4">F4 / Folio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="adc-label">Ketebalan Margin</div>
+                    <select class="form-control" onchange="setMargin(this.value)">
+                      <option value="Normal">Normal</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Narrow">Narrow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="adc-export-row">
+                  <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiRppResult','RPP_Cimega')">📄 Ekspor Word (.docx)</button>
+                  <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiRppResult','RPP_Cimega')">📊 Ekspor Excel (.xlsx)</button>
                 </div>
               </div>
             </div>
@@ -678,10 +732,34 @@
             <div class="card-body">
               <div id="aiSuratResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-                  <div style="font-size:40px;margin-bottom:12px">📄</div>
-                  <div style="font-size:13px">Isi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
                 </div>
-              </div>
+736:               </div>
+737: 
+738:               <!-- Control Area (Surat) -->
+739:               <div class="ai-doc-controls" id="aiSuratControls">
+740:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+741:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+742:                   <div>
+743:                     <div class="adc-label">Ukuran & Margin</div>
+744:                     <select class="form-control" onchange="setPageSize(this.value)">
+745:                       <option value="A4">A4 (Standar)</option>
+746:                       <option value="F4">F4 / Folio</option>
+747:                     </select>
+748:                   </div>
+749:                   <div>
+750:                     <div class="adc-label">Ketebalan Margin</div>
+751:                     <select class="form-control" onchange="setMargin(this.value)">
+752:                       <option value="Normal">Normal</option>
+753:                       <option value="Moderate">Moderate</option>
+754:                       <option value="Narrow">Narrow</option>
+755:                     </select>
+756:                   </div>
+757:                 </div>
+758:                 <div class="adc-export-row">
+759:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiSuratResult','Surat_Cimega')">📄 Ekspor Word (.docx)</button>
+760:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiSuratResult','Surat_Cimega')">📊 Ekspor Excel (.xlsx)</button>
+761:                 </div>
+762:               </div>
             </div>
           </div>
         </div>
@@ -750,10 +828,257 @@
             <div class="card-body">
               <div id="aiAnalisisResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-                  <div style="font-size:40px;margin-bottom:12px">📊</div>
-                  <div style="font-size:13px">Masukkan data nilai siswa<br/>lalu klik <strong style="color:var(--cyan)">Analisis dengan AI</strong></div>
                 </div>
+833:               </div>
+834: 
+835:               <!-- Control Area (Analisis) -->
+836:               <div class="ai-doc-controls" id="aiAnalisisControls">
+837:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+838:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+839:                   <div>
+840:                     <div class="adc-label">Ukuran & Margin</div>
+841:                     <select class="form-control" onchange="setPageSize(this.value)">
+842:                       <option value="A4">A4 (Standar)</option>
+843:                       <option value="F4">F4 / Folio</option>
+844:                     </select>
+845:                   </div>
+846:                   <div>
+847:                     <div class="adc-label">Ketebalan Margin</div>
+848:                     <select class="form-control" onchange="setMargin(this.value)">
+849:                       <option value="Normal">Normal</option>
+850:                       <option value="Moderate">Moderate</option>
+851:                       <option value="Narrow">Narrow</option>
+852:                     </select>
+853:                   </div>
+854:                 </div>
+855:                 <div class="adc-export-row">
+856:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiAnalisisResult','Analisis_Cimega')">📄 Ekspor Word (.docx)</button>
+857:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiAnalisisResult','Analisis_Cimega')">📊 Ekspor Excel (.xlsx)</button>
+858:                 </div>
+859:               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: KEPSEK -->
+      <div class="ai-panel" id="aiPanel-kepsek" style="display:none">
+        <div class="grid-2" style="gap:12px;align-items:start">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ PARAMETER MANAJERIAL KEPSEK</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Jenis Dokumen</label>
+                <select class="form-control" id="aiKepsekType">
+                  <option value="rkt">Rencana Kerja Tahunan (RKT)</option>
+                  <option value="rkjm">Rencana Kerja Jangka Menengah (RKJM)</option>
+                  <option value="supervisi">Instrumen Supervisi Akademik</option>
+                  <option value="pkg">Penilaian Kinerja Guru (PKG)</option>
+                  <option value="laporan">Laporan Bulanan Kepala Sekolah</option>
+                </select>
               </div>
+              <div class="form-group">
+                <label class="form-label">Nama Guru/Sasaran <span style="color:var(--muted)">(Jika Supervisi/PKG)</span></label>
+                <input class="form-control" id="aiKepsekSasaran" placeholder="cth: Budi Santoso (Guru Kelas 4)"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tahun / Periode</label>
+                <input class="form-control" id="aiKepsekTahun" value="2025/2026"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fokus / Catatan Tambahan</label>
+                <textarea class="form-control" id="aiKepsekCatatan" rows="3" placeholder="cth: Fokus pembenahan literasi dan numerasi"></textarea>
+              </div>
+              <button class="btn btn-primary" onclick="generateKepsek()" style="width:100%;margin-top:4px">
+                ✨ Generate Dokumen Kepsek
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="card-title">📄 HASIL GENERATE</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" id="aiKepsekCopyBtn" onclick="copyAiResult('aiKepsekResult')" style="display:none">📋 Copy</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="aiKepsekResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                </div>
+885:               </div>
+886: 
+887:               <!-- Control Area (Kepsek) -->
+888:               <div class="ai-doc-controls" id="aiKepsekControls">
+889:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+890:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+891:                   <div>
+892:                     <div class="adc-label">Ukuran & Margin</div>
+893:                     <select class="form-control" onchange="setPageSize(this.value)">
+894:                       <option value="A4">A4 (Standar)</option>
+895:                       <option value="F4">F4 / Folio</option>
+896:                     </select>
+897:                   </div>
+898:                   <div>
+899:                     <div class="adc-label">Ketebalan Margin</div>
+900:                     <select class="form-control" onchange="setMargin(this.value)">
+901:                       <option value="Normal">Normal</option>
+902:                       <option value="Moderate">Moderate</option>
+903:                       <option value="Narrow">Narrow</option>
+904:                     </select>
+905:                   </div>
+906:                 </div>
+907:                 <div class="adc-export-row">
+908:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiKepsekResult','Dokumen_Kepsek')">📄 Ekspor Word (.docx)</button>
+909:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiKepsekResult','Dokumen_Kepsek')">📊 Ekspor Excel (.xlsx)</button>
+910:                 </div>
+911:               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: BENDAHARA -->
+      <div class="ai-panel" id="aiPanel-bendahara" style="display:none">
+        <div class="grid-2" style="gap:12px;align-items:start">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ PARAMETER KEUANGAN & BOS</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Jenis Laporan</label>
+                <select class="form-control" id="aiBendaharaType">
+                  <option value="rkas">Draft RKAS BOS Reguler</option>
+                  <option value="bku">Buku Kas Umum (BKU)</option>
+                  <option value="bapk">Berita Acara Pemeriksaan Kas</option>
+                  <option value="spj">Draft SPJ Honor/Kegiatan</option>
+                  <option value="pajak">Rekapitulasi Pajak Belanja</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bulan / Periode</label>
+                <input class="form-control" id="aiBendaharaBulan" placeholder="cth: Triwulan I / Januari 2026"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Pemasukan / Saldo Awal</label>
+                <input class="form-control" id="aiBendaharaMasuk" placeholder="cth: Rp 50.000.000"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Uraian Transaksi Utama</label>
+                <textarea class="form-control" id="aiBendaharaRincian" rows="4" placeholder="cth: Belanja ATK 2jt, Honor Guru Honorer 10jt, Langganan Internet 1jt"></textarea>
+              </div>
+              <button class="btn btn-primary" onclick="generateBendahara()" style="width:100%;margin-top:4px">
+                ✨ Generate Laporan Keuangan
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="card-title">📄 HASIL GENERATE</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" id="aiBendaharaCopyBtn" onclick="copyAiResult('aiBendaharaResult')" style="display:none">📋 Copy</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="aiBendaharaResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                </div>
+937:               </div>
+938: 
+939:               <!-- Control Area (Bendahara) -->
+940:               <div class="ai-doc-controls" id="aiBendaharaControls">
+941:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+942:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+943:                   <div>
+944:                     <div class="adc-label">Ukuran & Margin</div>
+945:                     <select class="form-control" onchange="setPageSize(this.value)">
+946:                       <option value="A4">A4 (Standar)</option>
+947:                       <option value="F4">F4 / Folio</option>
+948:                     </select>
+949:                   </div>
+950:                   <div>
+951:                     <div class="adc-label">Ketebalan Margin</div>
+952:                     <select class="form-control" onchange="setMargin(this.value)">
+953:                       <option value="Normal">Normal</option>
+954:                       <option value="Moderate">Moderate</option>
+955:                       <option value="Narrow">Narrow</option>
+956:                     </select>
+957:                   </div>
+958:                 </div>
+959:                 <div class="adc-export-row">
+960:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiBendaharaResult','Laporan_Keuangan')">📄 Ekspor Word (.docx)</button>
+961:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiBendaharaResult','Laporan_Keuangan')">📊 Ekspor Excel (.xlsx)</button>
+962:                 </div>
+963:               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 7: OPERATOR (OPS) -->
+      <div class="ai-panel" id="aiPanel-ops" style="display:none">
+        <div class="grid-2" style="gap:12px;align-items:start">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚙️ PARAMETER OPERATOR & TU</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Jenis Dokumen Pendukung</label>
+                <select class="form-control" id="aiOpsType">
+                  <option value="mutasi">Surat Keterangan Pindah Mutasi</option>
+                  <option value="absen">Blangko Absen & Jurnal Kosong</option>
+                  <option value="inventaris">KIB (Kartu Inventaris Barang)</option>
+                  <option value="kepanitiaan">Susunan Kepanitiaan Cepat</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Identitas Siswa/Barang</label>
+                <textarea class="form-control" id="aiOpsIdentitas" rows="3" placeholder="cth: Dodi Setiawan, NISN 1234, Pindah ke SD Harapan"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tanggal Dokumen</label>
+                <input class="form-control" id="aiOpsTgl" type="date"/>
+              </div>
+              <button class="btn btn-primary" onclick="generateOps()" style="width:100%;margin-top:4px">
+                ✨ Generate Dokumen TU
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="card-title">📄 HASIL GENERATE</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" id="aiOpsCopyBtn" onclick="copyAiResult('aiOpsResult')" style="display:none">📋 Copy</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="aiOpsResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
+                <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                </div>
+985:               </div>
+986: 
+987:               <!-- Control Area (Ops) -->
+988:               <div class="ai-doc-controls" id="aiOpsControls">
+989:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+990:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+991:                   <div>
+992:                     <div class="adc-label">Ukuran & Margin</div>
+993:                     <select class="form-control" onchange="setPageSize(this.value)">
+994:                       <option value="A4">A4 (Standar)</option>
+995:                       <option value="F4">F4 / Folio</option>
+996:                     </select>
+997:                   </div>
+998:                   <div>
+999:                     <div class="adc-label">Ketebalan Margin</div>
+1000:                     <select class="form-control" onchange="setMargin(this.value)">
+1001:                       <option value="Normal">Normal</option>
+1002:                       <option value="Moderate">Moderate</option>
+1003:                       <option value="Narrow">Narrow</option>
+1004:                     </select>
+1005:                   </div>
+1006:                 </div>
+1007:                 <div class="adc-export-row">
+1008:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiOpsResult','Dokumen_TU')">📄 Ekspor Word (.docx)</button>
+1009:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiOpsResult','Dokumen_TU')">📊 Ekspor Excel (.xlsx)</button>
+1010:                 </div>
+1011:               </div>
             </div>
           </div>
         </div>
@@ -1567,11 +1892,56 @@ function setAiLoading(elId, loading) {
   }
 }
 
-function showAiResult(elId, text, copyBtnId, saveBtnId) {
+function showAiResult(elId, text, copyBtnId, saveBtnId, controlId) {
   const el = document.getElementById(elId);
   if (el) el.textContent = text;
   if (copyBtnId) { const b = document.getElementById(copyBtnId); if(b) b.style.display = ''; }
   if (saveBtnId) { const b = document.getElementById(saveBtnId); if(b) b.style.display = ''; }
+  if (controlId) { const c = document.getElementById(controlId); if(c) c.classList.add('show'); }
+}
+
+function exportToWord(elId, filename) {
+  const content = document.getElementById(elId).textContent;
+  const html = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'><title>Export</title>
+    <style>
+      body { font-family: 'Arial', sans-serif; line-height: 1.6; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+    </style>
+    </head><body>${content.replace(/\n/g, '<br>')}</body></html>`;
+  
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (filename || 'Dokumen') + '.doc';
+  a.click();
+}
+
+function exportToExcel(elId, filename) {
+  const el = document.getElementById(elId);
+  const text = el.textContent;
+  
+  // Jika isi berupa tabel HTML (seringkali AI generate tabel)
+  // Kita coba deteksi apakah ada tag <table> jika text diparse sebagai HTML
+  const tmp = document.createElement('div');
+  tmp.innerHTML = text;
+  const table = tmp.querySelector('table');
+  
+  let wb;
+  if (table) {
+    wb = XLSX.utils.table_to_book(table);
+  } else {
+    // Jika hanya teks, pecah per baris
+    const rows = text.split('\n').map(r => [r]);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+  }
+  
+  XLSX.writeFile(wb, (filename || 'Data') + '.xlsx');
 }
 
 function copyAiResult(elId) {
@@ -1635,7 +2005,7 @@ Buat dokumen yang lengkap, profesional, dan siap pakai. Sertakan semua komponen 
       showAiResult('aiRppResult', '❌ Error: ' + res.error);
       showToast('error', 'Gagal', res.error);
     } else {
-      showAiResult('aiRppResult', res.text, 'aiRppCopyBtn', 'aiRppSaveBtn');
+      showAiResult('aiRppResult', res.text, 'aiRppCopyBtn', 'aiRppSaveBtn', 'aiRppControls');
       showToast('success', 'Selesai', docNames[docType] + ' berhasil digenerate');
     }
   } catch(e) {
@@ -1682,7 +2052,7 @@ Buat dokumen lengkap dengan format resmi, nomor surat, kop surat (teks), dan tan
       showAiResult('aiSuratResult', '❌ Error: ' + res.error);
       showToast('error', 'Gagal', res.error);
     } else {
-      showAiResult('aiSuratResult', res.text, 'aiSuratCopyBtn', 'aiSuratSaveBtn');
+      showAiResult('aiSuratResult', res.text, 'aiSuratCopyBtn', 'aiSuratSaveBtn', 'aiSuratControls');
       showToast('success', 'Selesai', suratNames[suratType] + ' berhasil digenerate');
     }
   } catch(e) {
@@ -1810,13 +2180,134 @@ Berikan: analisis capaian kelas, kelompok siswa (tinggi/sedang/rendah), rekomend
       showAiResult('aiAnalisisResult', '❌ Error: ' + res.error);
       showToast('error', 'Gagal', res.error);
     } else {
-      showAiResult('aiAnalisisResult', res.text, 'aiAnalisisCopyBtn');
+      showAiResult('aiAnalisisResult', res.text, 'aiAnalisisCopyBtn', null, 'aiAnalisisControls');
       showToast('success', 'Selesai', tipeNames[tipe] + ' selesai dianalisis');
     }
   } catch(e) {
     showAiResult('aiAnalisisResult', '❌ Error: ' + e.message);
   }
   btn.disabled = false; btn.textContent = '✨ Analisis dengan AI';
+}
+
+
+// ── Tambahan Fungsi AI (Kepsek, Bendahara, Ops) ──────────
+
+async function generateKepsek() {
+  const tipe  = document.getElementById('aiKepsekType').value;
+  const sasaran = document.getElementById('aiKepsekSasaran').value.trim();
+  const tahun = document.getElementById('aiKepsekTahun').value.trim();
+  const catatan = document.getElementById('aiKepsekCatatan').value.trim();
+
+  const tipeNames = {rkt:'Rencana Kerja Tahunan (RKT)', rkjm:'Rencana Kerja Jangka Menengah (RKJM)', supervisi:'Instrumen Supervisi Akademik', pkg:'Penilaian Kinerja Guru (PKG)', laporan:'Laporan Bulanan Kepala Sekolah'};
+  
+  const btn = document.querySelector('#aiPanel-kepsek button.btn-primary');
+  btn.disabled = true; btn.textContent = '⏳ Generating...';
+  setAiLoading('aiKepsekResult', true);
+
+  const prompt = `Buatkan ${tipeNames[tipe]} untuk Kepala Sekolah secara lengkap dan profesional dengan format tabel HTML resmi:
+- Satuan Pendidikan: SDN Cimega, Kp.Bojongloa Desa Sarinagen, Kec.Cipongkor, Kab.Bandung Barat
+- Tahun / Periode: ${tahun}
+${sasaran ? '- Nama Sasaran / Guru: ' + sasaran : ''}
+${catatan ? '- Fokus / Catatan: ' + catatan : ''}
+
+Ketentuan Khusus:
+Buat keseluruhan isinya langsung menggunakan tag tabel HTML (\`<table>, <th>, <td>, dsb\`) yang rapi, solid, profesional. Jangan gunakan bahasa pengantar AI, langsung outputkan HTML. Gunakan bahasa Indonesia resmi (Tata bahasa Kemdikbud).`;
+
+  try {
+    const res = await window.cimegaAPI.claudeAsk({ messages: [{ role: 'user', content: prompt }], maxTokens: 3000 });
+    if (res.error) { showAiResult('aiKepsekResult', '❌ Error: ' + res.error); showToast('error', 'Gagal', res.error); } 
+    else { showAiResult('aiKepsekResult', res.text, 'aiKepsekCopyBtn', null, 'aiKepsekControls'); showToast('success', 'Selesai', 'Dokumen manajerial selesai'); }
+  } catch(e) { showAiResult('aiKepsekResult', '❌ Error: ' + e.message); }
+  btn.disabled = false; btn.textContent = '✨ Generate Dokumen Kepsek';
+}
+
+async function generateBendahara() {
+  const tipe  = document.getElementById('aiBendaharaType').value;
+  const bulan = document.getElementById('aiBendaharaBulan').value.trim();
+  const masuk = document.getElementById('aiBendaharaMasuk').value.trim();
+  const rincian = document.getElementById('aiBendaharaRincian').value.trim();
+
+  const tipeNames = {rkas:'Draft RKAS BOS Reguler', bku:'Buku Kas Umum (BKU)', bapk:'Berita Acara Pemeriksaan Kas', spj:'Draft SPJ Honor/Kegiatan', pajak:'Rekapitulasi Pajak Belanja'};
+  
+  const btn = document.querySelector('#aiPanel-bendahara button.btn-primary');
+  btn.disabled = true; btn.textContent = '⏳ Generating...';
+  setAiLoading('aiBendaharaResult', true);
+
+  const prompt = `Buatkan ${tipeNames[tipe]} untuk Bendahara Sekolah secara lengkap dengan format tabel HTML resmi:
+- Satuan Pendidikan: SDN Cimega, Kec.Cipongkor, Kab.Bandung Barat
+- Bulan / Periode: ${bulan}
+${masuk ? '- Pemasukan / Saldo Awal: ' + masuk : ''}
+${rincian ? '- Uraian Transaksi Utama: ' + rincian : ''}
+
+Ketentuan Khusus:
+Buat dokumen pembukuan laporan keuangan yang detail dan komplit. Tampilkan seluruh rancangannya menggunakan DOKUMEN HTML murni berbasis tabel berformat standar BKU/RKAS Dana BOS. Hitung matematisnya jika memungkinkan (logis angka). Jangan ada pengantar AI.`;
+
+  try {
+    const res = await window.cimegaAPI.claudeAsk({ messages: [{ role: 'user', content: prompt }], maxTokens: 3000 });
+    if (res.error) { showAiResult('aiBendaharaResult', '❌ Error: ' + res.error); showToast('error', 'Gagal', res.error); } 
+    else { showAiResult('aiBendaharaResult', res.text, 'aiBendaharaCopyBtn', null, 'aiBendaharaControls'); showToast('success', 'Selesai', 'Laporan keuangan selesai'); }
+  } catch(e) { showAiResult('aiBendaharaResult', '❌ Error: ' + e.message); }
+  btn.disabled = false; btn.textContent = '✨ Generate Laporan Keuangan';
+}
+
+async function generateOps() {
+  const tipe  = document.getElementById('aiOpsType').value;
+  const identitas = document.getElementById('aiOpsIdentitas').value.trim();
+  const tgl = document.getElementById('aiOpsTgl').value.trim();
+
+  const tipeNames = {mutasi:'Surat Keterangan Pindah Mutasi', absen:'Blangko Absen & Jurnal Kosong', inventaris:'KIB (Kartu Inventaris Barang)', kepanitiaan:'Susunan Kepanitiaan Kelompok Kerja'};
+  
+  if (!identitas) { showToast('warn', 'Perlu diisi', 'Isi kolom Identitas terlebih dahulu'); return; }
+
+  const btn = document.querySelector('#aiPanel-ops button.btn-primary');
+  btn.disabled = true; btn.textContent = '⏳ Generating...';
+  setAiLoading('aiOpsResult', true);
+
+  const prompt = `Buatkan ${tipeNames[tipe]} untuk bagian Tata Usaha / Operator Dapodik secara lengkap:
+- Satuan Pendidikan: SDN Cimega
+- Identitas Terkait (Siswa/Barang/Kegiatan): ${identitas}
+- Tanggal Dibuat: ${tgl || '(Kosongi atau beri titik-titik)'}
+
+Ketentuan Khusus:
+Gunakan kop surat formal HTML, dan/atau tata letak border-collapse HTML. Jika itu KIB/Buku Induk, buat tabel lebar 100%. Jangan gunakan markdown, langsung outputkan pure code HTML rendering.`;
+
+  try {
+    const res = await window.cimegaAPI.claudeAsk({ messages: [{ role: 'user', content: prompt }], maxTokens: 2500 });
+    if (res.error) { showAiResult('aiOpsResult', '❌ Error: ' + res.error); showToast('error', 'Gagal', res.error); } 
+    else { showAiResult('aiOpsResult', res.text, 'aiOpsCopyBtn', null, 'aiOpsControls'); showToast('success', 'Selesai', 'Dokumen TU selesai'); }
+  } catch(e) { showAiResult('aiOpsResult', '❌ Error: ' + e.message); }
+  btn.disabled = false; btn.textContent = '✨ Generate Dokumen TU';
+}
+
+function filterAiTabsByRole() {
+  const roles = userData.roles || [userData.role || 'guru'];
+  // Cek apakah kategori tertentu memiliki konten aktif untuk user ini (lewat _kontenCache)
+  const hasCat = (catId) => _kontenCache[catId] && _kontenCache[catId].length > 0;
+
+  const rules = {
+    'rpp':       r => (r.includes('guru') || r.includes('kepsek')) && hasCat('adm_guru'),
+    'surat':     r => (r.includes('guru') || r.includes('ops') || r.includes('kepsek')) && hasCat('adm_umum'),
+    'chat':      () => true, // Chatbot selalu muncul sebagai default
+    'analisis':  r => (r.includes('guru') || r.includes('kepsek')) && hasCat('adm_guru'),
+    'kepsek':    r => r.includes('kepsek') && hasCat('adm_kepsek'),
+    'bendahara': r => (r.includes('bendahara') || r.includes('kepsek')) && hasCat('keuangan'),
+    'ops':       r => (r.includes('ops') || r.includes('kepsek')) && hasCat('adm_umum')
+  };
+  let firstTab = null;
+  let activeValid = false;
+  document.querySelectorAll('.ai-tab').forEach(el => {
+    const tabId = el.getAttribute('data-tab');
+    const valid = rules[tabId] ? rules[tabId](roles) : false;
+    if (valid) {
+      el.style.display = 'inline-block';
+      if (!firstTab) firstTab = { id: tabId, el };
+      if (el.classList.contains('active')) activeValid = true;
+    } else {
+      el.style.display = 'none';
+      el.classList.remove('active');
+    }
+  });
+  if (!activeValid && firstTab) switchAiTab(firstTab.id, firstTab.el);
 }
 
 async function initApp(){
@@ -1833,6 +2324,7 @@ async function initApp(){
 
     await loadKontenDynamic();
     setupUser();
+    filterAiTabsByRole(); // Filter AI Tabs based on user's authorized role
     buildSidebar();
     loadBeranda();
     loadNotifications();

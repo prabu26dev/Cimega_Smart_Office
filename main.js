@@ -6,17 +6,24 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path  = require('path');
 const fs    = require('fs');
 const https = require('https');
+const url   = require('url');
 
 // ── Baca .env ──────────────────────────────
 function loadEnv() {
   const envPath = path.join(__dirname, '.env');
   if (!fs.existsSync(envPath)) return {};
   const env = {};
-  fs.readFileSync(envPath, 'utf-8').split('\n').forEach(line => {
+  const lines = fs.readFileSync(envPath, 'utf-8').split(/\r?\n/);
+  lines.forEach(line => {
     line = line.trim();
     if (!line || line.startsWith('#')) return;
     const idx = line.indexOf('=');
-    if (idx > 0) env[line.slice(0,idx).trim()] = line.slice(idx+1).trim();
+    if (idx > 0) {
+      let key = line.slice(0, idx).trim();
+      let val = line.slice(idx + 1).trim();
+      val = val.replace(/^["']|["']$/g, ''); // Hapus tanda kutip jika ada
+      env[key] = val;
+    }
   });
   return env;
 }
@@ -42,6 +49,62 @@ const musicState = {
 let updateInfo = null; // simpan info update yang tersedia
 
 let mainWindow;
+let bgMusicWindow = null;
+
+function createBgMusicWindow() {
+  if (bgMusicWindow) return;
+  bgMusicWindow = new BrowserWindow({ 
+    show: false,
+    webPreferences: {
+      webSecurity: false,
+      autoplayPolicy: 'no-user-gesture-required' // Fix Chrome blocking autoplay
+    }
+  });
+  bgMusicWindow.loadURL('data:text/html,<html><head><title>BGM_IDLE</title></head><body></body></html>');
+  
+  bgMusicWindow.on('page-title-updated', (e, title) => {
+    if (title.startsWith('BGM_ENDED')) {
+      musicState.index = (musicState.index + 1) % musicFiles.length;
+      playMusicOnBgWindow();
+    }
+  });
+}
+
+function broadcastMusicState() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('music-state-changed', {
+      index: musicState.index,
+      muted: musicState.muted,
+      files: musicFiles
+    });
+  }
+}
+
+function playMusicOnBgWindow() {
+  if (!bgMusicWindow) return;
+  const file = musicFiles[musicState.index];
+  const absPath = path.join(__dirname, 'assets_music', file);
+  const audioUrl = url.pathToFileURL(absPath).href;
+
+  bgMusicWindow.webContents.executeJavaScript(`
+    if (!window._bgm) {
+      window._bgm = new Audio();
+      window._bgm.onended = () => { document.title = 'BGM_ENDED_' + Date.now(); };
+    }
+    window._bgm.src = "${audioUrl}";
+    window._bgm.volume = ${musicState.muted ? 0 : 0.8};
+    window._bgm.play().catch(e=>console.error('BGM Error 123:', e));
+  `).catch(e => console.error('IPC Exec JS Error:', e));
+  broadcastMusicState();
+}
+
+function toggleMuteBgWindow(mute) {
+  musicState.muted = mute;
+  if (bgMusicWindow) {
+    bgMusicWindow.webContents.executeJavaScript(`if(window._bgm) window._bgm.volume = ${mute ? 0 : 0.8};`);
+  }
+  broadcastMusicState();
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -61,8 +124,12 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.maximize();
+    createBgMusicWindow();
   });
-  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('closed', () => { 
+    mainWindow = null; 
+    app.quit(); // Teruskan sinyal penghentian ke seluruh Jendela (termasuk bgMusicWindow) 
+  });
 }
 
 // ══════════════════════════════════════════
@@ -86,25 +153,37 @@ ipcMain.handle('get-app-config', () => ({
 }));
 
 // Musik
+ipcMain.handle('music-init', () => {
+  if (!bgMusicWindow) createBgMusicWindow();
+  bgMusicWindow.webContents.executeJavaScript('!!window._bgm && !window._bgm.paused')
+    .then(isPlaying => {
+      if (!isPlaying) playMusicOnBgWindow();
+      else broadcastMusicState(); 
+    }).catch(() => playMusicOnBgWindow());
+  return { ...musicState, files: musicFiles, total: musicFiles.length };
+});
+
 ipcMain.handle('music-get-state', () => ({
   index:    musicState.index,
   muted:    musicState.muted,
-  position: musicState.position || 0,
   files:    musicFiles,
   total:    musicFiles.length,
 }));
-ipcMain.handle('music-set-state', (e, s) => {
-  if (typeof s.index    !== 'undefined') musicState.index    = s.index;
-  if (typeof s.muted    !== 'undefined') musicState.muted    = s.muted;
-  if (typeof s.position !== 'undefined') musicState.position = s.position;
-  return musicState;
+
+ipcMain.handle('music-toggle-mute', () => {
+  toggleMuteBgWindow(!musicState.muted);
+  return musicState.muted;
 });
+
 ipcMain.handle('music-next', () => {
   musicState.index = (musicState.index + 1) % musicFiles.length;
+  playMusicOnBgWindow();
   return { index: musicState.index, title: musicFiles[musicState.index] };
 });
+
 ipcMain.handle('music-prev', () => {
   musicState.index = (musicState.index - 1 + musicFiles.length) % musicFiles.length;
+  playMusicOnBgWindow();
   return { index: musicState.index, title: musicFiles[musicState.index] };
 });
 
@@ -232,10 +311,12 @@ ipcMain.handle('open-external', (e, url) => {
 // GEMINI AI API (Google — Free Tier)
 // API key disimpan di .env → GEMINI_API_KEY
 // Gratis: https://aistudio.google.com/apikey
-// Model: gemini-2.0-flash (cepat & gratis)
+// Model: gemini-2.5-flash (cepat & gratis)
 // ══════════════════════════════════════════
 ipcMain.handle('claude-ask', async (e, { messages, system, maxTokens }) => {
-  const apiKey = envConfig.GEMINI_API_KEY;
+  // Muat ulang env secara live (Hot-reload) agar perubahan API Key langsung masuk tanpa restart!
+  const freshEnv = loadEnv();
+  const apiKey = freshEnv.GEMINI_API_KEY || envConfig.GEMINI_API_KEY;
   if (!apiKey) return { error: 'GEMINI_API_KEY belum diisi di file .env' };
 
   // Konversi format messages (claude/openai) ke format Gemini
@@ -258,7 +339,7 @@ ipcMain.handle('claude-ask', async (e, { messages, system, maxTokens }) => {
     },
   });
 
-  const model = 'gemini-2.0-flash';
+  const model = 'gemini-2.5-flash';
   const path  = `/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   return new Promise((resolve) => {
@@ -280,13 +361,23 @@ ipcMain.handle('claude-ask', async (e, { messages, system, maxTokens }) => {
           const parsed = JSON.parse(data);
           // Cek error dari Gemini
           if (parsed.error) {
-            resolve({ error: parsed.error.message || 'Gemini API error' });
+            let errorMsg = parsed.error.message || 'Gemini API error';
+            if (errorMsg.includes('Quota exceeded') || errorMsg.includes('429')) {
+              errorMsg = 'Batas pemakaian harian gratis AI Anda (Quota) atau batas pesan beruntun saat ini telah tercapai.\nHarap tunggu sebentar (sekitar 1 menit) sebelum mencoba AI lagi.';
+            }
+            resolve({ error: errorMsg });
             return;
           }
           // Ambil teks dari response Gemini
           const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
           if (!text) {
-            resolve({ error: 'Gemini tidak memberikan respons. Coba lagi.' });
+            // Jika ada finishReason (misal BLOCKED)
+            const finishReason = parsed.candidates?.[0]?.finishReason;
+            if (finishReason) {
+              resolve({ error: `AI menolak menjawab (Alasan: ${finishReason}). Coba pertanyaan lain.` });
+            } else {
+              resolve({ error: 'Gemini tidak memberikan respons. Pastikan API Key valid dan model tersedia.' });
+            }
             return;
           }
           resolve({ success: true, text });

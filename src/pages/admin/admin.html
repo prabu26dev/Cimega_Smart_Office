@@ -14,6 +14,16 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:12px}
 
+    /* AKORDION SEKOLAH (SEMUA USER) */
+    .sch-group-header {
+      background:rgba(0,229,255,0.08);color:var(--cyan);padding:12px 14px;border:1px solid var(--border);border-radius:8px;
+      cursor:pointer;font-weight:bold;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;transition:all 0.2s;
+    }
+    .sch-group-header:hover { background:rgba(0,229,255,0.15); }
+    .sch-group-content { margin-bottom:15px; border-radius:0 0 8px 8px; overflow:hidden; border:1px solid var(--border); border-top:none; }
+    .sch-group-content table { margin:0; border:none; }
+
+
     /* SIDEBAR */
     .sidebar{width:var(--sidebar);background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
     .sidebar-header{padding:14px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -698,6 +708,7 @@ function showPage(page,navEl){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
   const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
@@ -886,6 +897,7 @@ function renderUsers(list){
 // ── Modal Pengguna ─────────────────────────
 function openModalUser(){
   if(!_activeSchoolName){showToast('warn','Perhatian','Pilih sekolah terlebih dahulu!');return;}
+  window._isGlobalModal = false;
   document.getElementById('userId').value='';
   document.getElementById('userNama').value='';
   document.getElementById('userUsername').value='';
@@ -893,6 +905,8 @@ function openModalUser(){
   document.getElementById('userStatus').value='aktif';
   document.getElementById('userExpired').value='';
   document.getElementById('userSekolah').value=_activeSchoolName;
+  const sd = document.getElementById('userSekolahDisplay');
+  sd.outerHTML = `<input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>`;
   document.getElementById('userSekolahDisplay').value=_activeSchoolName;
   setCheckedRoles('rolesCheckboxes',[]);
   document.getElementById('modalUserTitle').textContent='Tambah Pengguna — '+_activeSchoolName;
@@ -901,6 +915,7 @@ function openModalUser(){
 function editUser(id){
   const d=_allUsers.find(u=>u.id===id);
   if(!d) return;
+  window._isGlobalModal = false;
   document.getElementById('userId').value=id;
   document.getElementById('userNama').value=d.nama||'';
   document.getElementById('userUsername').value=d.username||'';
@@ -908,6 +923,8 @@ function editUser(id){
   document.getElementById('userStatus').value=d.status||'aktif';
   document.getElementById('userExpired').value=d.expired?fmtDateInput(d.expired):'';
   document.getElementById('userSekolah').value=d.sekolah||_activeSchoolName;
+  const sd = document.getElementById('userSekolahDisplay');
+  sd.outerHTML = `<input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>`;
   document.getElementById('userSekolahDisplay').value=d.sekolah||_activeSchoolName;
   setCheckedRoles('rolesCheckboxes',d.roles||[d.role]);
   document.getElementById('modalUserTitle').textContent='Edit Pengguna — '+(d.nama||'');
@@ -941,8 +958,14 @@ async function saveUser(){
       _allUsers.push({id:ref.id,...payload});
     }
     closeModal('modalUser');
-    const schoolUsers=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
-    renderUsers(applyRoleFilter(schoolUsers));
+    if (window._isGlobalModal) {
+      const idx = _allSekolah.findIndex(s=>s.nama===sekolah);
+      if (idx===-1) _allSekolah.push({id:'',nama:sekolah}); // Optimistic caching
+      await loadAllUsersGlobal();
+    } else {
+      const schoolUsers=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
+      renderUsers(applyRoleFilter(schoolUsers));
+    }
     loadDashboard();
     addLog('Pengguna',`${id?'Edit':'Tambah'} pengguna: ${nama} (${roles.join('+')}) @ ${sekolah}`);
     showToast('success','Berhasil',`Pengguna ${nama} ${id?'diperbarui':'ditambahkan'}`);
@@ -1344,9 +1367,13 @@ function konfirmasiHapus(tipe,id,nama){
     try{
       await deleteDoc(doc(db,tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten',id));
       closeModal('modalKonfirmasi');
-      if(tipe==='user'){
+      if(tipe==='user' || tipe==='user_global'){
         const idx=_allUsers.findIndex(u=>u.id===id);if(idx>-1)_allUsers.splice(idx,1);
-        renderUsers(applyRoleFilter(_allUsers.filter(u=>u.sekolah===_activeSchoolName)));
+        if (tipe==='user') {
+          renderUsers(applyRoleFilter(_allUsers.filter(u=>u.sekolah===_activeSchoolName)));
+        } else {
+          renderAllUsers(applyRoleFilterGlobal(_allUsers));
+        }
         loadDashboard();
       } else if(tipe==='sekolah'){
         await loadSekolahDropdown();

@@ -1,33 +1,19 @@
 // ============================================
-// CIMEGA SMART OFFICE - shared/music.js v3.4
+// CIMEGA SMART OFFICE - shared/music.js v4.0 (Continuous BGM)
 // Simpan ke: src/shared/music.js
 //
-// FIX v3.4:
-// - updateUI() support 2 set ID:
-//     Login       → mwTitle, mwBars, mwMuteBtn
-//     Dashboard   → musicTitle, musicBars, musicMuteBtn, musicTrackInfo
+// FIX v4.0:
+// - Audio object sepenuhnya pindah ke `main.js` (Background Window)
+// - File ini murni sebagai Controller UI yang listen ke State Changed.
 // ============================================
 
 const CimegaMusic = (() => {
 
-  const PLAYLIST = [
-    'Kang Prabu - Himne SDN Cimega.mp3',
-    'Kang Prabu - Mars SDN Cimega.mp3',
-    'Kang Prabu - Langkah Kecil Cimega.mp3',
-    'Kang Prabu - Duhai Pemilik Jiwa.mp3',
-    'Kang Prabu - Juara Di Atas Bumi Mulia.mp3',
-    'Kang Prabu - Restu Terakhir.mp3',
-    'Kang Prabu - Senam Kreasi Cimega.mp3',
-  ];
-
-  let audio         = null;
-  let basePath      = '../../../assets_music/';
-  let currentIndex  = 0;
-  let isMuted       = false;
-  let lastPosition  = 0;
-  let _saveInterval = null;
-  let _uiTimer      = null;
-  let _initialized  = false;
+  let currentIndex = 0;
+  let isMuted      = false;
+  let PLAYLIST     = [];
+  let _initialized = false;
+  let _uiTimer     = null;
 
   function shortTitle(f) {
     return (f || '').replace('Kang Prabu - ', '').replace('.mp3', '') || '...';
@@ -35,8 +21,8 @@ const CimegaMusic = (() => {
 
   // ── updateUI — support ID login (mw*) DAN dashboard/admin (music*) ──
   function updateUI() {
-    const title = shortTitle(PLAYLIST[currentIndex]);
-    const track = (currentIndex + 1) + ' / ' + PLAYLIST.length;
+    const title = PLAYLIST.length > 0 ? shortTitle(PLAYLIST[currentIndex]) : 'Memuat...';
+    const track = PLAYLIST.length > 0 ? ((currentIndex + 1) + ' / ' + PLAYLIST.length) : '0 / 0';
     const icon  = isMuted ? '🔇' : '🔊';
 
     // Dashboard & Admin
@@ -44,109 +30,78 @@ const CimegaMusic = (() => {
     const info = document.getElementById('musicTrackInfo');
     const btn  = document.getElementById('musicMuteBtn');
     const bars = document.getElementById('musicBars');
+    
     if (t)    t.textContent    = title;
     if (info) info.textContent = track;
     if (btn)  btn.textContent  = icon;
-    if (bars) isMuted ? bars.classList.add('paused') : bars.classList.remove('paused');
+    if (bars) {
+      if (isMuted) bars.classList.add('paused');
+      else bars.classList.remove('paused');
+    }
 
     // Login (ID berbeda: mwTitle, mwMuteBtn, mwBars)
     const mwT    = document.getElementById('mwTitle');
     const mwBtn  = document.getElementById('mwMuteBtn');
     const mwBars = document.getElementById('mwBars');
+    
     if (mwT)    mwT.textContent   = title;
     if (mwBtn)  mwBtn.textContent = icon;
-    if (mwBars) isMuted ? mwBars.classList.add('paused') : mwBars.classList.remove('paused');
+    if (mwBars) {
+      if (isMuted) mwBars.classList.add('paused');
+      else mwBars.classList.remove('paused');
+    }
 
-    // Retry jika semua elemen belum ada di DOM
+    // Retry jika elemen belum terbentuk
     if (!t && !mwT) {
       if (_uiTimer) clearTimeout(_uiTimer);
       _uiTimer = setTimeout(updateUI, 300);
     }
   }
 
-  async function savePosition() {
-    if (!audio || audio.paused || !audio.src) return;
-    try {
-      await window.cimegaAPI.musicSetState({
-        index:    currentIndex,
-        muted:    isMuted,
-        position: Math.floor(audio.currentTime),
-      });
-    } catch (e) {}
-  }
-
-  function loadTrack(index, seekTo) {
-    if (!audio) return;
-    currentIndex = ((index % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
-
-    audio.oncanplay = () => {
-      audio.oncanplay = null;
-      if (seekTo && seekTo > 2) {
-        try { audio.currentTime = seekTo; } catch(e) {}
-      }
-      audio.play().catch(() => {});
-    };
-
-    audio.src    = basePath + PLAYLIST[currentIndex];
-    audio.volume = isMuted ? 0 : 0.8;
-    audio.load();
+  function applyState(state) {
+    if (!state) return;
+    if (state.files) PLAYLIST = state.files;
+    if (typeof state.index !== 'undefined') currentIndex = state.index;
+    if (typeof state.muted !== 'undefined') isMuted      = state.muted;
     updateUI();
   }
 
-  async function init(path) {
+  async function init() {
     if (_initialized) return;
     _initialized = true;
-    if (path) basePath = path;
 
-    try {
-      const saved = await window.cimegaAPI.musicGetState();
-      if (saved) {
-        currentIndex = (saved.index >= 0 && saved.index < PLAYLIST.length)
-          ? saved.index : 0;
-        isMuted      = saved.muted    || false;
-        lastPosition = saved.position || 0;
-      }
-    } catch (e) {
-      currentIndex = 0; isMuted = false; lastPosition = 0;
+    // Pasang listener Broadcast dari main.js (jika halaman memilikinya)
+    if (window.cimegaAPI && window.cimegaAPI.onMusicStateChanged) {
+      window.cimegaAPI.onMusicStateChanged((state) => applyState(state));
     }
 
-    if (audio) { audio.pause(); audio.oncanplay = null; audio.src = ''; }
-    audio         = new Audio();
-    audio.preload = 'auto';
-    audio.volume  = isMuted ? 0 : 0.8;
+    try {
+      // Pemicu init ke main process (Memutar lagu jika belum jalan)
+      const initialState = await window.cimegaAPI.musicInit();
+      applyState(initialState);
+    } catch (e) {
+      console.error('CimegaMusic init fail:', e);
+    }
 
-    // Update UI saat audio benar-benar mulai play
-    audio.addEventListener('play', () => updateUI());
-
-    // Auto next saat lagu selesai
-    audio.addEventListener('ended', () => loadTrack(currentIndex + 1, 0));
-
-    loadTrack(currentIndex, lastPosition);
-
-    if (_saveInterval) clearInterval(_saveInterval);
-    _saveInterval = setInterval(savePosition, 2000);
-
+    // Force sinkron UI tambahan
     updateUI();
     setTimeout(updateUI, 500);
   }
 
   async function toggleMute() {
-    isMuted = !isMuted;
-    if (audio) audio.volume = isMuted ? 0 : 0.8;
-    try { await window.cimegaAPI.musicSetState({ muted: isMuted }); } catch (e) {}
-    updateUI();
+    try {
+      const newMute = await window.cimegaAPI.musicToggleMute();
+      isMuted = newMute;
+      updateUI();
+    } catch (e) { console.error(e); }
   }
 
   async function next() {
-    await savePosition();
-    loadTrack(currentIndex + 1, 0);
-    try { await window.cimegaAPI.musicSetState({ index: currentIndex, position: 0 }); } catch (e) {}
+    try { await window.cimegaAPI.musicNext(); } catch (e) {}
   }
 
   async function prev() {
-    await savePosition();
-    loadTrack(currentIndex - 1, 0);
-    try { await window.cimegaAPI.musicSetState({ index: currentIndex, position: 0 }); } catch (e) {}
+    try { await window.cimegaAPI.musicPrev(); } catch (e) {}
   }
 
   return { init, toggleMute, next, prev, updateUI };
