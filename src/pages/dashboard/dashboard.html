@@ -322,10 +322,21 @@
   </div>
   <nav class="sidebar-nav" id="sidebarNav"></nav>
   <div class="sidebar-footer">
-    <div class="school-tag">
-      <strong id="schoolName">SDN Cimega</strong>
-      <span id="schoolAddr">Kp.Bojongloa Desa Sarinagen, Kec.Cipongkor</span>
+    <!-- MUSIC FIRST -->
+    <div class="sidebar-music">
+      <div class="sm-row1">
+        <div class="sm-bars" id="musicBars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+        <div class="sm-title" id="musicTitle">Memuat...</div>
+      </div>
+      <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Kang Prabu</div>
+      <div class="sm-controls">
+        <div class="sm-btn" onclick="CimegaMusic.prev()">⏮</div>
+        <div class="sm-btn" id="musicMuteBtn" onclick="CimegaMusic.toggleMute()">🔊</div>
+        <div class="sm-btn" onclick="CimegaMusic.next()">⏭</div>
+      </div>
     </div>
+
+    <!-- SETTINGS (Hidden) -->
     <div class="page-settings" style="display:none">
       <div class="ps-title">⚙ Halaman Dokumen</div>
       <div class="ps-label">Ukuran</div>
@@ -345,18 +356,13 @@
         <div class="ps-btn" id="psLandscape" onclick="setOrientation('Landscape')">Landscape</div>
       </div>
     </div>
-    <div class="sidebar-music">
-      <div class="sm-row1">
-        <div class="sm-bars" id="musicBars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
-        <div class="sm-title" id="musicTitle">Memuat...</div>
-      </div>
-      <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Kang Prabu</div>
-      <div class="sm-controls">
-        <div class="sm-btn" onclick="CimegaMusic.prev()">⏮</div>
-        <div class="sm-btn" id="musicMuteBtn" onclick="CimegaMusic.toggleMute()">🔊</div>
-        <div class="sm-btn" onclick="CimegaMusic.next()">⏭</div>
-      </div>
+
+    <!-- ADDRESS BOTTOM -->
+    <div class="school-tag">
+      <strong id="schoolName">SDN Cimega</strong>
+      <span id="schoolAddr">Kp.Bojongloa Desa Sarinagen, Kec.Cipongkor</span>
     </div>
+    
     <div class="btn-logout" onclick="doLogout()"><span>🚪</span>Keluar</div>
   </div>
 </div>
@@ -559,15 +565,9 @@
     <div class="page" id="page-ai">
       <div class="section-title">✨ AI <span>Asisten</span></div>
 
-      <!-- Tab bar -->
-      <div class="ai-tabs" id="aiTabs" style="overflow-x:auto;white-space:nowrap;display:flex;padding-bottom:5px;">
-        <div class="ai-tab active" data-tab="rpp"     onclick="switchAiTab('rpp',this)">📝 RPP / Modul Ajar</div>
-        <div class="ai-tab"        data-tab="surat"   onclick="switchAiTab('surat',this)">📄 SK & Surat</div>
-        <div class="ai-tab"        data-tab="chat"    onclick="switchAiTab('chat',this)">💬 Chatbot Kurikulum</div>
-        <div class="ai-tab"        data-tab="analisis" onclick="switchAiTab('analisis',this)">📊 Analisis Nilai</div>
-        <div class="ai-tab"        data-tab="kepsek"  onclick="switchAiTab('kepsek',this)">🏛️ Kepsek</div>
-        <div class="ai-tab"        data-tab="bendahara" onclick="switchAiTab('bendahara',this)">💰 Bendahara</div>
-        <div class="ai-tab"        data-tab="ops"     onclick="switchAiTab('ops',this)">💻 Ops/TU</div>
+      <!-- Tab bar — Simplified to Chatbot only as per request -->
+      <div class="ai-tabs" id="aiTabs" style="display:none">
+        <div class="ai-tab active" data-tab="chat" onclick="switchAiTab('chat',this)">💬 Chatbot Kurikulum</div>
       </div>
 
       <!-- TAB 1: RPP / MODUL AJAR -->
@@ -732,34 +732,36 @@
             <div class="card-body">
               <div id="aiSuratResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">📄</div>
+                  <div style="font-size:13px">Isi parameter di kiri lalu klik<br/><strong style="color:var(--cyan)">Generate dengan AI</strong></div>
                 </div>
-736:               </div>
-737: 
-738:               <!-- Control Area (Surat) -->
-739:               <div class="ai-doc-controls" id="aiSuratControls">
-740:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
-741:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-742:                   <div>
-743:                     <div class="adc-label">Ukuran & Margin</div>
-744:                     <select class="form-control" onchange="setPageSize(this.value)">
-745:                       <option value="A4">A4 (Standar)</option>
-746:                       <option value="F4">F4 / Folio</option>
-747:                     </select>
-748:                   </div>
-749:                   <div>
-750:                     <div class="adc-label">Ketebalan Margin</div>
-751:                     <select class="form-control" onchange="setMargin(this.value)">
-752:                       <option value="Normal">Normal</option>
-753:                       <option value="Moderate">Moderate</option>
-754:                       <option value="Narrow">Narrow</option>
-755:                     </select>
-756:                   </div>
-757:                 </div>
-758:                 <div class="adc-export-row">
-759:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiSuratResult','Surat_Cimega')">📄 Ekspor Word (.docx)</button>
-760:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiSuratResult','Surat_Cimega')">📊 Ekspor Excel (.xlsx)</button>
-761:                 </div>
-762:               </div>
+              </div>
+
+              <!-- Control Area (Surat) -->
+              <div class="ai-doc-controls" id="aiSuratControls">
+                <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div>
+                    <div class="adc-label">Ukuran & Margin</div>
+                    <select class="form-control" onchange="setPageSize(this.value)">
+                      <option value="A4">A4 (Standar)</option>
+                      <option value="F4">F4 / Folio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="adc-label">Ketebalan Margin</div>
+                    <select class="form-control" onchange="setMargin(this.value)">
+                      <option value="Normal">Normal</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Narrow">Narrow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="adc-export-row">
+                  <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiSuratResult','Surat_Cimega')">📄 Ekspor Word (.docx)</button>
+                  <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiSuratResult','Surat_Cimega')">📊 Ekspor Excel (.xlsx)</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -828,34 +830,36 @@
             <div class="card-body">
               <div id="aiAnalisisResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">📊</div>
+                  <div style="font-size:13px">Masukkan data nilai siswa<br/>lalu klik <strong style="color:var(--cyan)">Analisis dengan AI</strong></div>
                 </div>
-833:               </div>
-834: 
-835:               <!-- Control Area (Analisis) -->
-836:               <div class="ai-doc-controls" id="aiAnalisisControls">
-837:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
-838:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-839:                   <div>
-840:                     <div class="adc-label">Ukuran & Margin</div>
-841:                     <select class="form-control" onchange="setPageSize(this.value)">
-842:                       <option value="A4">A4 (Standar)</option>
-843:                       <option value="F4">F4 / Folio</option>
-844:                     </select>
-845:                   </div>
-846:                   <div>
-847:                     <div class="adc-label">Ketebalan Margin</div>
-848:                     <select class="form-control" onchange="setMargin(this.value)">
-849:                       <option value="Normal">Normal</option>
-850:                       <option value="Moderate">Moderate</option>
-851:                       <option value="Narrow">Narrow</option>
-852:                     </select>
-853:                   </div>
-854:                 </div>
-855:                 <div class="adc-export-row">
-856:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiAnalisisResult','Analisis_Cimega')">📄 Ekspor Word (.docx)</button>
-857:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiAnalisisResult','Analisis_Cimega')">📊 Ekspor Excel (.xlsx)</button>
-858:                 </div>
-859:               </div>
+              </div>
+
+              <!-- Control Area (Analisis) -->
+              <div class="ai-doc-controls" id="aiAnalisisControls">
+                <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div>
+                    <div class="adc-label">Ukuran & Margin</div>
+                    <select class="form-control" onchange="setPageSize(this.value)">
+                      <option value="A4">A4 (Standar)</option>
+                      <option value="F4">F4 / Folio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="adc-label">Ketebalan Margin</div>
+                    <select class="form-control" onchange="setMargin(this.value)">
+                      <option value="Normal">Normal</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Narrow">Narrow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="adc-export-row">
+                  <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiAnalisisResult','Analisis_Cimega')">📄 Ekspor Word (.docx)</button>
+                  <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiAnalisisResult','Analisis_Cimega')">📊 Ekspor Excel (.xlsx)</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -904,34 +908,36 @@
             <div class="card-body">
               <div id="aiKepsekResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">🏛️</div>
+                  <div style="font-size:13px">Lengkapi form lalu klik<br/><strong style="color:var(--cyan)">Generate Dokumen Kepsek</strong></div>
                 </div>
-885:               </div>
-886: 
-887:               <!-- Control Area (Kepsek) -->
-888:               <div class="ai-doc-controls" id="aiKepsekControls">
-889:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
-890:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-891:                   <div>
-892:                     <div class="adc-label">Ukuran & Margin</div>
-893:                     <select class="form-control" onchange="setPageSize(this.value)">
-894:                       <option value="A4">A4 (Standar)</option>
-895:                       <option value="F4">F4 / Folio</option>
-896:                     </select>
-897:                   </div>
-898:                   <div>
-899:                     <div class="adc-label">Ketebalan Margin</div>
-900:                     <select class="form-control" onchange="setMargin(this.value)">
-901:                       <option value="Normal">Normal</option>
-902:                       <option value="Moderate">Moderate</option>
-903:                       <option value="Narrow">Narrow</option>
-904:                     </select>
-905:                   </div>
-906:                 </div>
-907:                 <div class="adc-export-row">
-908:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiKepsekResult','Dokumen_Kepsek')">📄 Ekspor Word (.docx)</button>
-909:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiKepsekResult','Dokumen_Kepsek')">📊 Ekspor Excel (.xlsx)</button>
-910:                 </div>
-911:               </div>
+              </div>
+
+              <!-- Control Area (Kepsek) -->
+              <div class="ai-doc-controls" id="aiKepsekControls">
+                <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div>
+                    <div class="adc-label">Ukuran & Margin</div>
+                    <select class="form-control" onchange="setPageSize(this.value)">
+                      <option value="A4">A4 (Standar)</option>
+                      <option value="F4">F4 / Folio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="adc-label">Ketebalan Margin</div>
+                    <select class="form-control" onchange="setMargin(this.value)">
+                      <option value="Normal">Normal</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Narrow">Narrow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="adc-export-row">
+                  <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiKepsekResult','Dokumen_Kepsek')">📄 Ekspor Word (.docx)</button>
+                  <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiKepsekResult','Dokumen_Kepsek')">📊 Ekspor Excel (.xlsx)</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -980,34 +986,36 @@
             <div class="card-body">
               <div id="aiBendaharaResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">💰</div>
+                  <div style="font-size:13px">Lengkapi form lalu klik<br/><strong style="color:var(--cyan)">Generate Laporan Keuangan</strong></div>
                 </div>
-937:               </div>
-938: 
-939:               <!-- Control Area (Bendahara) -->
-940:               <div class="ai-doc-controls" id="aiBendaharaControls">
-941:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
-942:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-943:                   <div>
-944:                     <div class="adc-label">Ukuran & Margin</div>
-945:                     <select class="form-control" onchange="setPageSize(this.value)">
-946:                       <option value="A4">A4 (Standar)</option>
-947:                       <option value="F4">F4 / Folio</option>
-948:                     </select>
-949:                   </div>
-950:                   <div>
-951:                     <div class="adc-label">Ketebalan Margin</div>
-952:                     <select class="form-control" onchange="setMargin(this.value)">
-953:                       <option value="Normal">Normal</option>
-954:                       <option value="Moderate">Moderate</option>
-955:                       <option value="Narrow">Narrow</option>
-956:                     </select>
-957:                   </div>
-958:                 </div>
-959:                 <div class="adc-export-row">
-960:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiBendaharaResult','Laporan_Keuangan')">📄 Ekspor Word (.docx)</button>
-961:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiBendaharaResult','Laporan_Keuangan')">📊 Ekspor Excel (.xlsx)</button>
-962:                 </div>
-963:               </div>
+              </div>
+
+              <!-- Control Area (Bendahara) -->
+              <div class="ai-doc-controls" id="aiBendaharaControls">
+                <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div>
+                    <div class="adc-label">Ukuran & Margin</div>
+                    <select class="form-control" onchange="setPageSize(this.value)">
+                      <option value="A4">A4 (Standar)</option>
+                      <option value="F4">F4 / Folio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="adc-label">Ketebalan Margin</div>
+                    <select class="form-control" onchange="setMargin(this.value)">
+                      <option value="Normal">Normal</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Narrow">Narrow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="adc-export-row">
+                  <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiBendaharaResult','Laporan_Keuangan')">📄 Ekspor Word (.docx)</button>
+                  <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiBendaharaResult','Laporan_Keuangan')">📊 Ekspor Excel (.xlsx)</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1051,34 +1059,36 @@
             <div class="card-body">
               <div id="aiOpsResult" style="min-height:400px;font-size:12px;font-family:Arial,sans-serif;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word">
                 <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+                  <div style="font-size:40px;margin-bottom:12px">💻</div>
+                  <div style="font-size:13px">Lengkapi form lalu klik<br/><strong style="color:var(--cyan)">Generate Dokumen TU</strong></div>
                 </div>
-985:               </div>
-986: 
-987:               <!-- Control Area (Ops) -->
-988:               <div class="ai-doc-controls" id="aiOpsControls">
-989:                 <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
-990:                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-991:                   <div>
-992:                     <div class="adc-label">Ukuran & Margin</div>
-993:                     <select class="form-control" onchange="setPageSize(this.value)">
-994:                       <option value="A4">A4 (Standar)</option>
-995:                       <option value="F4">F4 / Folio</option>
-996:                     </select>
-997:                   </div>
-998:                   <div>
-999:                     <div class="adc-label">Ketebalan Margin</div>
-1000:                     <select class="form-control" onchange="setMargin(this.value)">
-1001:                       <option value="Normal">Normal</option>
-1002:                       <option value="Moderate">Moderate</option>
-1003:                       <option value="Narrow">Narrow</option>
-1004:                     </select>
-1005:                   </div>
-1006:                 </div>
-1007:                 <div class="adc-export-row">
-1008:                   <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiOpsResult','Dokumen_TU')">📄 Ekspor Word (.docx)</button>
-1009:                   <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiOpsResult','Dokumen_TU')">📊 Ekspor Excel (.xlsx)</button>
-1010:                 </div>
-1011:               </div>
+              </div>
+
+              <!-- Control Area (Ops) -->
+              <div class="ai-doc-controls" id="aiOpsControls">
+                <div class="adc-header">⚙️ OPSI DOKUMEN & PENGATURAN</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div>
+                    <div class="adc-label">Ukuran & Margin</div>
+                    <select class="form-control" onchange="setPageSize(this.value)">
+                      <option value="A4">A4 (Standar)</option>
+                      <option value="F4">F4 / Folio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="adc-label">Ketebalan Margin</div>
+                    <select class="form-control" onchange="setMargin(this.value)">
+                      <option value="Normal">Normal</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Narrow">Narrow</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="adc-export-row">
+                  <button class="btn btn-primary btn-sm btn-export" onclick="exportToWord('aiOpsResult','Dokumen_TU')">📄 Ekspor Word (.docx)</button>
+                  <button class="btn btn-success btn-sm btn-export" onclick="exportToExcel('aiOpsResult','Dokumen_TU')">📊 Ekspor Excel (.xlsx)</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1088,6 +1098,10 @@
 
   </div><!-- /content -->
 </div><!-- /main -->
+
+<!-- Dependencies -->
+<script src="../../shared/music.js"></script>
+<script src="../../shared/updater.js"></script>
 
 <script>
 'use strict';
@@ -1161,6 +1175,8 @@ async function loadKontenDynamic(){
       const meta=katMeta[katId]||{icon:'📄',title:katId,desc:''};
       _menuDataDynamic.push({id:katId,icon:meta.icon,title:meta.title,desc:meta.desc,items:docs.map(d=>d.nama),docs});
     });
+    // Trigger filtering AI tabs based on new content
+    filterAiTabsByRole();
   }catch(e){console.error('loadKontenDynamic error',e);}
 }
 
@@ -1380,15 +1396,15 @@ function printDoc(){
 // ── Page settings ──────────────────────────
 function setPageSize(s){
   pageSettings.size=s;
+  // Update sidebar if exists (optional cleanup)
   ['A4','F4'].forEach(k=>document.getElementById('ps'+k)?.classList.toggle('active',k===s));
+  showToast('info', 'Ukuran Kertas', 'Diatur ke ' + s);
 }
 function setMargin(m){
   pageSettings.margin=m;
+  // Update sidebar if exists (optional cleanup)
   ['Normal','Moderate','Narrow'].forEach(k=>document.getElementById('ps'+k)?.classList.toggle('active',k===m));
-}
-function setOrientation(o){
-  pageSettings.orientation=o;
-  ['Portrait','Landscape'].forEach(k=>document.getElementById('ps'+k)?.classList.toggle('active',k===o));
+  showToast('info', 'Margin', 'Diatur ke ' + m);
 }
 
 // ══════════════════════════════════════════
@@ -1901,47 +1917,66 @@ function showAiResult(elId, text, copyBtnId, saveBtnId, controlId) {
 }
 
 function exportToWord(elId, filename) {
-  const content = document.getElementById(elId).textContent;
+  const el = document.getElementById(elId);
+  const content = el.innerHTML;
+  
+  // Map page settings to CSS
+  const margins = { Normal: '2.54cm', Moderate: '1.91cm', Narrow: '1.27cm' };
+  const mg = margins[pageSettings.margin] || '2.54cm';
+  const sz = pageSettings.size === 'F4' ? '21.59cm 33.02cm' : 'A4';
+  
   const html = `
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-    <head><meta charset='utf-8'><title>Export</title>
-    <style>
-      body { font-family: 'Arial', sans-serif; line-height: 1.6; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-    </style>
-    </head><body>${content.replace(/\n/g, '<br>')}</body></html>`;
+    <head>
+      <meta charset='utf-8'>
+      <title>Export AI Document</title>
+      <style>
+        @page { size: ${sz}; margin: ${mg}; }
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #000; }
+        table { border-collapse: collapse; width: 100%; border: 1px solid #000; margin-bottom: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      ${content}
+    </body>
+    </html>`;
   
   const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = (filename || 'Dokumen') + '.doc';
+  a.download = (filename || 'Dokumen_AI') + '_' + new Date().getTime() + '.doc';
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function exportToExcel(elId, filename) {
   const el = document.getElementById(elId);
-  const text = el.textContent;
   
-  // Jika isi berupa tabel HTML (seringkali AI generate tabel)
-  // Kita coba deteksi apakah ada tag <table> jika text diparse sebagai HTML
-  const tmp = document.createElement('div');
-  tmp.innerHTML = text;
-  const table = tmp.querySelector('table');
+  // Try to find any tables in the content
+  const tables = el.querySelectorAll('table');
+  let wb = XLSX.utils.book_new();
   
-  let wb;
-  if (table) {
-    wb = XLSX.utils.table_to_book(table);
+  if (tables.length > 0) {
+    tables.forEach((table, i) => {
+      const ws = XLSX.utils.table_to_sheet(table);
+      XLSX.utils.book_append_sheet(wb, ws, "Tabel " + (i + 1));
+    });
   } else {
-    // Jika hanya teks, pecah per baris
-    const rows = text.split('\n').map(r => [r]);
+    // Fallback: split by lines
+    const text = el.innerText || el.textContent;
+    const rows = text.split('\n').filter(r => r.trim()).map(r => [r]);
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.utils.book_append_sheet(wb, ws, "Konten Teks");
   }
   
-  XLSX.writeFile(wb, (filename || 'Data') + '.xlsx');
+  XLSX.writeFile(wb, (filename || 'Data_AI') + '_' + new Date().getTime() + '.xlsx');
 }
 
 function copyAiResult(elId) {
@@ -2280,34 +2315,19 @@ Gunakan kop surat formal HTML, dan/atau tata letak border-collapse HTML. Jika it
 }
 
 function filterAiTabsByRole() {
-  const roles = userData.roles || [userData.role || 'guru'];
-  // Cek apakah kategori tertentu memiliki konten aktif untuk user ini (lewat _kontenCache)
-  const hasCat = (catId) => _kontenCache[catId] && _kontenCache[catId].length > 0;
-
-  const rules = {
-    'rpp':       r => (r.includes('guru') || r.includes('kepsek')) && hasCat('adm_guru'),
-    'surat':     r => (r.includes('guru') || r.includes('ops') || r.includes('kepsek')) && hasCat('adm_umum'),
-    'chat':      () => true, // Chatbot selalu muncul sebagai default
-    'analisis':  r => (r.includes('guru') || r.includes('kepsek')) && hasCat('adm_guru'),
-    'kepsek':    r => r.includes('kepsek') && hasCat('adm_kepsek'),
-    'bendahara': r => (r.includes('bendahara') || r.includes('kepsek')) && hasCat('keuangan'),
-    'ops':       r => (r.includes('ops') || r.includes('kepsek')) && hasCat('adm_umum')
-  };
-  let firstTab = null;
-  let activeValid = false;
+  // Hanya Chatbot yang boleh muncul di navigasi AI (Sesuai permintaan)
+  // Tool lain dipindahkan ke sidebar -> kategori dokumen
   document.querySelectorAll('.ai-tab').forEach(el => {
-    const tabId = el.getAttribute('data-tab');
-    const valid = rules[tabId] ? rules[tabId](roles) : false;
-    if (valid) {
+    if (el.getAttribute('data-tab') === 'chat') {
       el.style.display = 'inline-block';
-      if (!firstTab) firstTab = { id: tabId, el };
-      if (el.classList.contains('active')) activeValid = true;
+      el.classList.add('active');
     } else {
       el.style.display = 'none';
       el.classList.remove('active');
     }
   });
-  if (!activeValid && firstTab) switchAiTab(firstTab.id, firstTab.el);
+  // Pastikan panel chat aktif
+  switchAiTab('chat', document.querySelector('.ai-tab[data-tab="chat"]'));
 }
 
 async function initApp(){
@@ -2330,7 +2350,6 @@ async function initApp(){
     loadNotifications();
     checkUpdate();
 
-    CimegaMusic.init('../../../assets_music/');
 
     try{
       await CimegaUpdater.init({owner:'prabu26dev',repo:'Cimega_Smart_Office'});
@@ -2358,9 +2377,12 @@ async function initApp(){
   }catch(e){console.error('initApp error',e);}
 }
 
+
+// 🔥 Init Music ASAP
+CimegaMusic.init();
+
+// Init Firebase & Dashboard logic
 initApp();
 </script>
 
-<script src="../../shared/music.js"></script>
-<script src="../../shared/updater.js"></script>
 </body>
