@@ -244,9 +244,8 @@
   <nav class="sidebar-nav">
     <div class="nav-section">Menu Utama</div>
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
-    <div class="nav-section">Manajemen</div>
-    <div class="nav-item" onclick="showPage('guru',this)"><span class="nav-icon">👥</span>Kelola Pengguna</div>
-    <div class="nav-item" onclick="showPage('institusi',this)"><span class="nav-icon">🏫</span>Kelola Institusi</div>
+    <div class="nav-section">Manajemen Terpadu</div>
+    <div class="nav-item active" style="color:var(--gold)" onclick="showPage('master',this)"><span class="nav-icon">📦</span>Data Master (Sinkron)</div>
     <div class="nav-section">Sistem</div>
     <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📝</span>Kelola Konten</div>
     <div class="nav-item" onclick="showPage('update',this)"><span class="nav-icon">🔄</span>Update Aplikasi</div>
@@ -308,65 +307,9 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         PAGE: KELOLA PENGGUNA
-         Level 1 = kartu per sekolah  (#view-schools)
-         Level 2 = tabel user sekolah (#view-users)
-    ══════════════════════════════════════════ -->
-    <div class="page" id="page-guru">
-
-      <!-- LEVEL 1 — DAFTAR KARTU SEKOLAH -->
-      <div id="view-schools">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Kelola <span>Pengguna</span></div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px">Pilih sekolah untuk melihat &amp; mengelola penggunanya</div>
-          </div>
-          <button class="btn btn-gold" onclick="openModalSekolah()">🏫 + Tambah Sekolah</button>
-        </div>
-        <div class="school-grid" id="schoolGrid">
-          <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
-            <div style="font-size:32px;margin-bottom:10px">⏳</div>Memuat data sekolah...
-          </div>
-        </div>
-      </div>
-
-      <!-- LEVEL 2 — PENGGUNA PER SEKOLAH -->
-      <div id="view-users" style="display:none">
-        <div class="users-view-header">
-          <div class="back-btn" onclick="backToSchools()" title="Kembali ke daftar sekolah">←</div>
-          <div class="users-view-school">
-            <div class="users-view-school-name" id="activeSchoolName">—</div>
-            <div class="users-view-school-sub" id="activeSchoolSub">—</div>
-          </div>
-          <div class="users-view-actions">
-            <button class="btn btn-gold btn-sm" id="btnEditSchool" onclick="editActiveSchool()">✏️ Edit Sekolah</button>
-            <button class="btn btn-primary btn-sm" onclick="openModalUser()">+ Tambah Pengguna</button>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <div class="search-wrap"><input class="search-input" id="searchUser" placeholder="Cari nama / username..." oninput="filterUsers()"/></div>
-            <div class="role-filter-bar">
-              <div class="rf-btn active" onclick="filterByRole('all',this)">Semua</div>
-              <div class="rf-btn" onclick="filterByRole('guru',this)">👨‍🏫 Guru</div>
-              <div class="rf-btn" onclick="filterByRole('kepsek',this)">🏛️ Kepsek</div>
-              <div class="rf-btn" onclick="filterByRole('bendahara',this)">💰 Bendahara</div>
-              <div class="rf-btn" onclick="filterByRole('ops',this)">💻 Operator</div>
-            </div>
-          </div>
-          <table>
-            <thead><tr><th>Nama</th><th>Username</th><th>Jabatan</th><th>Status</th><th>Expired</th><th>Aksi</th></tr></thead>
-            <tbody id="userBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Memuat...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-    </div><!-- /page-guru -->
-
-    <!-- PAGE: KELOLA INSTITUSI & KOMPONEN -->
-    <div class="page" id="page-institusi">
-      <div id="adminInstitusiApp"></div>
+    <!-- PAGE: DATA MASTER (COMBINED) -->
+    <div class="page active" id="page-master">
+      <div id="masterApp"></div>
     </div>
 
     <!-- PAGE: KONTEN -->
@@ -534,11 +477,11 @@
       <div style="font-family:'Orbitron',sans-serif; font-size:10px; color:var(--gold); margin-bottom:8px;">🔐 SHARED SECURITY KEYS (SAAS)</div>
       <div class="form-group" style="margin-bottom:8px;">
         <label class="form-label" style="font-size:10px; color:var(--muted);">School Secret Key (AES-256)</label>
-        <input class="form-control" id="sekolahSecretKey" readonly style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
+        <input class="form-control" id="sekolahSecretKey" style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
       </div>
       <div class="form-group" style="margin:0;">
         <label class="form-label" style="font-size:10px; color:var(--muted);">Emergency Backup Key</label>
-        <input class="form-control" id="sekolahBackupKey" readonly style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
+        <input class="form-control" id="sekolahBackupKey" style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
       </div>
       <div style="font-size:9px; color:var(--muted); margin-top:6px;">⚠️ Kunci ini dihasilkan secara otomatis dan mutlak diperlukan untuk dekripsi data chat/dokumen.</div>
     </div>
@@ -666,7 +609,7 @@
 <script src="../../shared/music.js"></script>
 <script src="../../shared/updater.js"></script>
 <!-- Modul Admin -->
-<script src="../../modules/admin/akademik.js"></script>
+<script src="../../modules/admin/data_master.js"></script>
 <script>
 'use strict';
 // ══════════════════════════════════════════
@@ -732,10 +675,11 @@ function showPage(page,navEl){
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',akademik:'DATA AKADEMIK',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
   if(page==='guru')       loadSchoolCards();
   if(page==='institusi')  if(window.AdminInstitusi) window.AdminInstitusi.init();
+  if(page==='master')     if(window.AdminMaster) window.AdminMaster.init();
   if(page==='konten')     loadKategoriList();
   if(page==='log')        loadLog();
   if(page==='pengaturan') loadPengaturan();
@@ -771,151 +715,7 @@ async function loadDashboard(){
 // ════════════════════════════════════════════
 // KELOLA PENGGUNA — LEVEL 1: KARTU SEKOLAH
 // ════════════════════════════════════════════
-async function loadSchoolCards(){
-  document.getElementById('view-schools').style.display='';
-  document.getElementById('view-users').style.display='none';
-  _roleFilter='all';
-  _allUsers=[];
-
-  const{collection,getDocs}=window._fb;
-  const grid=document.getElementById('schoolGrid');
-  grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)"><div style="font-size:32px;margin-bottom:10px">⏳</div>Memuat data sekolah...</div>`;
-
-  try{
-    const[skolSnap,usrSnap]=await Promise.all([
-      getDocs(collection(db,'sekolah')),
-      getDocs(collection(db,'users')),
-    ]);
-
-    _allSekolah=[];
-    skolSnap.forEach(d=>_allSekolah.push({id:d.id,...d.data()}));
-
-    // Hitung statistik per sekolah
-    const statBySchool={};
-    usrSnap.forEach(d=>{
-      const u=d.data();
-      if(!u.roles) u.roles=u.role?[u.role]:['guru'];
-      _allUsers.push({id:d.id,...u});
-      const sk=u.sekolah||'—';
-      if(!statBySchool[sk]) statBySchool[sk]={total:0,aktif:0,guru:0,kepsek:0,bendahara:0,ops:0};
-      statBySchool[sk].total++;
-      if(u.status==='aktif') statBySchool[sk].aktif++;
-      (u.roles||[]).forEach(r=>{if(statBySchool[sk][r]!==undefined)statBySchool[sk][r]++;});
-    });
-
-    if(_allSekolah.length===0){
-      grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--muted)">
-        <div style="font-size:44px;margin-bottom:14px">🏫</div>
-        <div style="font-size:14px;color:#fff;margin-bottom:6px">Belum ada sekolah terdaftar</div>
-        <div style="font-size:12px;margin-bottom:20px">Tambahkan sekolah pertama untuk mulai mengelola pengguna</div>
-        <button class="btn btn-gold" onclick="openModalSekolah()">🏫 + Tambah Sekolah Sekarang</button>
-      </div>`;
-      return;
-    }
-
-    grid.innerHTML=_allSekolah.map(s=>{
-      const st=statBySchool[s.nama]||{total:0,aktif:0,kepsek:0};
-      return `<div class="school-card" onclick="openSchoolUsers('${s.id}','${(s.nama||'').replace(/'/g,"\\'")}')">
-        <div class="school-card-top">
-          <div class="school-card-icon">🏫</div>
-          <div class="school-card-info">
-            <div class="school-card-name">${s.nama||'-'}</div>
-            <div class="school-card-addr">${s.alamat||'Alamat belum diisi'}</div>
-          </div>
-        </div>
-        <div class="school-card-stats">
-          <div class="school-stat"><div class="school-stat-num">${st.total}</div><div class="school-stat-label">Pengguna</div></div>
-          <div class="school-stat"><div class="school-stat-num" style="color:var(--success)">${st.aktif}</div><div class="school-stat-label">Aktif</div></div>
-          <div class="school-stat"><div class="school-stat-num" style="color:var(--gold)">${st.kepsek}</div><div class="school-stat-label">Kepsek</div></div>
-        </div>
-        <div class="school-card-footer">
-          <span class="badge ${s.status==='aktif'?'badge-active':'badge-inactive'}">${s.status||'aktif'}</span>
-          <span class="school-card-arrow">→</span>
-        </div>
-      </div>`;
-    }).join('');
-
-  }catch(e){
-    grid.innerHTML=`<div style="grid-column:1/-1" class="empty-state"><div class="icon">⚠️</div><p>Gagal memuat: ${e.message}</p></div>`;
-  }
-}
-
-// ── Buka pengguna per sekolah ──────────────
-function openSchoolUsers(schoolId, schoolName){
-  _activeSchoolId=schoolId;
-  _activeSchoolName=schoolName;
-
-  const sekolah=_allSekolah.find(s=>s.id===schoolId)||{};
-  document.getElementById('activeSchoolName').textContent=schoolName;
-  document.getElementById('activeSchoolSub').textContent=
-    (sekolah.alamat||'Alamat belum diisi')+' · Status: '+(sekolah.status||'aktif');
-
-  // Reset filter & search
-  _roleFilter='all';
-  document.getElementById('searchUser').value='';
-  document.querySelectorAll('.rf-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
-
-  document.getElementById('view-schools').style.display='none';
-  document.getElementById('view-users').style.display='';
-
-  const schoolUsers=_allUsers.filter(u=>u.sekolah===schoolName);
-  renderUsers(applyRoleFilter(schoolUsers));
-}
-
-// ── Kembali ke daftar sekolah ──────────────
-function backToSchools(){
-  document.getElementById('view-users').style.display='none';
-  document.getElementById('view-schools').style.display='';
-  _activeSchoolId='';
-  _activeSchoolName='';
-}
-
-// ── Edit sekolah aktif (dari tombol di level 2) ──
-function editActiveSchool(){
-  openModalSekolah(_activeSchoolId);
-}
-
-// ════════════════════════════════════════════
-// KELOLA PENGGUNA — LEVEL 2: TABEL USER
-// ════════════════════════════════════════════
-function applyRoleFilter(list){
-  if(_roleFilter==='all') return list;
-  return list.filter(u=>(u.roles||[u.role]).includes(_roleFilter));
-}
-function filterByRole(role,el){
-  _roleFilter=role;
-  document.querySelectorAll('.rf-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  const q=document.getElementById('searchUser').value.toLowerCase();
-  let list=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
-  if(q) list=list.filter(u=>(u.nama||'').toLowerCase().includes(q)||(u.username||'').toLowerCase().includes(q));
-  renderUsers(applyRoleFilter(list));
-}
-function filterUsers(){
-  const q=document.getElementById('searchUser').value.toLowerCase();
-  let list=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
-  if(q) list=list.filter(u=>(u.nama||'').toLowerCase().includes(q)||(u.username||'').toLowerCase().includes(q));
-  renderUsers(applyRoleFilter(list));
-}
-function roleBadgeHtml(roles){
-  const map={guru:'<span class="badge badge-guru">👨‍🏫 Guru</span>',kepsek:'<span class="badge badge-kepsek">🏛️ Kepsek</span>',bendahara:'<span class="badge badge-bendahara">💰 Bendahara</span>',ops:'<span class="badge badge-ops">💻 Operator</span>'};
-  return (roles||[]).map(r=>map[r]||`<span class="badge">${r}</span>`).join(' ');
-}
-function renderUsers(list){
-  const rows=list.map(d=>`<tr>
-    <td><strong>${d.nama||'-'}</strong></td>
-    <td style="color:var(--muted);font-size:11px">${d.username||'-'}</td>
-    <td>${roleBadgeHtml(d.roles||[d.role])}</td>
-    <td><span class="badge ${d.status==='aktif'?'badge-active':'badge-inactive'}">${d.status||'-'}</span></td>
-    <td style="font-size:11px;color:var(--muted)">${d.expired?fmtDate(d.expired):'-'}</td>
-    <td><div style="display:flex;gap:5px">
-      <button class="btn btn-ghost btn-sm" onclick="editUser('${d.id}')">✏️</button>
-      <button class="btn btn-${d.status==='aktif'?'warn':'success'} btn-sm" onclick="toggleUserStatus('${d.id}','${d.status}')">${d.status==='aktif'?'🔒':'🔓'}</button>
-      <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('user','${d.id}','${(d.nama||'').replace(/'/g,"\\'")}')">🗑</button>
-    </div></td>
-  </tr>`).join('');
-  document.getElementById('userBody').innerHTML=rows||`<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Belum ada pengguna di sekolah ini.<br><br><button class="btn btn-primary btn-sm" onclick="openModalUser()">+ Tambah Pengguna Pertama</button></td></tr>`;
-}
+// (Fungsi Kelola Pengguna lama dihapus karena digantikan Data Master)
 
 // ── Modal Pengguna ─────────────────────────
 function openModalUser(){
@@ -998,12 +798,9 @@ async function saveUser(){
     }
     
     closeModal('modalUser');
-    if (window._isGlobalModal) {
-      await loadAllUsersGlobal();
-    } else {
-      const schoolUsers = _allUsers.filter(u => u.sekolah === _activeSchoolName);
-      renderUsers(applyRoleFilter(schoolUsers));
-    }
+    // Refresh Data Master
+    if (window.AdminMaster) await window.AdminMaster.init();
+
     loadDashboard();
     addLog('Pengguna', `${id?'Edit':'Tambah'} pengguna: ${nama} (${roles.join('+')}) @ ${sekolah}`);
     showToast('success','Berhasil',`Pengguna ${nama} ${id?'diperbarui':'ditambahkan'}`);
@@ -1014,9 +811,7 @@ async function toggleUserStatus(id,currentStatus){
   const newStatus=currentStatus==='aktif'?'nonaktif':'aktif';
   try{
     await updateDoc(doc(db,'users',id),{status:newStatus,updatedAt:serverTimestamp()});
-    const u=_allUsers.find(u=>u.id===id);if(u) u.status=newStatus;
-    const schoolUsers=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
-    renderUsers(applyRoleFilter(schoolUsers));
+    if (window.AdminMaster) await window.AdminMaster.init();
     addLog('Pengguna',`Status pengguna → ${newStatus}`);
     showToast('info','Status Diubah',`Pengguna di${newStatus==='aktif'?'aktifkan':'nonaktifkan'}`);
   }catch(e){showToast('error','Error',e.message);}
@@ -1090,6 +885,9 @@ async function saveSekolah(){
     else   await addDoc(collection(db,'sekolah'), { ...payload, createdAt: serverTimestamp() });
     
     closeModal('modalSekolah');
+    // Refresh Data Master
+    if (window.AdminMaster) await window.AdminMaster.init();
+
     addLog('Sekolah',`${id?'Edit':'Tambah'} sekolah: ${nama} (${npsn})`);
     showToast('success','Berhasil',`Institusi ${nama} ${id?'diperbarui':'ditambahkan'}`);
     
@@ -1099,7 +897,6 @@ async function saveSekolah(){
       document.getElementById('activeSchoolSub').textContent=alamat+' · NPSN: '+npsn;
     }
     await loadSekolahDropdown();
-    if(document.getElementById('view-schools').style.display!=='none') loadSchoolCards();
     loadDashboard();
   }catch(e){showToast('error','Error',e.message);}
 }
@@ -1436,23 +1233,17 @@ function konfirmasiHapus(tipe,id,nama){
     try{
       await deleteDoc(doc(db,tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten',id));
       closeModal('modalKonfirmasi');
-      if(tipe==='user' || tipe==='user_global'){
-        const idx=_allUsers.findIndex(u=>u.id===id);if(idx>-1)_allUsers.splice(idx,1);
-        if (tipe==='user') {
-          renderUsers(applyRoleFilter(_allUsers.filter(u=>u.sekolah===_activeSchoolName)));
-        } else {
-          renderAllUsers(applyRoleFilterGlobal(_allUsers));
-        }
-        loadDashboard();
-      } else if(tipe==='sekolah'){
-        await loadSekolahDropdown();
-        if(_activeSchoolId===id) backToSchools();
-        else loadSchoolCards();
-        loadDashboard();
-      } else if(tipe==='konten'){
-        document.getElementById(`konten-item-${id}`)?.remove();
-        loadDashboard();
+      
+      // Refresh Data Master jika yang dihapus adalah user atau sekolah
+      if (tipe === 'user' || tipe === 'sekolah') {
+        if (window.AdminMaster) await window.AdminMaster.init();
       }
+
+      if(tipe==='konten'){
+        document.getElementById(`konten-item-${id}`)?.remove();
+      }
+      
+      loadDashboard();
       addLog('Hapus',`Hapus ${tipe}: ${nama}`);
       showToast('success','Dihapus',`${nama} berhasil dihapus`);
     }catch(e){showToast('error','Error',e.message);}

@@ -68,6 +68,11 @@ function createBgMusicWindow() {
       playMusicOnBgWindow();
     }
   });
+
+  bgMusicWindow.webContents.on('did-finish-load', () => {
+    console.log('BGM Window loaded, starting playback...');
+    playMusicOnBgWindow();
+  });
 }
 
 function broadcastMusicState() {
@@ -121,10 +126,13 @@ function createWindow() {
   });
 
   mainWindow.loadFile('src/pages/login/login.html');
+  
+  // Inisialisasi musik sesegera mungkin
+  createBgMusicWindow();
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.maximize();
-    createBgMusicWindow();
   });
   mainWindow.on('closed', () => { 
     mainWindow = null; 
