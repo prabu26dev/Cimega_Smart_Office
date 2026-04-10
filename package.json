@@ -1,13 +1,14 @@
 {
-  "name": "Cimega_Smart_Office",
+  "name": "cimega-smart-office",
   "version": "1.0.0",
   "description": "Sistem Administrasi Digital SDN Cimega",
   "main": "main.js",
-  "author": "Imam Alfida Nurhasby",
+  "author": "Kang Prabu",
   "scripts": {
     "start": "electron .",
     "build:win": "electron-builder --win --x64",
     "build:all": "electron-builder --win --x64 --publish never",
+    "build:secure": "node scripts/build-secure.js",
     "release": "electron-builder --win --x64 --publish always"
   },
   "dependencies": {
@@ -20,7 +21,10 @@
   },
   "devDependencies": {
     "electron": "^41.0.0",
-    "electron-builder": "^26.8.1"
+    "electron-builder": "^26.8.1",
+    "fs-extra": "^11.3.4",
+    "glob": "^13.0.6",
+    "javascript-obfuscator": "^5.4.1"
   },
   "build": {
     "appId": "com.cimega.smartoffice",

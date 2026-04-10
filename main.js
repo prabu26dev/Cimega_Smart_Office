@@ -117,7 +117,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      devTools: false // SECURITY: Nonaktifkan DevTools
     },
     show: false,
     backgroundColor: '#020b18',
@@ -134,6 +135,21 @@ function createWindow() {
     mainWindow.show();
     mainWindow.maximize();
   });
+
+  // SECURITY: Hapus Menu Bar bawaan (yang berisi menu akses DevTools)
+  mainWindow.setMenuBarVisibility(false);
+  mainWindow.setMenu(null);
+
+  // SECURITY: Blokir klik kanan (Context Menu) di seluruh aplikasi
+  mainWindow.webContents.on('context-menu', (e) => {
+    e.preventDefault();
+  });
+
+  // SECURITY: Jika DevTools tetap berhasil dibuka secara paksa, tutup lagi secara otomatis
+  mainWindow.webContents.on('devtools-opened', () => {
+    mainWindow.webContents.closeDevTools();
+  });
+
   mainWindow.on('closed', () => { 
     mainWindow = null; 
     app.quit(); // Teruskan sinyal penghentian ke seluruh Jendela (termasuk bgMusicWindow) 
