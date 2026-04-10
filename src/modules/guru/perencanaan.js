@@ -1,8 +1,11 @@
 window.ModulPerencanaan = {
   container: null,
-  
+  lastGeneratedData: null,
+  userData: null,
+
   init: function() {
     this.container = document.getElementById('modulPerencanaanApp');
+    this.userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
     this.render();
   },
 
@@ -70,8 +73,6 @@ window.ModulPerencanaan = {
     btn.innerHTML = '⏳ Sedang Menganalisis...';
 
     try {
-      // The user requested to refactor to window.cimegaAPI.geminiAsk
-      // and optimize for JSON structured output for Google Gemini 2.5 Flash
       const systemPrompt = `Anda adalah "Asisten Kurikulum Merdeka SDN Cimega" yang ahli dalam merancang Modul Ajar untuk Sekolah Dasar.
 TUGAS ANDA:
 Buatkan "Pertanyaan Pemantik" dan "Langkah Kegiatan" (Pendahuluan, Inti, Penutup) berdasarkan Mata Pelajaran, Fase, dan Tujuan Pembelajaran berikut.
@@ -88,28 +89,23 @@ DILARANG memberikan teks pengantar atau markdown lain selain JSON murni tersebut
 
       const userPrompt = `Mata Pelajaran: ${mapel}\nFase: ${fase}\nTujuan Pembelajaran (TP): ${tp}`;
 
-      const userPrompt = `Mata Pelajaran: ${mapel}\nFase: ${fase}\nTujuan Pembelajaran (TP): ${tp}`;
-
       const res = await window.CimegaAI.ask({
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
         maxTokens: 1500
       });
 
-      if (res.error) {
-        throw new Error(res.error);
-      }
+      if (res.error) throw new Error(res.error);
 
       let parsedData;
       try {
-        // Find JSON block if AI wraps in markdown
         const text = res.text.replace(/```json/g, '').replace(/```/g, '').trim();
         parsedData = JSON.parse(text);
       } catch(e) {
-        console.error("Gagal parse keluaran AI:", res.text);
         throw new Error("Keluaran AI tidak berformat JSON yang valid.");
       }
 
+      this.lastGeneratedData = { ...parsedData, mapel, fase, tp };
       this.renderHasilAI(parsedData);
       showToast('success', 'Selesai', 'Modul Ajar berhasil digenerate AI');
 
@@ -128,33 +124,51 @@ DILARANG memberikan teks pengantar atau markdown lain selain JSON murni tersebut
       <div class="card" style="margin-bottom: 16px; border-color: var(--success);">
         <div class="card-header">
           <div class="card-title" style="color: var(--success);">✅ HASIL GENERATE AI</div>
-          <button class="btn btn-ghost btn-sm" onclick="copyAiResult('modulAjarContent')">Salin Output</button>
+          <div style="display:flex; gap:8px;">
+             <button class="btn btn-primary btn-sm" onclick="window.ModulPerencanaan.saveModul()">💾 Ajukan Pengesahan</button>
+             <button class="btn btn-ghost btn-sm" onclick="CimegaUtils.copyToClipboard('modulAjarContent')">Salin</button>
+          </div>
         </div>
         <div class="card-body" id="modulAjarContent">
           <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:8px">❓ Pertanyaan Pemantik</h3>
           <ul style="margin-left: 20px; font-size:12px; color:var(--text); margin-bottom: 14px;">
             ${(data.pertanyaan_pemantik || []).map(p => `<li style="margin-bottom:4px;">${p}</li>`).join('')}
           </ul>
-
-          <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:8px">🏃‍♂️ Langkah Kegiatan - Pendahuluan</h3>
-          <ol style="margin-left: 20px; font-size:12px; color:var(--text); margin-bottom: 14px;">
-            ${(data.langkah_kegiatan?.pendahuluan || []).map(p => `<li style="margin-bottom:4px;">${p}</li>`).join('')}
-          </ol>
-
-          <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:8px">🧠 Langkah Kegiatan - Inti</h3>
-          <ol style="margin-left: 20px; font-size:12px; color:var(--text); margin-bottom: 14px;">
-            ${(data.langkah_kegiatan?.inti || []).map(p => `<li style="margin-bottom:4px;">${p}</li>`).join('')}
-          </ol>
-
-          <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:8px">🏁 Langkah Kegiatan - Penutup</h3>
-          <ol style="margin-left: 20px; font-size:12px; color:var(--text); margin-bottom: 14px;">
-            ${(data.langkah_kegiatan?.penutup || []).map(p => `<li style="margin-bottom:4px;">${p}</li>`).join('')}
-          </ol>
+          <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:8px">🏃‍♂️ Langkah Kegiatan</h3>
+          <div style="font-size:12px; color:var(--text);">
+             <strong>Pendahuluan:</strong>
+             <ul style="margin-left:20px; margin-bottom:10px;">${(data.langkah_kegiatan?.pendahuluan || []).map(p => `<li>${p}</li>`).join('')}</ul>
+             <strong>Inti:</strong>
+             <ul style="margin-left:20px; margin-bottom:10px;">${(data.langkah_kegiatan?.inti || []).map(p => `<li>${p}</li>`).join('')}</ul>
+             <strong>Penutup:</strong>
+             <ul style="margin-left:20px;">${(data.langkah_kegiatan?.penutup || []).map(p => `<li>${p}</li>`).join('')}</ul>
+          </div>
         </div>
       </div>
     `;
 
     hasilDiv.innerHTML = html;
     hasilDiv.style.display = 'block';
+  },
+
+  saveModul: async function() {
+    if (!this.lastGeneratedData) return;
+    
+    try {
+      const { collection, addDoc, serverTimestamp } = window._fb;
+      await addDoc(collection(db, "perencanaan"), {
+        ...this.lastGeneratedData,
+        school_id: this.userData.school_id || 'NPSN_MIGRATE',
+        teacher_id: this.userData.id,
+        teacher_name: this.userData.nama,
+        status: 'waiting_approval',
+        createdAt: serverTimestamp()
+      });
+      
+      showToast('success', 'Berhasil', 'Modul Ajar disimpan dan diajukan pengesahan.');
+      document.getElementById('hasilModulAjar').style.display = 'none';
+    } catch (e) {
+      showToast('error', 'Gagal', e.message);
+    }
   }
 };

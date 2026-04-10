@@ -313,7 +313,7 @@ ipcMain.handle('open-external', (e, url) => {
 // Gratis: https://aistudio.google.com/apikey
 // Model: gemini-2.5-flash (cepat & gratis)
 // ══════════════════════════════════════════
-ipcMain.handle('claude-ask', async (e, { messages, system, maxTokens }) => {
+ipcMain.handle('gemini-ask', async (e, { messages, system, maxTokens }) => {
   // Muat ulang env secara live (Hot-reload) agar perubahan API Key langsung masuk tanpa restart!
   const freshEnv = loadEnv();
   const apiKey = freshEnv.GEMINI_API_KEY || envConfig.GEMINI_API_KEY;

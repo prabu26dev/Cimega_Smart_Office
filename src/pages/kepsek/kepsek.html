@@ -176,15 +176,19 @@
         window._fb = { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where, orderBy, serverTimestamp };
         
         // Boot Modules
-        if(window.ModulDashboard) window.ModulDashboard.init();
-        if(window.ModulSupervisi) window.ModulSupervisi.init();
-        if(window.ModulApproval) window.ModulApproval.init();
         if(window.ModulArsipMakro) window.ModulArsipMakro.init();
+
+        // Multi-Tenant SaaS Update: Secure Chat
+        if(window.CimegaChat) window.CimegaChat.init(db);
       } catch(e) { console.error("Firebase init failed", e); }
     }
     
     initFirestore();
   </script>
+
+  <!-- SHARED SaaS UPGRADE -->
+  <script src="../../shared/crypto_helper.js"></script>
+  <script src="../../shared/chat.js"></script>
 
   <!-- MODULE SCRIPTS -->
   <script src="../../modules/kepsek/dashboard.js"></script>

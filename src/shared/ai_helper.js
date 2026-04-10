@@ -1,7 +1,7 @@
 /**
  * CIMEGA SMART OFFICE - AI Helper
  * 
- * Centralized wrapper for window.cimegaAPI.geminiAsk or claudeAsk
+ * Centralized wrapper for window.cimegaAPI.geminiAsk
  * Ensures strict domain guardrails before sending requests to the main process.
  */
 
@@ -22,32 +22,53 @@ window.CimegaAI = {
    * @returns {Promise<Object>} The AI response { text, error }
    */
   ask: async function(options) {
-    if (!window.cimegaAPI || (!window.cimegaAPI.claudeAsk && !window.cimegaAPI.geminiAsk)) {
-      return { error: 'cimegaAPI AI Bridge belum tersedia di preload.js.' };
+    // 1. Check if options is defined
+    if (!options) return { error: 'Parameter options tidak boleh kosong.' };
+
+    // 2. Check for API bridge existence
+    if (!window.cimegaAPI || !window.cimegaAPI.geminiAsk) {
+      return { error: 'Cimega AI Bridge (geminiAsk) tidak ditemukan. Pastikan aplikasi berjalan di Electron.' };
+    }
+
+    // 3. Validate messages
+    if (!options.messages || !Array.isArray(options.messages) || options.messages.length === 0) {
+      return { error: 'Parameter messages harus berupa array yang tidak kosong.' };
     }
 
     try {
-      // Merge system guardrails
-      let mergedSystem = this.SYSTEM_GUARDRAIL;
+      // 4. Merge system guardrails using absolute reference
+      let mergedSystem = window.CimegaAI.SYSTEM_GUARDRAIL;
       if (options.system) {
         mergedSystem += '\n\nINSTRUKSI TAMBAHAN:\n' + options.system;
       }
 
-      // Payload building
+      // 5. Build payload with sanitized types
       const payload = {
         system: mergedSystem,
         messages: options.messages,
-        maxTokens: options.maxTokens || 2000
+        maxTokens: parseInt(options.maxTokens) || 2000
       };
 
-      // Call underlying API (Gemini/Claude)
-      const askFn = window.cimegaAPI.geminiAsk || window.cimegaAPI.claudeAsk;
+      // 6. Call underlying API
+      const res = await window.cimegaAPI.geminiAsk(payload);
+
+      // 7. Handle empty responses from bridge
+      if (!res) return { error: 'AI Bridge tidak mengembalikan respon.' };
       
-      const res = await askFn(payload);
-      return res;
+      // 8. Error handling from bridge
+      if (res.error) return { error: res.error };
+
+      // 9. Standardize output text
+      if (res.success && res.text) {
+        return { success: true, text: res.text.trim() };
+      }
+
+      return { error: 'AI mengembalikan respon kosong tanpa pesan kesalahan.' };
+      
     } catch (err) {
-      console.error('CimegaAI Error:', err);
-      return { error: err.message };
+      // 10. Global Exception Handling
+      console.error('CimegaAI Critical Error:', err);
+      return { error: 'Terjadi kesalahan sistem pada Cimega AI: ' + err.message };
     }
   }
 };

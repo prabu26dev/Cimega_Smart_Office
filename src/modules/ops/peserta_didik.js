@@ -2,9 +2,11 @@ window.ModulPD = {
   container: null,
   gridInstance: null,
   students: [],
+  userData: null,
 
   init: async function() {
     this.container = document.getElementById('modulePesertaDidikApp');
+    this.userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
     this.renderSkeleton();
     await this.loadData();
     this.render();
@@ -18,8 +20,10 @@ window.ModulPD = {
   loadData: async function() {
     try {
       const { collection, getDocs, query, where } = window._fb;
-      // Because OPS might manage a specific school, we assume OPS sees their own school's data
-      const q = query(collection(db, 'students'), where('sekolah', '==', userData.sekolah || ''));
+      const schoolId = this.userData.school_id || 'NPSN_MIGRATE';
+      
+      // Strict Multi-Tenant Filter by school_id (NPSN)
+      const q = query(collection(db, 'students'), where('school_id', '==', schoolId));
       const snap = await getDocs(q);
       
       this.students = [];
@@ -45,9 +49,7 @@ window.ModulPD = {
             <button class="btn btn-success" style="margin-left:8px;" onclick="window.ModulPD.showForm()">+ Tambah Siswa</button>
           </div>
         </div>
-        <div class="card-body">
-          <div id="gridWrapper"></div>
-        </div>
+        <div class="card-body" id="gridWrapper"></div>
       </div>
 
       <!-- FORM ADD/EDIT -->
@@ -97,9 +99,9 @@ window.ModulPD = {
       s.nis || '-',
       s.name || '-',
       s.gender || '-',
-      s.tempat_lahir ? \`\${s.tempat_lahir}, \${s.tanggal_lahir}\` : '-',
+      s.tempat_lahir ? `${s.tempat_lahir}, ${s.tanggal_lahir}` : '-',
       s.nama_ibu || '-',
-      gridjs.html(\`<button class='btn btn-ghost btn-sm' onclick='window.ModulPD.hapusSiswa("\${s.id}")'>Hapus</button>\`)
+      gridjs.html(`<button class='btn btn-ghost btn-sm' onclick='window.ModulPD.hapusSiswa("${s.id}")'>Hapus</button>`)
     ]);
 
     this.gridInstance = new gridjs.Grid({
@@ -136,7 +138,8 @@ window.ModulPD = {
       nama_ibu: document.getElementById('pdIbu').value.trim(),
       nama_ayah: document.getElementById('pdAyah').value.trim(),
       alamat: document.getElementById('pdAlamat').value.trim(),
-      sekolah: userData.sekolah
+      sekolah: this.userData.sekolah,
+      school_id: this.userData.school_id || 'NPSN_MIGRATE'
     };
 
     if(!data.name || !data.nisn) { alert("Nama dan NISN wajib diisi!"); return; }
@@ -162,11 +165,9 @@ window.ModulPD = {
   },
 
   downloadCsvTemplate: function() {
-    // Dapodik Headers requested by user
     const headers = [
       "Nama", "NISN", "NIS", "NIK", "Tempat Lahir", "Tanggal Lahir", "Jenis Kelamin", "Nama Ibu Kandung", "Nama Ayah", "Alamat"
     ];
-    // Example Data Row
     const data = [
       headers,
       ["Budi Santoso", "0012345678", "101", "3201234567890001", "Jakarta", "2010-05-12", "L", "Siti", "Andi", "Jl. Mawar No. 12 RT 01 RW 01"]
@@ -198,9 +199,10 @@ window.ModulPD = {
         const { collection, addDoc, serverTimestamp } = window._fb;
         const colRef = collection(db, 'students');
 
-        // Parse corresponding to Dapodik Headers
+        const school_id = this.userData.school_id || 'NPSN_MIGRATE';
+
         for(let row of rows) {
-          if(!row["Nama"] || !row["NISN"]) continue; // skip invalid rows
+          if(!row["Nama"] || !row["NISN"]) continue;
           try {
             await addDoc(colRef, {
               name: row["Nama"],
@@ -213,7 +215,8 @@ window.ModulPD = {
               nama_ibu: row["Nama Ibu Kandung"] || "",
               nama_ayah: row["Nama Ayah"] || "",
               alamat: row["Alamat"] || "",
-              sekolah: userData.sekolah,
+              sekolah: this.userData.sekolah,
+              school_id: school_id,
               createdAt: serverTimestamp()
             });
             success++;
@@ -222,9 +225,9 @@ window.ModulPD = {
           }
         }
         
-        document.getElementById('importCsv').value = ""; // reset
-        alert(\`Import Selesai! Berhasil mengimpor \${success} data siswa.\`);
-        this.init(); // Reload
+        document.getElementById('importCsv').value = "";
+        alert(`Import Selesai! Berhasil mengimpor ${success} data siswa.`);
+        this.init();
       }
     });
   }

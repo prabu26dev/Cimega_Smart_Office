@@ -167,12 +167,19 @@
         if(window.ModulAsesmen) window.ModulAsesmen.init();
         if(window.ModulNilai) window.ModulNilai.init();
 
+        // Multi-Tenant SaaS Update: Secure Chat
+        if(window.CimegaChat) window.CimegaChat.init(db);
+
       } catch(e) {
         console.error("Environment init fail", e);
       }
     }
     initEnvironment();
   </script>
+
+  <!-- SHARED SaaS UPGRADE -->
+  <script src="../../shared/crypto_helper.js"></script>
+  <script src="../../shared/chat.js"></script>
 
   <!-- SCRIPT INJECTIONS -->
   <script type="module" src="../../modules/guru/perencanaan.js"></script>

@@ -302,16 +302,26 @@
             }
           }
 
-          // ★ KRITIS: simpan roles array agar bendahara & jabatan ganda berfungsi
-          const roles=data.roles||(data.role?[data.role]:['guru']);
+          // ★ Multi-Tenant SaaS Update: Fetch School ID and Key
+          const schoolId = data.school_id || 'NPSN_MIGRATE';
+          let schoolSecret = '';
+          
+          try {
+            const schoolDoc = await getDoc(doc(db, 'sekolah', schoolId));
+            if (schoolDoc.exists()) {
+              schoolSecret = schoolDoc.data().school_secret_key || '';
+            }
+          } catch (e) { console.warn("Could not fetch school key:", e); }
 
           localStorage.setItem('cimega_user', JSON.stringify({
-            id:       userDoc.id,
-            nama:     data.nama,
-            role:     data.role,     // role utama (backward compat)
-            roles:    roles,          // ★ array roles — wajib untuk bendahara
-            sekolah:  data.sekolah,
-            username: data.username,
+            id:         userDoc.id,
+            nama:       data.nama,
+            role:       data.role,     // main role
+            roles:      roles,         // array roles (dual-role support)
+            sekolah:    data.sekolah,
+            school_id:  schoolId,      // tag per school
+            school_key: schoolSecret,  // AES key for encryption
+            username:   data.username,
           }));
 
           btn.innerHTML='✓ BERHASIL — MEMBUKA SISTEM...';
@@ -319,14 +329,14 @@
           setTimeout(()=>{
             if(data.role==='admin'){
               window.location.href='../admin/admin.html';
+            } else if (roles.includes('kepsek')) {
+              window.location.href='../kepsek/kepsek.html'; // Kepsek has priority
             } else if (roles.includes('ops')) {
               window.location.href='../ops/ops.html';
             } else if (roles.includes('bendahara')) {
               window.location.href='../bendahara/bendahara.html';
             } else if (roles.includes('guru')) {
               window.location.href='../guru/guru.html';
-            } else if (roles.includes('kepsek')) {
-              window.location.href='../kepsek/kepsek.html';
             } else {
               window.location.href='../login/login.html'; // Fallback
             }

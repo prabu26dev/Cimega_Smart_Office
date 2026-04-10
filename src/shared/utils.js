@@ -64,3 +64,9 @@ window.CimegaUtils = {
     return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 };
+
+// Global Aliases for backwards compatibility
+window.formatIDR = window.CimegaUtils.formatIDR;
+window.angkaTerbilang = window.CimegaUtils.terbilang;
+window.formatDate = window.CimegaUtils.formatDate;
+window.terbilang = window.CimegaUtils.terbilang;

@@ -2,9 +2,11 @@ window.ModulBku = {
   container: null,
   bkuData: [],
   gridFilter: 'SEMUA',
+  userData: null,
 
   init: async function() {
     this.container = document.getElementById('moduleBkuApp');
+    this.userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
     this.renderSkeleton();
     await this.loadData();
     this.render();
@@ -18,7 +20,13 @@ window.ModulBku = {
   loadData: async function() {
     try {
       const { collection, getDocs, query, where, orderBy } = window._fb;
-      const q = query(collection(db, 'bku'), where('sekolah', '==', userData.sekolah || ''), orderBy('tanggal', 'asc'));
+      const schoolId = this.userData.school_id || 'NPSN_MIGRATE';
+      
+      const q = query(
+        collection(db, 'bku'), 
+        where('school_id', '==', schoolId), 
+        orderBy('tanggal', 'asc')
+      );
       const snap = await getDocs(q);
       
       this.bkuData = [];
@@ -58,14 +66,11 @@ window.ModulBku = {
             <button class="btn btn-ghost" onclick="document.getElementById('bkuFormModal').style.display='none'">Tutup</button>
           </div>
           <div class="card-body">
-            
             <div class="grid-2">
               <div class="form-group"><label class="form-label">Tanggal Transaksi</label><input type="date" class="form-control" id="bkuTanggal" /></div>
               <div class="form-group"><label class="form-label">No. Bukti / Referensi</label><input class="form-control" id="bkuBukti" placeholder="BKK-001 / BKM-001" /></div>
             </div>
-            
             <div class="form-group"><label class="form-label">Uraian Transaksi</label><textarea class="form-control" id="bkuUraian" placeholder="Penarikan Tunai dari Bank / Belanja ATK"></textarea></div>
-
             <div class="grid-2">
               <div class="form-group">
                 <label class="form-label">Tipe Pembantu (Tagging)</label>
@@ -83,16 +88,13 @@ window.ModulBku = {
                 </select>
               </div>
             </div>
-
             <div class="form-group">
               <label class="form-label">Nominal (Rp)</label>
               <input class="form-control" type="number" id="bkuNominal" placeholder="Contoh: 1500000" />
             </div>
-
             <div style="background:rgba(255,170,0,0.1); border:1px solid var(--warn); padding:10px; border-radius:8px; font-size:11px; color:var(--warn); margin-bottom:15px; display:flex; gap:10px;">
-              <span>ℹ️</span> Saldo akan dihitung secara otomatis (Auto-Rolling Balance) berdasarkan urutan tanggal sistem. Pastikan tanggal dan nominal mutlak benar.
+              <span>ℹ️</span> Saldo akan dihitung secara otomatis berdasarkan school_id. Pastikan data mutlak benar.
             </div>
-
             <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;" onclick="window.ModulBku.saveData()">💾 Simpan Ke BKU</button>
           </div>
         </div>
@@ -107,20 +109,14 @@ window.ModulBku = {
 
   initGrid: function() {
     let runningBalance = 0;
-    
-    // Sort chronologically to compute trailing balance perfectly
     const sortedData = [...this.bkuData].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
     const formattedData = [];
 
     sortedData.forEach((row, idx) => {
-      // Float Math Mitigation: Strict extraction and parsing to Math.round absolute Int.
       const debet = Math.round(Number(row.debet) || 0);
       const kredit = Math.round(Number(row.kredit) || 0);
-      
-      // Dynamic Balance (Saldo) Equation
       runningBalance = runningBalance + debet - kredit;
 
-      // Filter View Implementation
       if(this.gridFilter === 'SEMUA' || row.tipe === this.gridFilter) {
         formattedData.push([
           row.tanggal || '-',
@@ -129,23 +125,20 @@ window.ModulBku = {
           window.formatIDR(debet),
           window.formatIDR(kredit),
           window.formatIDR(runningBalance),
-          gridjs.html(\`<button class='btn btn-ghost btn-sm' onclick='window.ModulBku.hapusData("\${row.id}")'>Hapus</button>\`)
+          gridjs.html(`<button class='btn btn-ghost btn-sm' onclick='window.ModulBku.hapusData("${row.id}")'>🗑</button>`)
         ]);
       }
     });
 
     const wrapper = document.getElementById('gridWrapperBku');
-    wrapper.innerHTML = ''; // reset wrapping since gridjs appends
+    wrapper.innerHTML = ''; 
 
     new gridjs.Grid({
-      columns: ['Tanggal', 'No. Bukti', 'Uraian', 'Debet (Masuk)', 'Kredit (Keluar)', 'Saldo', 'Aksi'],
+      columns: ['Tanggal', 'Bukti', 'Uraian', 'Debet', 'Kredit', 'Saldo', 'Aksi'],
       data: formattedData,
       search: true,
       pagination: { limit: 12 },
-      language: {
-        search: { placeholder: 'Cari Transaksi...' },
-        pagination: { previous: 'Prev', next: 'Next', showing: 'Data', results: () => 'Baris' }
-      }
+      language: { search: { placeholder: 'Cari Transaksi...' } }
     }).render(wrapper);
   },
 
@@ -164,11 +157,9 @@ window.ModulBku = {
     const uraian = document.getElementById('bkuUraian').value.trim();
     const tipe = document.getElementById('bkuTipe').value;
     const jenis = document.getElementById('bkuJenis').value;
-    
-    // Float mitigation
     const nominal = Math.round(parseFloat(document.getElementById('bkuNominal').value) || 0);
 
-    if(!tanggal || !uraian || nominal <= 0) { alert("Data tidak lengkap atau nominal salah!"); return; }
+    if(!tanggal || !uraian || nominal <= 0) { showToast('warn', 'Perhatian', 'Data tidak lengkap!'); return; }
 
     const debet = jenis === 'DEBET' ? nominal : 0;
     const kredit = jenis === 'KREDIT' ? nominal : 0;
@@ -177,22 +168,25 @@ window.ModulBku = {
       const { collection, addDoc, serverTimestamp } = window._fb;
       await addDoc(collection(db, 'bku'), { 
         tanggal, no_bukti, uraian, tipe, debet, kredit, 
-        sekolah: userData.sekolah,
+        sekolah: this.userData.sekolah,
+        school_id: this.userData.school_id || 'NPSN_MIGRATE',
         createdAt: serverTimestamp() 
       });
       document.getElementById('bkuFormModal').style.display = 'none';
-      this.init(); // Recalculates dynamically
+      showToast('success', 'Berhasil', 'Transaksi BKU berhasil disimpan.');
+      this.init(); 
     } catch(e) {
-      alert("Gagal menyimpan BKU: " + e.message);
+      showToast('error', 'Gagal', e.message);
     }
   },
 
   hapusData: async function(id) {
-    if(!confirm("Yakin menghapus transaksi BKU ini? Menghapus transaksi masa lampau akan mempengaruhi konstelasi seluruh Saldo berjalan selamanya.")) return;
+    if(!confirm("Yakin menghapus transaksi BKU ini?")) return;
     try {
       const { doc, deleteDoc } = window._fb;
       await deleteDoc(doc(db, 'bku', id));
+      showToast('success', 'Dihapus', 'Data BKU dihapus.');
       this.init();
-    } catch(e) { alert("Gagal hapus: " + e.message); }
+    } catch(e) { showToast('error', 'Gagal', e.message); }
   }
 };

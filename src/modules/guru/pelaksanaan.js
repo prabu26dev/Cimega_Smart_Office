@@ -1,9 +1,11 @@
 window.ModulPelaksanaan = {
   container: null,
   students: [],
+  userData: null,
 
   init: async function() {
     this.container = document.getElementById('modulPelaksanaanApp');
+    this.userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
     this.renderSkeleton();
     await this.loadStudents();
     this.render();
@@ -16,13 +18,13 @@ window.ModulPelaksanaan = {
   loadStudents: async function() {
     try {
       const { collection, getDocs, query, where } = window._fb;
-      // We assume the teacher manages students in their own school. Ideally, it should filter by 'classId'.
-      const snap = await getDocs(query(collection(db, 'students'), where('sekolah', '==', userData.sekolah)));
+      const schoolId = this.userData.school_id || 'NPSN_MIGRATE';
+      
+      const snap = await getDocs(query(collection(db, 'students'), where('school_id', '==', schoolId)));
       this.students = [];
       snap.forEach(doc => {
         this.students.push({ id: doc.id, ...doc.data() });
       });
-      // Sort alphabetically
       this.students.sort((a,b) => (a.name||'').localeCompare(b.name||''));
     } catch(e) {
       console.error("Gagal memuat siswa:", e);
@@ -75,7 +77,7 @@ window.ModulPelaksanaan = {
           </div>
           <div class="form-group">
             <label class="form-label">Catatan / Jurnal Anekdotal</label>
-            <textarea class="form-control" id="jurnalAnekdotal" placeholder="Catatan perilaku siswa atau kejadian penting hari ini..."></textarea>
+            <textarea class="form-control" id="jurnalAnekdotal" placeholder="Catatan perilaku siswa..." style="height:60px;"></textarea>
           </div>
         </div>
       </div>
@@ -124,13 +126,13 @@ window.ModulPelaksanaan = {
       if(select) presensiData[s.id] = select.value;
     });
 
-    const { collection, addDoc, serverTimestamp } = window._fb;
-    
     try {
+      const { collection, addDoc, serverTimestamp } = window._fb;
       await addDoc(collection(db, 'pelaksanaan_harian'), {
-        sekolah: userData.sekolah,
-        guruId: userData.id,
-        guruName: userData.nama,
+        sekolah: this.userData.sekolah,
+        school_id: this.userData.school_id || 'NPSN_MIGRATE',
+        guruId: this.userData.id,
+        guruName: this.userData.nama,
         tanggal: tanggal,
         mapel: mapel,
         materi: materi,
@@ -140,13 +142,10 @@ window.ModulPelaksanaan = {
       });
 
       showToast('success', 'Tersimpan', 'Jurnal dan Presensi hari ini berhasil disimpan.');
-      
-      // Reset sedikit UI
       document.getElementById('jurnalMateri').value = '';
       document.getElementById('jurnalAnekdotal').value = '';
-
     } catch (e) {
-      showToast('error', 'Gagal', 'Terjadi kesalahan: ' + e.message);
+      showToast('error', 'Gagal', e.message);
     }
   }
 };

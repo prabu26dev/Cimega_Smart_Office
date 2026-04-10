@@ -246,7 +246,7 @@
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-section">Manajemen</div>
     <div class="nav-item" onclick="showPage('guru',this)"><span class="nav-icon">👥</span>Kelola Pengguna</div>
-    <div class="nav-item" onclick="showPage('akademik',this)"><span class="nav-icon">🏫</span>Data Akademik</div>
+    <div class="nav-item" onclick="showPage('institusi',this)"><span class="nav-icon">🏫</span>Kelola Institusi</div>
     <div class="nav-section">Sistem</div>
     <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📝</span>Kelola Konten</div>
     <div class="nav-item" onclick="showPage('update',this)"><span class="nav-icon">🔄</span>Update Aplikasi</div>
@@ -364,9 +364,9 @@
 
     </div><!-- /page-guru -->
 
-    <!-- PAGE: DATA AKADEMIK -->
-    <div class="page" id="page-akademik">
-      <div id="adminAkademikApp"></div>
+    <!-- PAGE: KELOLA INSTITUSI & KOMPONEN -->
+    <div class="page" id="page-institusi">
+      <div id="adminInstitusiApp"></div>
     </div>
 
     <!-- PAGE: KONTEN -->
@@ -521,14 +521,28 @@
 <!-- MODAL SEKOLAH -->
 <div class="modal-overlay" id="modalSekolah">
   <div class="modal" style="max-width:480px">
-    <div class="modal-header"><div class="modal-title" id="modalSekolahTitle">Tambah Sekolah</div><button class="modal-close" onclick="closeModal('modalSekolah')">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="modalSekolahTitle">Tambah Institusi Sekolah</div><button class="modal-close" onclick="closeModal('modalSekolah')">✕</button></div>
     <input type="hidden" id="sekolahId"/>
     <div class="form-group"><label class="form-label">Nama Sekolah</label><input class="form-control" id="sekolahNama" placeholder="Nama lengkap sekolah"/></div>
-    <div class="form-group"><label class="form-label">Alamat</label><textarea class="form-control" id="sekolahAlamat" placeholder="Alamat sekolah..."></textarea></div>
+    <div class="form-group"><label class="form-label">NPSN (ID Institusi)</label><input class="form-control" id="sekolahNPSN" placeholder="8 digit NPSN / ID Unik" oninput="this.value=this.value.replace(/[^0-9A-Z]/g,'')"/></div>
+    <div class="form-group"><label class="form-label">Alamat</label><textarea class="form-control" id="sekolahAlamat" placeholder="Alamat lengkap..."></textarea></div>
+    <div class="form-group"><label class="form-label">Kepala Sekolah (TBA)</label><input class="form-control" id="sekolahKepsek" placeholder="Nama Kepala Sekolah / PLT"/></div>
     <div class="form-group"><label class="form-label">Status</label>
       <select class="form-control" id="sekolahStatus"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalSekolah')">Batal</button><button class="btn btn-primary" onclick="saveSekolah()">💾 Simpan</button></div>
+    <div style="background:rgba(255,208,0,0.05); border:1px dashed var(--gold); border-radius:10px; padding:12px; margin-top:10px;">
+      <div style="font-family:'Orbitron',sans-serif; font-size:10px; color:var(--gold); margin-bottom:8px;">🔐 SHARED SECURITY KEYS (SAAS)</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label class="form-label" style="font-size:10px; color:var(--muted);">School Secret Key (AES-256)</label>
+        <input class="form-control" id="sekolahSecretKey" readonly style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label" style="font-size:10px; color:var(--muted);">Emergency Backup Key</label>
+        <input class="form-control" id="sekolahBackupKey" readonly style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
+      </div>
+      <div style="font-size:9px; color:var(--muted); margin-top:6px;">⚠️ Kunci ini dihasilkan secara otomatis dan mutlak diperlukan untuk dekripsi data chat/dokumen.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modalSekolah')">Batal</button><button class="btn btn-primary" onclick="saveSekolah()">💾 Simpan Institusi</button></div>
   </div>
 </div>
 
@@ -552,9 +566,10 @@
     </div>
     <!-- Sekolah readonly, terisi otomatis dari konteks sekolah yang dipilih -->
     <div class="form-group">
-      <label class="form-label">Sekolah</label>
+      <label class="form-label">Institusi</label>
       <input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>
       <input type="hidden" id="userSekolah"/>
+      <input type="hidden" id="userSchoolId"/>
     </div>
     <div class="form-group"><label class="form-label">Status</label>
       <select class="form-control" id="userStatus"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option></select>
@@ -720,7 +735,7 @@ function showPage(page,navEl){
   const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',akademik:'DATA AKADEMIK',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
   if(page==='guru')       loadSchoolCards();
-  if(page==='akademik')   if(window.AdminAkademik) window.AdminAkademik.init();
+  if(page==='institusi')  if(window.AdminInstitusi) window.AdminInstitusi.init();
   if(page==='konten')     loadKategoriList();
   if(page==='log')        loadLog();
   if(page==='pengaturan') loadPengaturan();
@@ -905,6 +920,9 @@ function renderUsers(list){
 // ── Modal Pengguna ─────────────────────────
 function openModalUser(){
   if(!_activeSchoolName){showToast('warn','Perhatian','Pilih sekolah terlebih dahulu!');return;}
+  const schoolData = _allSekolah.find(s => s.nama === _activeSchoolName);
+  const npsn = schoolData ? schoolData.npsn : '';
+
   window._isGlobalModal = false;
   document.getElementById('userId').value='';
   document.getElementById('userNama').value='';
@@ -913,9 +931,12 @@ function openModalUser(){
   document.getElementById('userStatus').value='aktif';
   document.getElementById('userExpired').value='';
   document.getElementById('userSekolah').value=_activeSchoolName;
+  document.getElementById('userSchoolId').value=npsn;
+  
   const sd = document.getElementById('userSekolahDisplay');
   sd.outerHTML = `<input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>`;
-  document.getElementById('userSekolahDisplay').value=_activeSchoolName;
+  document.getElementById('userSekolahDisplay').value = `${_activeSchoolName} (${npsn})`;
+  
   setCheckedRoles('rolesCheckboxes',[]);
   document.getElementById('modalUserTitle').textContent='Tambah Pengguna — '+_activeSchoolName;
   openModal('modalUser');
@@ -931,51 +952,60 @@ function editUser(id){
   document.getElementById('userStatus').value=d.status||'aktif';
   document.getElementById('userExpired').value=d.expired?fmtDateInput(d.expired):'';
   document.getElementById('userSekolah').value=d.sekolah||_activeSchoolName;
+  document.getElementById('userSchoolId').value=d.school_id||'';
+
   const sd = document.getElementById('userSekolahDisplay');
   sd.outerHTML = `<input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>`;
-  document.getElementById('userSekolahDisplay').value=d.sekolah||_activeSchoolName;
+  document.getElementById('userSekolahDisplay').value = `${d.sekolah || _activeSchoolName} (${d.school_id || 'N/A'})`;
+  
   setCheckedRoles('rolesCheckboxes',d.roles||[d.role]);
   document.getElementById('modalUserTitle').textContent='Edit Pengguna — '+(d.nama||'');
   openModal('modalUser');
 }
 async function saveUser(){
-  const{collection,doc,addDoc,updateDoc,serverTimestamp,Timestamp}=window._fb;
-  const id=document.getElementById('userId').value;
-  const nama=document.getElementById('userNama').value.trim();
-  const username=document.getElementById('userUsername').value.trim();
-  const password=document.getElementById('userPassword').value;
-  const sekolah=document.getElementById('userSekolah').value||_activeSchoolName;
-  const status=document.getElementById('userStatus').value;
-  const expiredStr=document.getElementById('userExpired').value;
-  const roles=getCheckedRoles('rolesCheckboxes');
-  if(!nama||!username){showToast('warn','Peringatan','Nama dan username wajib diisi!');return;}
+  const { collection, doc, addDoc, updateDoc, serverTimestamp, Timestamp } = window._fb;
+  const id = document.getElementById('userId').value;
+  const nama = document.getElementById('userNama').value.trim();
+  const username = document.getElementById('userUsername').value.trim();
+  const password = document.getElementById('userPassword').value;
+  const sekolah = document.getElementById('userSekolah').value || _activeSchoolName;
+  const school_id = document.getElementById('userSchoolId').value;
+  const status = document.getElementById('userStatus').value;
+  const expiredStr = document.getElementById('userExpired').value;
+  const roles = getCheckedRoles('rolesCheckboxes');
+
+  if(!nama || !username){showToast('warn','Peringatan','Nama dan username wajib diisi!');return;}
   if(roles.length===0){showToast('warn','Peringatan','Pilih minimal satu jabatan!');return;}
-  if(!id&&!password){showToast('warn','Peringatan','Password wajib untuk pengguna baru!');return;}
+  if(!id && !password){showToast('warn','Peringatan','Password wajib untuk pengguna baru!');return;}
   if(!sekolah){showToast('warn','Peringatan','Sekolah tidak diketahui. Kembali dan pilih sekolah.');return;}
+
   try{
-    const role=roles[0];
-    const payload={nama,username,roles,role,sekolah,status,updatedAt:serverTimestamp()};
-    if(password) payload.password=password;
-    payload.expired=expiredStr?Timestamp.fromDate(new Date(expiredStr)):null;
+    const role = roles[0];
+    const payload = { 
+      nama, username, roles, role, sekolah, school_id, status, 
+      updatedAt: serverTimestamp() 
+    };
+    if(password) payload.password = password;
+    payload.expired = expiredStr ? Timestamp.fromDate(new Date(expiredStr)) : null;
+
     if(id){
-      await updateDoc(doc(db,'users',id),payload);
-      const idx=_allUsers.findIndex(u=>u.id===id);
-      if(idx>-1) _allUsers[idx]={..._allUsers[idx],...payload,id};
+      await updateDoc(doc(db,'users',id), payload);
+      const idx = _allUsers.findIndex(u => u.id === id);
+      if(idx > -1) _allUsers[idx] = { ..._allUsers[idx], ...payload, id };
     } else {
-      const ref=await addDoc(collection(db,'users'),{...payload,createdAt:serverTimestamp()});
-      _allUsers.push({id:ref.id,...payload});
+      const ref = await addDoc(collection(db,'users'), { ...payload, createdAt: serverTimestamp() });
+      _allUsers.push({ id: ref.id, ...payload });
     }
+    
     closeModal('modalUser');
     if (window._isGlobalModal) {
-      const idx = _allSekolah.findIndex(s=>s.nama===sekolah);
-      if (idx===-1) _allSekolah.push({id:'',nama:sekolah}); // Optimistic caching
       await loadAllUsersGlobal();
     } else {
-      const schoolUsers=_allUsers.filter(u=>u.sekolah===_activeSchoolName);
+      const schoolUsers = _allUsers.filter(u => u.sekolah === _activeSchoolName);
       renderUsers(applyRoleFilter(schoolUsers));
     }
     loadDashboard();
-    addLog('Pengguna',`${id?'Edit':'Tambah'} pengguna: ${nama} (${roles.join('+')}) @ ${sekolah}`);
+    addLog('Pengguna', `${id?'Edit':'Tambah'} pengguna: ${nama} (${roles.join('+')}) @ ${sekolah}`);
     showToast('success','Berhasil',`Pengguna ${nama} ${id?'diperbarui':'ditambahkan'}`);
   }catch(e){showToast('error','Error',e.message);}
 }
@@ -1005,39 +1035,70 @@ function openModalSekolah(schoolId){
     if(!d) return;
     document.getElementById('sekolahId').value=schoolId;
     document.getElementById('sekolahNama').value=d.nama||'';
+    document.getElementById('sekolahNPSN').value=d.npsn||'';
     document.getElementById('sekolahAlamat').value=d.alamat||'';
+    document.getElementById('sekolahKepsek').value=d.kepsek||'';
     document.getElementById('sekolahStatus').value=d.status||'aktif';
-    document.getElementById('modalSekolahTitle').textContent='Edit Sekolah';
+    document.getElementById('sekolahSecretKey').value=d.school_secret_key||'— Belum Digenerate —';
+    document.getElementById('sekolahBackupKey').value=d.emergency_backup_key||'— Belum Digenerate —';
+    document.getElementById('modalSekolahTitle').textContent='Edit Institusi Sekolah';
   } else {
     document.getElementById('sekolahId').value='';
     document.getElementById('sekolahNama').value='';
+    document.getElementById('sekolahNPSN').value='';
     document.getElementById('sekolahAlamat').value='';
+    document.getElementById('sekolahKepsek').value='';
     document.getElementById('sekolahStatus').value='aktif';
-    document.getElementById('modalSekolahTitle').textContent='Tambah Sekolah';
+    document.getElementById('sekolahSecretKey').value='Auto-Generated';
+    document.getElementById('sekolahBackupKey').value='Auto-Generated';
+    document.getElementById('modalSekolahTitle').textContent='Tambah Institusi Sekolah';
   }
   openModal('modalSekolah');
 }
 async function saveSekolah(){
-  const{collection,doc,setDoc,addDoc,serverTimestamp}=window._fb;
-  const id=document.getElementById('sekolahId').value;
-  const nama=document.getElementById('sekolahNama').value.trim();
-  const alamat=document.getElementById('sekolahAlamat').value.trim();
-  const status=document.getElementById('sekolahStatus').value;
-  if(!nama){showToast('warn','Peringatan','Nama sekolah wajib diisi!');return;}
+  const { collection, doc, setDoc, addDoc, serverTimestamp } = window._fb;
+  const id = document.getElementById('sekolahId').value;
+  const nama = document.getElementById('sekolahNama').value.trim();
+  const npsn = document.getElementById('sekolahNPSN').value.trim();
+  const alamat = document.getElementById('sekolahAlamat').value.trim();
+  const kepsek = document.getElementById('sekolahKepsek').value.trim();
+  const status = document.getElementById('sekolahStatus').value;
+
+  if(!nama || !npsn){showToast('warn','Peringatan','Nama dan NPSN wajib diisi!');return;}
+  
   try{
-    if(id) await setDoc(doc(db,'sekolah',id),{nama,alamat,status,updatedAt:serverTimestamp()});
-    else   await addDoc(collection(db,'sekolah'),{nama,alamat,status,createdAt:serverTimestamp()});
+    // Generate AES Key for new schools
+    let schoolKey = '';
+    let backupKey = '';
+    if(!id) {
+       const keyArray = new Uint8Array(32);
+       window.crypto.getRandomValues(keyArray);
+       schoolKey = btoa(String.fromCharCode(...keyArray));
+       backupKey = 'BACKUP_' + schoolKey.slice(0, 8); // Simple backup logic
+    }
+
+    const payload = { 
+      nama, npsn, alamat, kepsek, status, 
+      updatedAt: serverTimestamp() 
+    };
+    if(schoolKey) {
+      payload.school_secret_key = schoolKey;
+      payload.emergency_backup_key = backupKey;
+    }
+
+    if(id) await setDoc(doc(db,'sekolah',id), payload, { merge: true });
+    else   await addDoc(collection(db,'sekolah'), { ...payload, createdAt: serverTimestamp() });
+    
     closeModal('modalSekolah');
-    addLog('Sekolah',`${id?'Edit':'Tambah'} sekolah: ${nama}`);
-    showToast('success','Berhasil',`Sekolah ${nama} ${id?'diperbarui':'ditambahkan'}`);
-    // Update header level-2 jika sekolah aktif yang diedit
+    addLog('Sekolah',`${id?'Edit':'Tambah'} sekolah: ${nama} (${npsn})`);
+    showToast('success','Berhasil',`Institusi ${nama} ${id?'diperbarui':'ditambahkan'}`);
+    
     if(id&&_activeSchoolId===id){
       _activeSchoolName=nama;
       document.getElementById('activeSchoolName').textContent=nama;
-      document.getElementById('activeSchoolSub').textContent=alamat+' · Status: '+status;
+      document.getElementById('activeSchoolSub').textContent=alamat+' · NPSN: '+npsn;
     }
     await loadSekolahDropdown();
-    // Refresh kartu sekolah jika level-1 tampil
     if(document.getElementById('view-schools').style.display!=='none') loadSchoolCards();
     loadDashboard();
   }catch(e){showToast('error','Error',e.message);}

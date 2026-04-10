@@ -183,6 +183,9 @@
       
       // Initialize Modules
       if(window.ModulPD) window.ModulPD.init();
+
+      // Multi-Tenant SaaS Update: Secure Chat
+      if(window.CimegaChat) window.CimegaChat.init(db);
       if(window.ModulPTK) window.ModulPTK.init();
       if(window.ModulSarpras) window.ModulSarpras.init();
       if(window.ModulEOffice) window.ModulEOffice.init();
@@ -190,6 +193,10 @@
     
     initFirestore();
   </script>
+
+  <!-- SHARED SaaS UPGRADE -->
+  <script src="../../shared/crypto_helper.js"></script>
+  <script src="../../shared/chat.js"></script>
 
   <!-- MODULE SCRIPTS -->
   <script src="../../modules/ops/peserta_didik.js"></script>

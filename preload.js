@@ -27,8 +27,8 @@ contextBridge.exposeInMainWorld('cimegaAPI', {
   installUpdate:      (opts) => ipcRenderer.invoke('install-update', opts),
   openExternal:       (url)  => ipcRenderer.invoke('open-external', url),
 
-  // Claude AI
-  claudeAsk: (opts) => ipcRenderer.invoke('claude-ask', opts),
+  // Gemini AI
+  geminiAsk: (opts) => ipcRenderer.invoke('gemini-ask', opts),
 
   // Listener progress download (dari main ke renderer)
   onDownloadProgress: (cb) => {

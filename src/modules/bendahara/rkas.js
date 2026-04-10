@@ -1,10 +1,12 @@
 window.ModulRkas = {
   container: null,
   rkasData: [],
-  bospLimit: 150000000, // Misal Anggaran BOSP 1 sekolah 150 Juta
+  bospLimit: 150000000, 
+  userData: null,
 
   init: async function() {
     this.container = document.getElementById('moduleRkasApp');
+    this.userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
     this.renderSkeleton();
     await this.loadData();
     this.render();
@@ -18,7 +20,9 @@ window.ModulRkas = {
   loadData: async function() {
     try {
       const { collection, getDocs, query, where } = window._fb;
-      const q = query(collection(db, 'rkas'), where('sekolah', '==', userData.sekolah || ''));
+      const schoolId = this.userData.school_id || 'NPSN_MIGRATE';
+      
+      const q = query(collection(db, 'rkas'), where('school_id', '==', schoolId));
       const snap = await getDocs(q);
       
       this.rkasData = [];
@@ -31,7 +35,6 @@ window.ModulRkas = {
   },
 
   render: function() {
-    // Math.round absolute total calculation to avoid parsing floating points
     const totalAnggaran = this.rkasData.reduce((sum, item) => sum + Math.round(Number(item.total_pagu) || 0), 0);
     const sisaBosp = this.bospLimit - totalAnggaran;
     const isOverBudget = sisaBosp < 0;
@@ -52,9 +55,9 @@ window.ModulRkas = {
         </div>
       </div>
 
-      ${isOverBudget ? \`<div style="background:rgba(255,68,102,0.1); border:1px solid var(--danger); padding:10px 14px; border-radius:8px; margin-bottom:20px; color:#ff8899; font-size:12px; display:flex; align-items:center; gap:10px;">
-        <span style="font-size:16px;">⚠️</span> <strong>PERINGATAN DEFISIT:</strong> Total Rencana Anggaran (RKAS) Anda telah melebihi Pagu BOSP Sekolah! Pagu RKAS tidak boleh minus.
-      </div>\` : ''}
+      ${isOverBudget ? `<div style="background:rgba(255,68,102,0.1); border:1px solid var(--danger); padding:10px 14px; border-radius:8px; margin-bottom:20px; color:#ff8899; font-size:12px; display:flex; align-items:center; gap:10px;">
+        <span style="font-size:16px;">⚠️</span> <strong>PERINGATAN DEFISIT:</strong> Total Rencana Anggaran (RKAS) Anda telah melebihi Pagu BOSP Sekolah!
+      </div>` : ''}
 
       <div class="card">
         <div class="card-header">
@@ -76,7 +79,6 @@ window.ModulRkas = {
             <button class="btn btn-ghost" onclick="document.getElementById('rkasFormModal').style.display='none'">Tutup</button>
           </div>
           <div class="card-body">
-            
             <div class="grid-2">
               <div class="form-group"><label class="form-label">Kode Rekening</label><input class="form-control" id="rkKode" placeholder="5.1.02.01.01.0024" /></div>
               <div class="form-group">
@@ -93,21 +95,17 @@ window.ModulRkas = {
                 </select>
               </div>
             </div>
-            
             <div class="form-group"><label class="form-label">Uraian / Deskripsi Kegiatan</label><textarea class="form-control" id="rkUraian" placeholder="Belanja Alat Tulis Kantor (ATK)"></textarea></div>
-
             <div class="grid-3">
               <div class="form-group"><label class="form-label">Volume (Jumlah)</label><input class="form-control" type="number" id="rkVol" oninput="window.ModulRkas.calcPagu()" /></div>
               <div class="form-group"><label class="form-label">Satuan</label><input class="form-control" id="rkSatuan" placeholder="Rim / Box / Rim" /></div>
               <div class="form-group"><label class="form-label">Harga Satuan (Rp)</label><input class="form-control" type="number" id="rkHarga" oninput="window.ModulRkas.calcPagu()" /></div>
             </div>
-
             <div style="background:rgba(0,255,136,0.05); border:1px solid rgba(0,255,136,0.2); padding:12px; border-radius:8px; text-align:center; margin-bottom:15px;">
               <div style="font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Total Pagu Anggaran</div>
               <div style="font-size:20px; font-weight:700; color:var(--success); font-family:'Orbitron',sans-serif;" id="rkTotalDisplay">Rp 0</div>
             </div>
-
-            <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;" onclick="window.ModulRkas.saveData()">💾 Simpan Rencana Anggaran</button>
+            <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;" onclick="window.ModulRkas.saveData()">💾 Simpan & Ajukan Pengesahan</button>
           </div>
         </div>
       </div>
@@ -117,35 +115,36 @@ window.ModulRkas = {
   calcPagu: function() {
     const vol = parseFloat(document.getElementById('rkVol').value) || 0;
     const price = parseFloat(document.getElementById('rkHarga').value) || 0;
-    
-    // Math.round() logic to avoid floating point anomalies inherently
     const total = Math.round(vol * price);
     document.getElementById('rkTotalDisplay').innerText = window.formatIDR(total);
-    // Expose internally
     this._tempTotalPagu = total;
   },
 
   initGrid: function() {
-    const data = this.rkasData.map((r, idx) => [
-      r.kode || '-',
-      r.uraian || '-',
-      r.snp || '-',
-      r.volume || '-',
-      window.formatIDR(Math.round(r.harga_satuan || 0)),
-      window.formatIDR(Math.round(r.total_pagu || 0)),
-      gridjs.html(\`<button class='btn btn-ghost btn-sm' onclick='window.ModulRkas.hapusData("\${r.id}")'>Hapus</button>\`)
-    ]);
+    const data = this.rkasData.map((r, idx) => {
+      const statusLabels = {
+        'waiting_approval': '<span style="color:var(--warn);font-size:10px;">🕒 Menunggu</span>',
+        'approved': '<span style="color:var(--success);font-size:10px;">✅ Disetujui</span>',
+        'rejected': '<span style="color:var(--danger);font-size:10px;">❌ Ditolak</span>'
+      };
+
+      return [
+        r.kode || '-',
+        r.uraian || '-',
+        r.snp || '-',
+        r.volume || '-',
+        window.formatIDR(Math.round(r.total_pagu || 0)),
+        gridjs.html(statusLabels[r.status] || '<span style="color:var(--muted)">Draft</span>'),
+        gridjs.html(`<button class='btn btn-ghost btn-sm' onclick='window.ModulRkas.hapusData("${r.id}")'>🗑</button>`)
+      ];
+    });
 
     this.gridInstance = new gridjs.Grid({
-      columns: ['Kode Rek', 'Uraian Kegiatan', 'SNP', 'Vol', 'Harga Satuan', 'Total Pagu', 'Aksi'],
+      columns: ['Kode', 'Uraian', 'SNP', 'Vol', 'Pagu', 'Status', 'Aksi'],
       data: data,
       search: true,
       pagination: { limit: 10 },
-      sort: true,
-      language: {
-        search: { placeholder: 'Cari Rencana...' },
-        pagination: { previous: 'Prev', next: 'Next', showing: 'Data', results: () => 'RKAS' }
-      }
+      sort: true
     }).render(document.getElementById('gridWrapperRkas'));
   },
 
@@ -166,30 +165,43 @@ window.ModulRkas = {
       uraian: document.getElementById('rkUraian').value.trim(),
       volume: parseFloat(document.getElementById('rkVol').value) || 0,
       satuan: document.getElementById('rkSatuan').value.trim(),
-      // Force Absolute Integer Rounding
       harga_satuan: Math.round(parseFloat(document.getElementById('rkHarga').value) || 0),
       total_pagu: Math.round(this._tempTotalPagu || 0),
-      sekolah: userData.sekolah
+      sekolah: this.userData.sekolah,
+      school_id: this.userData.school_id || 'NPSN_MIGRATE',
+      status: 'waiting_approval'
     };
 
-    if(!data.uraian || data.total_pagu <= 0) { alert("Uraian dan Nominal wajar wajib diisi!"); return; }
+    if(!data.uraian || data.total_pagu <= 0) { showToast('warn', 'Peringatan', 'Data belum lengkap!'); return; }
 
     try {
       const { collection, addDoc, serverTimestamp } = window._fb;
       await addDoc(collection(db, 'rkas'), { ...data, createdAt: serverTimestamp() });
+      
+      // Also add to global approval queue
+      await addDoc(collection(db, 'antrean_dokumen'), {
+        tipe: 'RKAS',
+        judul: data.uraian,
+        pemohon: this.userData.nama,
+        school_id: data.school_id,
+        status: 'waiting_approval',
+        createdAt: serverTimestamp()
+      });
+
       document.getElementById('rkasFormModal').style.display = 'none';
-      this.init(); // Reload
+      showToast('success', 'Berhasil', 'RKAS diajukan untuk pengesahan Kepsek.');
+      this.init();
     } catch(e) {
-      alert("Gagal menyimpan RKAS: " + e.message);
+      showToast('error', 'Gagal', e.message);
     }
   },
 
   hapusData: async function(id) {
-    if(!confirm("Yakin menghapus kegiatan ini dari RKAS?")) return;
+    if(!confirm("Yakin menghapus rencana ini?")) return;
     try {
       const { doc, deleteDoc } = window._fb;
       await deleteDoc(doc(db, 'rkas', id));
       this.init();
-    } catch(e) { alert("Gagal hapus: " + e.message); }
+    } catch(e) { showToast('error', 'Gagal', e.message); }
   }
 };
