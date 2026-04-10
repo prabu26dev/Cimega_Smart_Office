@@ -1,45 +1,61 @@
-async function runCimegaDeepMigration() {
-  console.log("🚀 Memulai Migrasi Deep Database Cimega...");
+const admin = require('firebase-admin');
+const path = require('path');
 
-  const { collection, getDocs, writeBatch, doc, Timestamp, query, where } = window._fb;
-  if (!db || !window._fb) {
-    console.error("Firebase belum terinisialisasi!");
-    return;
-  }
+// Mengambil kunci dari root folder
+const serviceAccount = require(path.join(process.cwd(), 'serviceAccountKey.json'));
 
-  const DEFAULT_ID = "NPSN_MIGRATE";
-  const EXPIRY = new Date();
-  EXPIRY.setFullYear(EXPIRY.getFullYear() + 1);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
-  // Daftar koleksi yang wajib memiliki school_id
-  const targetCollections = ["users", "students", "perencanaan", "asesmen", "bku", "spj", "supervisi"];
+const db = admin.firestore();
+const DEFAULT_ID = "NPSN_MIGRATE_2026";
+const EXPIRY = new Date();
+EXPIRY.setFullYear(EXPIRY.getFullYear() + 1);
+
+async function startMigration() {
+  console.log("🚀 Memulai sinkronisasi data ke Multi-Tenant SaaS...");
+
+  // Koleksi yang akan diproses (termasuk 'konten' dari screenshot Anda)
+  const collections = ["users", "students", "perencanaan", "konten", "spj", "bku", "chats"];
 
   try {
-    for (const colName of targetCollections) {
-      console.log(`Memproses koleksi: ${colName}...`);
-      const snap = await getDocs(collection(db, colName));
-      const batch = writeBatch(db);
+    for (const colName of collections) {
+      console.log(`\nMemeriksa koleksi: [${colName}]`);
+      const snapshot = await db.collection(colName).get();
+
+      if (snapshot.empty) {
+        console.log(`- Koleksi ini kosong.`);
+        continue;
+      }
+
+      const batch = db.batch();
       let count = 0;
 
-      snap.forEach((d) => {
-        const data = d.data();
+      snapshot.forEach((doc) => {
+        const data = doc.data();
         const updates = {};
 
-        // Tambahkan school_id jika absen
+        // Injeksi school_id
         if (!data.school_id) {
           updates.school_id = DEFAULT_ID;
         }
 
-        // Khusus User: Tambahkan Masa Aktif
+        // Injeksi expiredDate untuk akun
         if (colName === "users" && !data.expiredDate) {
-          updates.expiredDate = Timestamp.fromDate(EXPIRY);
+          updates.expiredDate = admin.firestore.Timestamp.fromDate(EXPIRY);
           updates.status_akun = "Aktif";
         }
 
+        // Tandai konten lama sebagai 'Global' agar tidak hilang bagi sekolah lain
+        if (colName === "konten" && data.isGlobal === undefined) {
+          updates.isGlobal = true;
+        }
+
         if (Object.keys(updates).length > 0) {
-          batch.update(doc(db, colName, d.id), {
+          batch.update(doc.ref, {
             ...updates,
-            updatedAt: Timestamp.now()
+            migratedAt: admin.firestore.Timestamp.now()
           });
           count++;
         }
@@ -47,13 +63,15 @@ async function runCimegaDeepMigration() {
 
       if (count > 0) {
         await batch.commit();
-        console.log(`✅ ${colName}: Berhasil update ${count} dokumen.`);
+        console.log(`✅ Berhasil memperbarui ${count} data.`);
       }
     }
-
-    alert("Migrasi Selesai! Seluruh data peran telah diberi label sekolah default.");
+    console.log("\n✨ SEMUA DATA TELAH DIPERBARUI! Firestore Anda kini siap digunakan.");
+    process.exit(0);
   } catch (e) {
-    console.error("❌ Gagal:", e);
-    alert("Migrasi Gagal: " + e.message);
+    console.error("❌ ERROR:", e.message);
+    process.exit(1);
   }
 }
+
+startMigration();
