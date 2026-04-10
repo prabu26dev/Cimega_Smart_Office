@@ -101,16 +101,24 @@ window.ModulNilai = {
     hasilDiv.style.display = 'block';
 
     try {
-      const systemPrompt = `Anda adalah "Sistem Penilaian Kurikulum Merdeka". Buat deskripsi capaian rapor dalam JSON.`;
+      const systemPrompt = `Anda adalah "Asisten Penulisan Rapor Kurikulum Merdeka". 
+TUGAS: Membuat DESKRIPSI CP (Capaian Pembelajaran) berdasarkan nilai angka.
+ATURAN:
+1. Jika nilai tinggi (>80), gunakan kata kerja: "Sangat baik dalam memahami [TP], perlu bimbingan sedikit pada..."
+2. Jika nilai sedang (70-80), gunakan kata kerja: "Cukup baik dalam memahami [TP], perlu penguatan pada..."
+3. Jika nilai rendah (<70), gunakan kata kerja: "Menunjukkan penguasaan yang perlu ditingkatkan pada [TP]..."
+HASIL HARUS JSON MURNI: [{"nama": "...", "nilai": 85, "deskripsi": "..."}]
+Dilarang ada teks lain.`;
+
       const res = await window.CimegaAI.ask({
         system: systemPrompt,
-        messages: [{ role: 'user', content: `Mapel: ${mapel}, TP: ${lingkup}, Data: ${JSON.stringify(payloads)}` }],
+        messages: [{ role: 'user', content: `Mapel: ${mapel}, Lingkup Materi: ${lingkup}, Data Siswa: ${JSON.stringify(payloads)}` }],
         maxTokens: 3000
       });
 
       if(res.error) throw new Error(res.error);
-      const text = res.text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsedData = JSON.parse(text);
+      const cleanedText = res.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsedData = JSON.parse(cleanedText);
       this.renderHasilRapor(parsedData);
       showToast('success', 'Selesai', 'Deskripsi Rapor berhasil dibuat.');
     } catch(err) { showToast('error', 'Gagal', err.message); }

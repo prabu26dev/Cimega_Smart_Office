@@ -87,7 +87,11 @@ window.ModulSupervisi = {
         <div class="card" style="width:100%; max-width:800px; max-height:90vh; overflow-y:auto; border-color:var(--success);">
           <div class="card-header" style="background:rgba(0,255,136,0.1);">
             <div class="card-title" style="color:var(--success);">🤖 LAPORAN EVALUASI (AI ASSESSOR)</div>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiReportModal').style.display='none'">✕</button>
+            <div style="display:flex; gap:8px;">
+               <button class="btn btn-ghost btn-sm" onclick="CimegaSharing.share('Laporan Supervisi', 'Supervisi', document.getElementById('aiContentArea').innerHTML)">🔗 Bagikan</button>
+               <button class="btn btn-primary btn-sm" onclick="CimegaPrinter.showPrintDialog(document.getElementById('aiContentArea').outerHTML, 'Lap_Supervisi_Cimega')">🖨️ Ekspor</button>
+               <button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiReportModal').style.display='none'">✕</button>
+            </div>
           </div>
           <div class="card-body">
             <div id="aiContentArea"></div>
@@ -170,16 +174,22 @@ window.ModulSupervisi = {
     `;
 
     try {
-      const dbContext = this.supervisiData.map(s => `Guru: ${s.nama_guru}, Perencanaan: ${s.skor_perencanaan}/4, KBM: ${s.skor_pelaksanaan}/4. Catatan: ${s.catatan}`).join('\\n');
-      const systemPrompt = `Analyze supervision reports for Kurikulum Merdeka and provide a professional evaluation. Use HTML structure.`;
+      const dbContext = this.supervisiData.map(s => `Guru: ${s.nama_guru}, Perencanaan: ${s.skor_perencanaan}/4, KBM: ${s.skor_pelaksanaan}/4. Catatan: ${s.catatan}`).join('\n');
+      const systemPrompt = `Anda adalah "Asisten Ahli Supervisi Akademik". TUGAS ANDA: Menganalisis data observasi guru dan menyusun laporan evaluasi institusi yang mendalam.
+PERSYARATAN:
+1. Berikan analisis tren (aspek mana yang paling kuat, aspek mana yang perlu ditingkatkan secara global).
+2. Berikan rekomendasi tindak lanjut (Pelatihan/Workshop) untuk guru-guru yang skornya di bawah 3.
+3. OUTPUT HARUS berupa HTML murni yang elegan dan profesional (siap cetak).
+4. Dilarang menggunakan blok markdown.`;
 
       const res = await window.CimegaAI.ask({
         system: systemPrompt,
-        messages: [{ role: 'user', content: `Data:\n${dbContext}` }]
+        messages: [{ role: 'user', content: `Data Hasil Observasi Guru SDN Cimega:\n${dbContext}` }],
+        maxTokens: 3000
       });
 
       if(res.error) throw new Error(res.error);
-      document.getElementById('aiContentArea').innerHTML = res.text.replace(/```html/g, '').replace(/```/g, '');
+      document.getElementById('aiContentArea').innerHTML = res.text.replace(/```html/gi, '').replace(/```/g, '');
     } catch(e) {
       document.getElementById('aiContentArea').innerHTML = `<div style="color:var(--danger)">Error: ${e.message}</div>`;
     }

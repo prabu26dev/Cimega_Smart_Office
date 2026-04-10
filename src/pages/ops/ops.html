@@ -33,7 +33,21 @@
     .nav-item:hover{background:rgba(0,229,255,0.07);color:var(--text)}
     .nav-item.active{background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.18)}
     
-    .btn-logout{display:block;width:calc(100% - 20px);margin:10px;padding:10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:8px;color:#ff8899;text-align:center;cursor:pointer;}
+    .btn-logout{display:block;width:calc(100% - 20px);margin:10px;padding:10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:8px;color:#ff8899;text-align:center;cursor:pointer;font-weight:700;letter-spacing:1px;}
+
+    /* MUSIC WIDGET */
+    .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); }
+    .sidebar-music { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.1); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+    .sm-row1 { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+    .sm-bars { display: flex; gap: 2px; height: 12px; align-items: flex-end; }
+    .sm-bars .b { width: 2px; background: var(--cyan); animation: musicBars 0.6s infinite alternate; }
+    @keyframes musicBars { from { height: 2px; } to { height: 12px; } }
+    .sm-bars.paused .b { animation-play-state: paused; height: 2px; }
+    .sm-title { font-family: 'Orbitron'; font-size: 10px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .sm-sub { font-size: 9px; color: var(--muted); margin-bottom: 8px; }
+    .sm-controls { display: flex; justify-content: center; gap: 15px; }
+    .sm-btn { cursor: pointer; color: var(--cyan); font-size: 14px; transition: opacity 0.2s; }
+    .sm-btn:hover { opacity: 0.7; }
 
     /* MAIN */
     .main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1}
@@ -107,8 +121,24 @@
       <div class="nav-item" onclick="OpsUI.nav('sarpras', this)">🏫 Sarana & Prasarana</div>
       <div class="nav-section">Administrasi</div>
       <div class="nav-item" onclick="OpsUI.nav('eoffice', this)">✉️ E-Office (AI)</div>
+      <div class="nav-section">Kolaborasi</div>
+      <div class="nav-item" onclick="OpsUI.nav('sharing', this)">📩 Berbagi Dokumen</div>
     </div>
-    <button class="btn-logout" onclick="logout()">LOGOUT</button>
+    <div class="sidebar-footer">
+      <div class="sidebar-music">
+        <div class="sm-row1">
+          <div id="musicBars" class="sm-bars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+          <div id="musicTitle" class="sm-title">Radio Cimega...</div>
+        </div>
+        <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Kang Prabu</div>
+        <div class="sm-controls">
+          <div class="sm-btn" onclick="CimegaMusic.prev()">⏮</div>
+          <div id="musicMuteBtn" class="sm-btn" onclick="CimegaMusic.toggleMute()">🔊</div>
+          <div class="sm-btn" onclick="CimegaMusic.next()">⏭</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">LOGOUT</button>
+    </div>
   </div>
 
   <!-- MAIN VIEW -->
@@ -138,6 +168,13 @@
         <div id="moduleEOfficeApp"></div>
       </div>
 
+      <div class="page" id="page-sharing">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📩 DOKUMEN DITERIMA (INBOX)</div></div>
+          <div class="card-body" id="sharingInbox"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -154,9 +191,11 @@
           'pd': 'MANAJEMEN PESERTA DIDIK',
           'ptk': 'PENDIDIK & TENAGA KEPENDIDIKAN',
           'sarpras': 'SARANA & PRASARANA',
-          'eoffice': 'E-OFFICE (SURAT AI)'
+          'eoffice': 'E-OFFICE (SURAT AI)',
+          'sharing': 'KOLABORASI & BERBAGI DOKUMEN'
         };
         document.getElementById('topTitle').innerText = titles[pageId];
+        if(pageId === 'sharing') window.CimegaSharing.renderInbox('sharingInbox');
       }
     };
     
@@ -197,11 +236,24 @@
   <!-- SHARED SaaS UPGRADE -->
   <script src="../../shared/crypto_helper.js"></script>
   <script src="../../shared/chat.js"></script>
+  <script src="../../shared/music.js"></script>
+  <script src="../../shared/printer.js"></script>
+  <script src="../../shared/sharing.js"></script>
+  <script src="../../shared/ai_chatbot.js"></script>
 
   <!-- MODULE SCRIPTS -->
   <script src="../../modules/ops/peserta_didik.js"></script>
   <script src="../../modules/ops/ptk.js"></script>
   <script src="../../modules/ops/sarpras.js"></script>
   <script src="../../modules/ops/e_office.js"></script>
+
+  <script>
+    async function startCimegaShared() {
+       if(window.CimegaMusic) window.CimegaMusic.init();
+       if(window.CimegaAIChatbot) window.CimegaAIChatbot.init();
+       if(window.CimegaSharing) window.CimegaSharing.init();
+    }
+    setTimeout(startCimegaShared, 1000);
+  </script>
 </body>
 </html>

@@ -248,6 +248,7 @@
     <div class="nav-section">Manajemen Terpadu</div>
     <div class="nav-item active" style="color:var(--gold)" onclick="showPage('master',this)"><span class="nav-icon">📦</span>Data Master (Sinkron)</div>
     <div class="nav-item" onclick="showPage('cloud',this)"><span class="nav-icon">☁️</span>Cimega Cloud Drive</div>
+    <div class="nav-item" onclick="showPage('command',this)"><span class="nav-icon">🕹️</span>Unit Command Center</div>
     <div class="nav-item" onclick="showPage('oversight',this)"><span class="nav-icon">🛡️</span>Pengawasan Dokumen</div>
     <div class="nav-section">Sistem</div>
     <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📝</span>Kelola Konten</div>
@@ -439,6 +440,46 @@
         <div class="update-card">
           <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px">📬 RIWAYAT NOTIFIKASI</div>
           <div id="notifHistory"><div class="empty-state"><div class="icon">🔔</div><p>Belum ada notifikasi</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: COMMAND CENTER (GLOBAL OVERSIGHT) -->
+    <div class="page" id="page-command">
+      <div class="section-header">
+        <div class="section-title">🕹️ Unit <span>Command Center</span></div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <div class="card-title">Pilih Bidang Pengawasan</div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-ghost btn-sm" onclick="showCommandSub('guru')">👩‍🏫 Guru</button>
+            <button class="btn btn-ghost btn-sm" onclick="showCommandSub('ops')">🖥️ OPS</button>
+            <button class="btn btn-ghost btn-sm" onclick="showCommandSub('bendahara')">💰 Bendahara</button>
+            <button class="btn btn-ghost btn-sm" onclick="showCommandSub('kepsek')">🎓 Kepsek</button>
+          </div>
+        </div>
+        <div class="card-body">
+            <!-- GURU COMMAND -->
+            <div id="command-content-guru" class="cmd-sub" style="display:none;">
+                <div style="font-family:'Orbitron',sans-serif; font-size:11px; color:var(--cyan); margin-bottom:12px;">📊 MONITORING ADMINISTRASI GURU (AI)</div>
+                <div id="gridGuruAdmin"></div>
+            </div>
+            <!-- OPS COMMAND -->
+            <div id="command-content-ops" class="cmd-sub" style="display:none;">
+                <div style="font-family:'Orbitron',sans-serif; font-size:11px; color:var(--cyan); margin-bottom:12px;">📑 MONITORING E-OFFICE & CLOUD</div>
+                <div id="gridOpsAdmin"></div>
+            </div>
+            <!-- BENDAHARA COMMAND -->
+            <div id="command-content-bendahara" class="cmd-sub" style="display:none;">
+                <div style="font-family:'Orbitron',sans-serif; font-size:11px; color:var(--cyan); margin-bottom:12px;">💰 MONITORING RKAS & KEUANGAN</div>
+                <div id="gridBendaharaAdmin"></div>
+            </div>
+            <!-- KEPSEK COMMAND -->
+            <div id="command-content-kepsek" class="cmd-sub" style="display:none;">
+                <div style="font-family:'Orbitron',sans-serif; font-size:11px; color:var(--cyan); margin-bottom:12px;">🔍 MONITORING SUPERVISI AKADEMIK</div>
+                <div id="gridKepsekAdmin"></div>
+            </div>
         </div>
       </div>
     </div>
@@ -1268,6 +1309,45 @@ async function loadKontenByKat(kat){
         const btn=katItem.querySelector('.kat-item-btn');
         if(btn) btn.insertAdjacentHTML('beforeend',`<span class="kat-count">${snap.size}</span>`);
       }
+    }
+
+    function showCommandSub(unit) {
+      document.querySelectorAll('.cmd-sub').forEach(c => c.style.display = 'none');
+      document.getElementById('command-content-' + unit).style.display = 'block';
+      loadCommandData(unit);
+    }
+
+    async function loadCommandData(unit) {
+      const { collection, getDocs, query, orderBy, limit } = window._fb;
+      const targetTable = {
+        'guru': { col: 'administrasi_guru', grid: 'gridGuruAdmin', cols: ['Tipe', 'Guru', 'Sekolah', 'Tanggal'] },
+        'ops': { col: 'cloud_files', grid: 'gridOpsAdmin', cols: ['File', 'Uploader', 'Sekolah', 'Tanggal'] },
+        'bendahara': { col: 'rkas', grid: 'gridBendaharaAdmin', cols: ['Uraian', 'Pagu', 'Sekolah', 'Status'] },
+        'kepsek': { col: 'supervisi', grid: 'gridKepsekAdmin', cols: ['Guru', 'RPP', 'KBM', 'Sekolah'] }
+      }[unit];
+
+      const container = document.getElementById(targetTable.grid);
+      container.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        const snap = await getDocs(query(collection(db, targetTable.col), orderBy('createdAt', 'desc'), limit(50)));
+        const data = [];
+        snap.forEach(doc => {
+          const d = doc.data();
+          if(unit === 'guru') data.push([d.tipe, d.teacher_name, d.school_id, d.createdAt?.toDate().toLocaleDateString()]);
+          if(unit === 'ops') data.push([d.nama, d.uploader_name, d.sekolah, d.createdAt?.toDate().toLocaleDateString()]);
+          if(unit === 'bendahara') data.push([d.uraian, window.formatIDR(d.total_pagu), d.sekolah, d.status]);
+          if(unit === 'kepsek') data.push([d.nama_guru, d.skor_perencanaan, d.skor_pelaksanaan, d.sekolah]);
+        });
+
+        container.innerHTML = '';
+        new gridjs.Grid({
+          columns: targetTable.cols,
+          data: data,
+          pagination: { limit: 10 },
+          search: true
+        }).render(container);
+      } catch(e) { container.innerHTML = `<div style="color:var(--danger)">Gagal memuat: ${e.message}</div>`; }
     }
   }catch(e){document.getElementById('kontenList').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><p>Gagal memuat: ${e.message}</p></div>`;}
 }

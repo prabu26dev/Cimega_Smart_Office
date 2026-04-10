@@ -116,7 +116,7 @@ window.ModulSarpras = {
             <div class="form-group">
               <label class="form-label">Alokasi Ruangan</label>
               <select class="form-control" id="iRuang">
-                ${this.ruanganData.map(r => \`<option value="\${r.id}">\${r.nama}</option>\`).join('')}
+                ${this.ruanganData.map(r => '<option value="' + r.id + '">' + r.nama + '</option>').join('')}
               </select>
             </div>
             <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:10px;" onclick="window.ModulSarpras.saveInventaris()">Simpan Inventaris</button>
@@ -129,7 +129,7 @@ window.ModulSarpras = {
   initGridRuang: function() {
     const data = this.ruanganData.map((r, idx) => [
       r.nama || '-', r.kapasitas || '-', r.kondisi || '-',
-      gridjs.html(\`<button class='btn btn-ghost btn-sm' onclick='window.ModulSarpras.hapusRuang("\${r.id}")'>Hapus</button>\`)
+      gridjs.html("<button class='btn btn-ghost btn-sm' onclick='window.ModulSarpras.hapusRuang(\"" + r.id + "\")'>Hapus</button>")
     ]);
 
     new gridjs.Grid({
@@ -150,7 +150,7 @@ window.ModulSarpras = {
         i.jumlah || '-',
         i.kondisi || '-',
         ruang ? ruang.nama : '-',
-        gridjs.html(\`<button class='btn btn-ghost btn-sm' onclick='window.ModulSarpras.hapusInventaris("\${i.id}")'>Hapus</button>\`)
+        gridjs.html("<button class='btn btn-ghost btn-sm' onclick='window.ModulSarpras.hapusInventaris(\"" + i.id + "\")'>Hapus</button>")
       ];
     });
 

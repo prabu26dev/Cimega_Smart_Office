@@ -63,11 +63,28 @@ window.ModulRkas = {
         <div class="card-header">
           <div class="card-title">📑 TABEL E-RKAS (8 SNP)</div>
           <div>
+            <button class="btn btn-ghost btn-sm" onclick="window.ModulRkas.showAIAssistant()">✨ AI Budget Assistant</button>
             <button class="btn btn-primary" onclick="window.ModulRkas.showForm()">+ Tambah Rencana Belanja</button>
           </div>
         </div>
         <div class="card-body">
+          <div id="aiRkasSuggestion" style="display:none; margin-bottom:20px;"></div>
           <div id="gridWrapperRkas"></div>
+        </div>
+      </div>
+
+      <!-- AI ASSISTANT PANEL -->
+      <div id="aiRkasModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center;">
+        <div class="card" style="width:100%; max-width:500px; border-color:var(--gold);">
+            <div class="card-header"><div class="card-title">✨ AI RKAS SUGGESTION</div></div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Kebutuhan Utama (Deskripsi)</label>
+                    <textarea class="form-control" id="aiRkasPrompt" placeholder="Contoh: Sekolah membutuhkan perbaikan atap, pengadaan laptop 5 unit, dan buku kurikulum merdeka..."></textarea>
+                </div>
+                <button class="btn btn-primary" id="btnGenRkasAI" onclick="window.ModulRkas.generateAISuggestion()" style="width:100%; justify-content:center;">Generate Saran Belanja (AI)</button>
+                <button class="btn btn-ghost" onclick="document.getElementById('aiRkasModal').style.display='none'" style="width:100%; justify-content:center; margin-top:8px;">Batal</button>
+            </div>
         </div>
       </div>
 
@@ -203,5 +220,83 @@ window.ModulRkas = {
       await deleteDoc(doc(db, 'rkas', id));
       this.init();
     } catch(e) { showToast('error', 'Gagal', e.message); }
+  },
+
+  showAIAssistant: function() {
+    document.getElementById('aiRkasModal').style.display = 'flex';
+  },
+
+  generateAISuggestion: async function() {
+    const prompt = document.getElementById('aiRkasPrompt').value.trim();
+    if(!prompt) return showToast('warn', 'Ops', 'Masukkan deskripsi kebutuhan!');
+
+    const btn = document.getElementById('btnGenRkasAI');
+    btn.disabled = true; btn.innerHTML = '⏳ AI Menganalisis SNP & Harga Pasar...';
+
+    try {
+      const systemPrompt = `Anda adalah "Asisten Perencana Anggaran Sekolah (e-RKAS)".
+Tugas: Buat saran belanja yang masuk akal dan sesuai standar SNP Indonesia.
+INPUT: Deskripsi kebutuhan sekolah.
+OUTPUT HARUS JSON MURNI:
+{
+  "saran": [
+    {"kode": "5.1...", "snp": "6. Standar Sarpras", "uraian": "Laptop Core i5", "vol": 5, "satuan": "Unit", "estimasi_harga": 8000000}
+  ]
+}
+Dilarang ada teks lain.`;
+
+      const res = await window.CimegaAI.ask({
+        system: systemPrompt,
+        messages: [{ role: 'user', content: `Kebutuhan: ${prompt}` }]
+      });
+
+      if(res.error) throw new Error(res.error);
+      const cleaned = res.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      this.renderAISuggestion(parsed.saran);
+      document.getElementById('aiRkasModal').style.display = 'none';
+    } catch(e) { showToast('error', 'Gagal', e.message); }
+    finally { btn.disabled = false; btn.innerHTML = 'Generate Saran Belanja (AI)'; }
+  },
+
+  renderAISuggestion: function(saran) {
+    const div = document.getElementById('aiRkasSuggestion');
+    let html = `
+      <div class="card" style="border-color:var(--gold); background:rgba(255,208,0,0.02);">
+        <div class="card-header"><div class="card-title" style="color:var(--gold);">💡 SARAN BELANJA AI</div></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+                <thead><tr><th>Uraian</th><th>Vol</th><th>Harga</th><th>SNP</th><th>Aksi</th></tr></thead>
+                <tbody>
+    `;
+    saran.forEach((s, idx) => {
+      html += `
+        <tr>
+          <td style="font-size:11px;">${s.uraian}</td>
+          <td style="text-align:center;">${s.vol} ${s.satuan}</td>
+          <td style="color:var(--success);">${window.formatIDR(s.estimasi_harga)}</td>
+          <td style="font-size:10px; color:var(--muted);">${s.snp}</td>
+          <td><button class="btn btn-primary btn-sm" onclick="window.ModulRkas.applyAISuggestion(${idx})">Pakai</button></td>
+        </tr>
+      `;
+    });
+    html += `</tbody></table></div></div></div>`;
+    div.innerHTML = html;
+    div.style.display = 'block';
+    this._latestSaran = saran;
+  },
+
+  applyAISuggestion: function(idx) {
+    const s = this._latestSaran[idx];
+    document.getElementById('rkKode').value = s.kode;
+    document.getElementById('rkSnp').value = s.snp;
+    document.getElementById('rkUraian').value = s.uraian;
+    document.getElementById('rkVol').value = s.vol;
+    document.getElementById('rkSatuan').value = s.satuan;
+    document.getElementById('rkHarga').value = s.estimasi_harga;
+    this.calcPagu();
+    document.getElementById('rkasFormModal').style.display = 'flex';
   }
 };

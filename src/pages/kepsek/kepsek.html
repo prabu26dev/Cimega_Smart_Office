@@ -38,7 +38,21 @@
     .nav-item:hover{background:rgba(157,78,221,0.05);color:var(--text)}
     .nav-item.active{background:linear-gradient(90deg, rgba(157,78,221,0.2), transparent);color:var(--violet-light);border-left:3px solid var(--violet-light);}
     
-    .btn-logout{display:block;width:calc(100% - 20px);margin:10px;padding:10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:8px;color:#ff8899;text-align:center;cursor:pointer;}
+    .btn-logout{display:block;width:calc(100% - 20px);margin:10px;padding:10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:8px;color:#ff8899;text-align:center;cursor:pointer;font-weight:700;letter-spacing:1px;}
+
+    /* MUSIC WIDGET */
+    .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); }
+    .sidebar-music { background: rgba(157,78,221,0.04); border: 1px solid rgba(157,78,221,0.1); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+    .sm-row1 { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+    .sm-bars { display: flex; gap: 2px; height: 12px; align-items: flex-end; }
+    .sm-bars .b { width: 2px; background: var(--violet-light); animation: musicBars 0.6s infinite alternate; }
+    @keyframes musicBars { from { height: 2px; } to { height: 12px; } }
+    .sm-bars.paused .b { animation-play-state: paused; height: 2px; }
+    .sm-title { font-family: 'Orbitron'; font-size: 10px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .sm-sub { font-size: 9px; color: var(--muted); margin-bottom: 8px; }
+    .sm-controls { display: flex; justify-content: center; gap: 15px; }
+    .sm-btn { cursor: pointer; color: var(--violet-light); font-size: 14px; transition: opacity 0.2s; }
+    .sm-btn:hover { opacity: 0.7; }
 
     /* MAIN */
     .main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1}
@@ -109,8 +123,24 @@
       <div class="nav-section">Otorisasi & Legalitas</div>
       <div class="nav-item" onclick="KepsekUI.nav('approval', this)">✒️ Persetujuan & TTE</div>
       <div class="nav-item" onclick="KepsekUI.nav('arsip', this)">🗃️ Arsip Makro</div>
+      <div class="nav-section">Kolaborasi</div>
+      <div class="nav-item" onclick="KepsekUI.nav('sharing', this)">📩 Berbagi Dokumen</div>
     </div>
-    <button class="btn-logout" onclick="logout()">LOGOUT</button>
+    <div class="sidebar-footer">
+      <div class="sidebar-music">
+        <div class="sm-row1">
+          <div id="musicBars" class="sm-bars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+          <div id="musicTitle" class="sm-title">Radio Cimega...</div>
+        </div>
+        <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Kang Prabu</div>
+        <div class="sm-controls">
+          <div class="sm-btn" onclick="CimegaMusic.prev()">⏮</div>
+          <div id="musicMuteBtn" class="sm-btn" onclick="CimegaMusic.toggleMute()">🔊</div>
+          <div class="sm-btn" onclick="CimegaMusic.next()">⏭</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">LOGOUT</button>
+    </div>
   </div>
 
   <!-- MAIN VIEW -->
@@ -124,6 +154,13 @@
       <div class="page" id="page-supervisi"><div id="moduleSupervisiApp"></div></div>
       <div class="page" id="page-approval"><div id="moduleApprovalApp"></div></div>
       <div class="page" id="page-arsip"><div id="moduleArsipApp"></div></div>
+      
+      <div class="page" id="page-sharing">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📩 DOKUMEN DITERIMA (INBOX)</div></div>
+          <div class="card-body" id="sharingInbox"></div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -143,9 +180,11 @@
           'dasbor': 'EKSEKUTIF DASBOR (REAL-TIME ANALYTICS)',
           'supervisi': 'SUPERVISI AKADEMIK & AI EVALUATOR',
           'approval': 'SISTEM PERSETUJUAN & TTE (PIN)',
-          'arsip': 'ARSIP MAKRO INSTITUSI (KOSP, RKT, RKJM)'
+          'arsip': 'ARSIP MAKRO INSTITUSI (KOSP, RKT, RKJM)',
+          'sharing': 'KOLABORASI & BERBAGI DOKUMEN'
         };
         document.getElementById('topTitle').innerText = titles[pageId];
+        if(pageId === 'sharing') window.CimegaSharing.renderInbox('sharingInbox');
       }
     };
     
@@ -189,11 +228,24 @@
   <!-- SHARED SaaS UPGRADE -->
   <script src="../../shared/crypto_helper.js"></script>
   <script src="../../shared/chat.js"></script>
+  <script src="../../shared/music.js"></script>
+  <script src="../../shared/printer.js"></script>
+  <script src="../../shared/sharing.js"></script>
+  <script src="../../shared/ai_chatbot.js"></script>
 
   <!-- MODULE SCRIPTS -->
   <script src="../../modules/kepsek/dashboard.js"></script>
   <script src="../../modules/kepsek/supervisi.js"></script>
   <script src="../../modules/kepsek/approval.js"></script>
   <script src="../../modules/kepsek/arsip_makro.js"></script>
+
+  <script>
+    async function startCimegaShared() {
+       if(window.CimegaMusic) window.CimegaMusic.init();
+       if(window.CimegaAIChatbot) window.CimegaAIChatbot.init();
+       if(window.CimegaSharing) window.CimegaSharing.init();
+    }
+    setTimeout(startCimegaShared, 1000);
+  </script>
 </body>
 </html>

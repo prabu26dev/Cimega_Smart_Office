@@ -38,34 +38,29 @@ window.ModulEOffice = {
     btn.innerHTML = '⏳ AI Sedang Menyusun Surat...';
 
     try {
-      // Basic context fetch: if the user mentions a student, try to provide all students to the AI 
-      // (in a real scalable scenario, we would search before sending to AI, but for now we send top list or basic context)
       let contextData = "";
       if(window.ModulPD && window.ModulPD.students) {
-         const sliced = window.ModulPD.students.slice(0, 50).map(s => \`\${s.name} (NISN: \${s.nisn})\`);
-         contextData = "Data Siswa Tersedia:\\n" + sliced.join("\\n");
+         const sliced = window.ModulPD.students.slice(0, 50).map(s => `${s.name} (NISN: ${s.nisn})`);
+         contextData = "Data Siswa Tersedia:\n" + sliced.join("\n");
       }
 
-      const systemPrompt = `Anda adalah "Asisten Administrator Sekolah (E-Office)" yang mahir membuat surat formal berstandar instansi pendidikan di Indonesia.
-TUGAS ANDA:
-Buatkan draf surat sesuai instruksi pengguna. 
-FORMAT OUTPUT: 
-Kembalikan HANYA teks HTML murni (tanpa tag <html>, <head>, atau <body>) yang dibungkus dalam <div id="printableArea">...</div>.
-Didalam div tersebut, rancang surat dengan format Kop Surat, Nomor Surat, Tanggal, Isi, dan Tanda Tangan formal. 
-Gunakan styling inline CSS untuk membuat tata letak surat resmi yang siap di print pada kertas A4 (misalnya justify, margin standar, header center).
-DILARANG memberikan kalimat pengantar atau blok markdown seperti \`\`\`html. Kembalikan kode container <div> secara langsung.`;
+      const systemPrompt = `Anda adalah "Asisten Administrasi Sekolah (E-Office) Profesional". TUGAS ANDA: Membuat draf surat formal (Surat Keterangan, Surat Tugas, SK, dll) berdasarkan metadata.
+PERSYARATAN:
+1. Gunakan bahasa Indonesia formal (EYD).
+2. Sertakan Kop Surat SDN Cimega, Nomor Surat (buatkan draf nomor), dan tempat tanda tangan.
+3. OUTPUT HARUS berupa HTML murni di dalam <div id="printableArea" style="font-family:serif; line-height:1.6; color:#000; padding:20px;">.
+4. Jangan gunakan blok markdown (\`\`\`html).
+5. Buat konten yang sangat detail, akurat, dan profesional.`;
 
-      const userPrompt = `Instruksi Pembuatan Surat: ${promptValue}\n\nReferensi Konteks: ${contextData}`;
+      const userPrompt = `Input Pengguna: ${promptValue}\n\nReferensi Konteks: ${contextData}`;
 
       const res = await window.CimegaAI.ask({
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
-        maxTokens: 2000
+        maxTokens: 3000
       });
 
       if(res.error) throw new Error(res.error);
-
-      // Clean AI output if it includes markdown boundaries
       const htmlOutput = res.text.replace(/```html/gi, '').replace(/```/g, '').trim();
 
       const resDiv = document.getElementById('hasilSurat');
@@ -73,11 +68,12 @@ DILARANG memberikan kalimat pengantar atau blok markdown seperti \`\`\`html. Kem
         <div class="card" style="border-color:var(--success);">
           <div class="card-header">
             <div class="card-title" style="color:var(--success);">✅ Draf Surat Berhasil Dibuat</div>
-            <div>
-              <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+            <div style="display:flex; gap:8px;">
+               <button class="btn btn-ghost btn-sm" onclick="CimegaSharing.share(document.getElementById('eoPrompt').value.substring(0,30), 'Surat', document.getElementById('printableArea').innerHTML)">🔗 Bagikan</button>
+               <button class="btn btn-primary btn-sm" onclick="CimegaPrinter.showPrintDialog(document.getElementById('printableArea').outerHTML, 'Surat_Cimega')">🖨️ Cetak / Ekspor</button>
             </div>
           </div>
-          <div class="card-body" style="background:#fff; border-radius:0 0 12px 12px; padding:40px; color:#000;">
+          <div class="card-body" id="printableArea" style="background:#fff; border-radius:0 0 12px 12px; padding:40px; color:#000; font-family:'Times New Roman', serif;">
             ${htmlOutput}
           </div>
         </div>

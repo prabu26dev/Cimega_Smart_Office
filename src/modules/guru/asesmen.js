@@ -57,15 +57,29 @@ window.ModulAsesmen = {
     btn.disabled = true; btn.innerHTML = '⏳ Menyusun Soal HOTS...';
 
     try {
-      const systemPrompt = `Anda adalah "Asisten Ahli Evaluasi Pendidikan SD". Buat instrumen HOTS dalam JSON.`;
+      const systemPrompt = `Anda adalah "Pakar Evaluasi Pendidikan Digital". TUGAS ANDA: Membuat instrumen asesmen Kurikulum Merdeka yang akurat.
+HASIL OUTPUT HARUS JSON MURNI:
+{
+  "soal": [
+    {
+      "stimulus": "Teks/Konteks masalah nyata (HOTS)",
+      "pertanyaan": "Kalimat tanya",
+      "pilihan": ["A. ...", "B. ...", "C. ...", "D. ..."],
+      "kunci_jawaban": "A",
+      "pembahasan": "Alasan jawaban benar"
+    }
+  ]
+}
+Gunakan Level Kognitif ${document.getElementById('asLevel').value} dan Bentuk Soal ${document.getElementById('asBentuk').value}. Dilarang ada teks lain selain JSON.`;
+      
       const res = await window.CimegaAI.ask({
         system: systemPrompt,
-        messages: [{ role: 'user', content: `Mapel: ${mapel}, Indikator: ${indikator}, Level: ${document.getElementById('asLevel').value}, Bentuk: ${document.getElementById('asBentuk').value}` }]
+        messages: [{ role: 'user', content: `Buatkan ${document.getElementById('asJumlah').value} soal untuk ${mapel}. Indikator: ${indikator}` }]
       });
 
       if(res.error) throw new Error(res.error);
-      const text = res.text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsedData = JSON.parse(text);
+      const cleanedText = res.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsedData = JSON.parse(cleanedText);
       this.lastGeneratedSoal = parsedData.soal;
       this.renderHasilSoal(parsedData.soal, document.getElementById('asBentuk').value);
       showToast('success', 'Selesai', 'Bank soal berhasil digenerate AI.');
@@ -78,27 +92,29 @@ window.ModulAsesmen = {
     let html = `
       <div class="card" style="margin-bottom: 16px; border-color: var(--success);">
         <div class="card-header">
-          <div class="card-title" style="color: var(--success);">✅ HASIL BANK SOAL</div>
+          <div class="card-title">✅ BANK SOAL AI (HASIL)</div>
           <div style="display:flex; gap:8px;">
-            <button class="btn btn-primary btn-sm" onclick="window.ModulAsesmen.saveSoal()">💾 Simpan ke Bank Soal</button>
-            <button class="btn btn-ghost btn-sm" onclick="CimegaUtils.copyToClipboard('soalViewer')">Salin</button>
+             <button class="btn btn-ghost btn-sm" onclick="CimegaSharing.share('Bank Soal', 'Asesmen', document.getElementById('soalContent').innerHTML)">🔗 Bagikan</button>
+             <button class="btn btn-primary btn-sm" onclick="CimegaPrinter.showPrintDialog(document.getElementById('soalContent').outerHTML, 'Bank_Soal_Cimega')">🖨️ Ekspor</button>
+             <button class="btn btn-success btn-sm" onclick="window.ModulAsesmen.saveSoal()">💾 Simpan</button>
           </div>
         </div>
-        <div class="card-body" id="soalViewer">
-    `;
-    soalArray.forEach((item, index) => {
-      html += `
-        <div style="margin-bottom:15px; border-bottom:1px solid rgba(0,229,255,0.1); padding-bottom:10px;">
-          <div style="font-weight:700;">No. ${index+1}</div>
-          <div style="font-size:11px; font-style:italic; color:var(--muted);">${item.stimulus || ''}</div>
-          <div style="font-size:12px; margin:5px 0;">${item.pertanyaan}</div>
-          <div style="font-size:11px; background:rgba(0,255,136,0.05); padding:8px; border-radius:4px; margin-top:5px;">
-            <strong>Kunci:</strong> ${item.kunci_jawaban}
-          </div>
+        <div class="card-body" id="soalContent" style="background:#fff; color:#000; padding:30px; font-family:serif;">
+          <h2 style="text-align:center; font-size:16px;">BANK SOAL KURIKULUM MERDEKA</h2>
+          <hr style="border:1px solid #000; margin-bottom:20px;">
+          ${soalArray.map((s, i) => `
+            <div style="margin-bottom:15px;">
+              <p><b>${i + 1}. ${s.pertanyaan}</b></p>
+              <div style="margin-left:15px;">
+                ${(s.pilihan || []).map((p) => `<p>${p}</p>`).join('')}
+              </div>
+              <div style="font-size:11px; background:rgba(0,255,136,0.05); padding:8px; border-radius:4px; margin-top:5px;">
+                <strong>Kunci:</strong> ${s.kunci_jawaban}
+              </div>
+            </div>
+          `).join('')}
         </div>
-      `;
-    });
-    html += `</div></div>`;
+      </div>`;
     hasilDiv.innerHTML = html; hasilDiv.style.display = 'block';
   },
 
