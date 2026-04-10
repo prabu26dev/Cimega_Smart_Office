@@ -6,6 +6,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('cimegaAPI', {
   // Firebase
   getFirebaseConfig:  () => ipcRenderer.invoke('get-firebase-config'),
+  getSupabaseConfig:  () => ipcRenderer.invoke('get-supabase-config'),
   getAppConfig:       () => ipcRenderer.invoke('get-app-config'),
 
   // Musik

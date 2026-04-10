@@ -82,7 +82,7 @@ window.AdminMaster = {
                 </div>
                 <div class="stat-card gold" style="padding:15px">
                     <div class="stat-card-num">${orphanUsers.length}</div>
-                    <div class="stat-card-label">User Tanpa Sekolah</div>
+                    <div class="stat-card-label">Akun Administrator/Mandiri</div>
                 </div>
             </div>
         `;
@@ -96,10 +96,10 @@ window.AdminMaster = {
         // Render Orphan Users
         if (orphanUsers.length > 0) {
             html += `
-                <div class="card" style="margin-top:20px; border:1px dashed var(--danger); background:rgba(255,68,102,0.02)">
-                    <div class="card-header" style="background:rgba(255,68,102,0.05)">
-                        <div class="card-title" style="color:var(--danger)">⚠️ PENGGUNA TANPA SEKOLAH TERDAFTAR (${orphanUsers.length})</div>
-                        <p style="font-size:11px; color:var(--muted)">Pengguna ini tidak memiliki school_id atau Nama Sekolah yang cocok dengan daftar institusi.</p>
+                <div class="card" style="margin-top:20px; border:1px dashed var(--gold); background:rgba(255,208,0,0.02)">
+                    <div class="card-header" style="background:rgba(255,208,0,0.05)">
+                        <div class="card-title" style="color:var(--gold)">👤 PENGGUNA MANDIRI & ADMINISTRATOR (${orphanUsers.length})</div>
+                        <p style="font-size:11px; color:var(--muted)">Daftar akun yang tidak terafiliasi dengan institusi tertentu, termasuk akun Administrator sistem.</p>
                     </div>
                     <div class="table-wrap" style="margin:10px; border:none">
                         ${this.renderUserTable(orphanUsers)}
@@ -108,25 +108,6 @@ window.AdminMaster = {
             `;
         }
 
-        // Section: Komponen Global (Migrated from master_admin.js)
-        html += `
-            <div class="card" style="margin-top:40px; border-color:var(--cyan)">
-                <div class="card-header" style="background:rgba(0,229,255,0.05)">
-                    <div class="card-title">⚙️ KOMPONEN ADMINISTRASI GLOBAL</div>
-                </div>
-                <div class="card-body">
-                    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
-                        Pusat kendali template dan konfigurasi sistem untuk seluruh institusi. 
-                        Pilihan di bawah ini akan berdampak pada akses dokumen di semua sekolah.
-                    </p>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap">
-                        <button class="btn btn-ghost" onclick="showPage('konten', this)">📁 Kelola Template Dokumen</button>
-                        <button class="btn btn-ghost" onclick="seedKategoriDefault()">↩ Pulihkan Kategori Default</button>
-                        <button class="btn btn-ghost" onclick="confirmImportDefault()">📥 Import Dokumen Default</button>
-                    </div>
-                </div>
-            </div>
-        `;
 
         if (this.schools.length === 0 && orphanUsers.length === 0) {
             html += `<div class="empty-state"><div class="icon">📦</div><p>Database kosong. Mulai dengan menambah institusi.</p></div>`;

@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <title>Admin Panel - Cimega Smart Office</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{
       --cyan:#00e5ff;--blue:#0066ff;--dark:#020b18;--dark2:#041428;--dark3:#061a35;
@@ -246,6 +247,8 @@
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-section">Manajemen Terpadu</div>
     <div class="nav-item active" style="color:var(--gold)" onclick="showPage('master',this)"><span class="nav-icon">📦</span>Data Master (Sinkron)</div>
+    <div class="nav-item" onclick="showPage('cloud',this)"><span class="nav-icon">☁️</span>Cimega Cloud Drive</div>
+    <div class="nav-item" onclick="showPage('oversight',this)"><span class="nav-icon">🛡️</span>Pengawasan Dokumen</div>
     <div class="nav-section">Sistem</div>
     <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📝</span>Kelola Konten</div>
     <div class="nav-item" onclick="showPage('update',this)"><span class="nav-icon">🔄</span>Update Aplikasi</div>
@@ -317,11 +320,11 @@
       <div class="section-header">
         <div class="section-title">Kelola <span>Konten Dokumen</span></div>
         <div style="display:flex;gap:8px">
-                    <button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
+          <button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
           <button class="btn btn-primary" onclick="openModalKonten()">📄 + Konten</button>
         </div>
       </div>
-      <div class="konten-layout">
+      <div class="konten-layout" style="margin-bottom:30px">
         <div class="kat-list" id="kategoriList">
           <div class="kat-header">
             <span class="kat-header-label">Kategori</span>
@@ -337,6 +340,22 @@
           </div>
           <div class="content-list" id="kontenList">
             <div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Komponen Global (Migrated to Konten) -->
+      <div class="card" style="border-color:var(--cyan); background:rgba(0,229,255,0.02)">
+        <div class="card-header" style="background:rgba(0,229,255,0.05); padding:15px 20px; border-bottom:1px solid var(--border)">
+          <div class="card-title" style="font-family:'Orbitron',sans-serif; font-size:12px; color:#fff">⚙️ ADMINISTRASI GLOBAL & SISTEM</div>
+        </div>
+        <div class="card-body" style="padding:20px">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px; max-width:600px">
+            Pusat kendali konfigurasi konten untuk seluruh institusi. Pengaturan di bawah ini akan berdampak pada ketersediaan kategori dan dokumen di setiap sekolah.
+          </p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-ghost" onclick="seedKategoriDefault()">↩ Pulihkan Kategori Default</button>
+            <button class="btn btn-gold" onclick="confirmImportDefault()">📥 Import Semua Dokumen Default</button>
           </div>
         </div>
       </div>
@@ -420,6 +439,84 @@
         <div class="update-card">
           <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px">📬 RIWAYAT NOTIFIKASI</div>
           <div id="notifHistory"><div class="empty-state"><div class="icon">🔔</div><p>Belum ada notifikasi</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: PENGAWASAN DOKUMEN -->
+    <div class="page" id="page-oversight">
+      <div class="section-header">
+        <div class="section-title">🛡️ Pengawasan <span>Dokumen Global</span></div>
+        <div style="display:flex;gap:10px">
+          <select class="form-control" id="oversightColFilter" style="width:180px; font-size:11px" onchange="window.ModulOversight.loadData()">
+            <option value="all">Semua Koleksi</option>
+            <option value="perencanaan">Academic (Modul Ajar)</option>
+            <option value="arsip_makro">Arsip Institusi (RKT/RKJM)</option>
+            <option value="asesmen">Penilaian & Asesmen</option>
+            <option value="pelaksanaan">Jurnal Pelaksanaan</option>
+            <option value="keuangan">Keuangan (SPJ/BKU)</option>
+          </select>
+          <button class="btn btn-ghost" onclick="window.ModulOversight.loadData()">🔄 Refresh</button>
+        </div>
+      </div>
+      
+      <div class="update-card" style="margin-bottom:20px; border-color:var(--danger)">
+        <p style="font-size:11px; color:var(--muted); line-height:1.5">
+          <strong style="color:var(--danger)">MODE PENGAWASAN AKTIF:</strong> Anda melihat seluruh dokumen yang dihasilkan secara real-time dari seluruh sekolah. Gunakan fitur ini untuk audit keamanan atau pemulihan data.
+        </p>
+      </div>
+
+      <div class="card" style="background:var(--card); border:1px solid var(--border); border-radius:13px; padding:10px">
+        <div id="gridWrapperOversight"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: CLOUD DRIVE -->
+    <div class="page" id="page-cloud">
+      <div class="section-header">
+        <div class="section-title">☁️ Cimega <span>Cloud Drive</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="window.ModulCloudDrive.openUpload()">📤 Unggah File Baru</button>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-bottom:20px; border-color:var(--purple); background:rgba(170,85,255,0.02)">
+        <div class="card-body">
+            <p style="font-size:12px; color:var(--muted)">
+                Ruang penyimpanan cloud institusi bertenaga Supabase. File yang diunggah di sini terisolasi untuk sekolah Anda tetapi dapat diawasi oleh admin pusat.
+            </p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:15px">
+        <div id="gridWrapperCloud"></div>
+      </div>
+
+      <!-- Upload Drawer -->
+      <div id="uploadDrawer" style="display:none; position:fixed; right:0; top:0; bottom:0; width:350px; background:var(--dark2); border-left:1px solid var(--border); z-index:100; box-shadow:-10px 0 30px rgba(0,0,0,0.5); padding:20px; animation: slideRight 0.3s ease-out">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+            <h3 style="font-family:'Orbitron',sans-serif; font-size:14px; color:var(--cyan)">UPLOAD FILE</h3>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('uploadDrawer').style.display='none'">✕</button>
+        </div>
+        <div id="dropZone" style="border:2px dashed var(--border); border-radius:12px; height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; cursor:pointer; transition:all 0.2s" onclick="document.getElementById('fileInput').click()">
+            <div style="font-size:40px">📤</div>
+            <div style="font-size:11px; color:var(--muted)">Klik atau Drag file ke sini</div>
+            <input type="file" id="fileInput" style="display:none" onchange="window.ModulCloudDrive.handleFileSelect(event)">
+        </div>
+        <div id="uploadProgressContainer" style="margin-top:20px; display:none">
+            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:5px">
+                <span id="fileNameProgress" style="color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px">File.pdf</span>
+                <span id="pctProgress" style="color:var(--cyan)">0%</span>
+            </div>
+            <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden">
+                <div id="barProgress" style="width:0%; height:100%; background:var(--cyan); transition:width 0.1s"></div>
+            </div>
+        </div>
+        <div style="margin-top:30px; border-top:1px solid var(--border); padding-top:20px">
+            <p style="font-size:10px; color:var(--muted); line-height:1.5">
+                Maksimal ukuran file: <strong>5MB</strong>.<br>
+                Format yang diizinkan: PDF, DOCX, XLSX, JPG, PNG.
+            </p>
         </div>
       </div>
     </div>
@@ -675,11 +772,13 @@ function showPage(page,navEl){
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',oversight:'PENGAWASAN DOKUMEN GLOBAL',cloud:'CIMEGA CLOUD DRIVE',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
   if(page==='guru')       loadSchoolCards();
   if(page==='institusi')  if(window.AdminInstitusi) window.AdminInstitusi.init();
   if(page==='master')     if(window.AdminMaster) window.AdminMaster.init();
+  if(page==='oversight')  if(window.ModulOversight) window.ModulOversight.init();
+  if(page==='cloud')      if(window.ModulCloudDrive) window.ModulCloudDrive.init();
   if(page==='konten')     loadKategoriList();
   if(page==='log')        loadLog();
   if(page==='pengaturan') loadPengaturan();
@@ -1600,6 +1699,15 @@ async function initApp(){
       ['localVersion','settingVersion2','settingVersion4'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lv;});
     }catch(e){}
 
+    // Inisialisasi Supabase
+    try {
+      const sbCfg = await window.cimegaAPI.getSupabaseConfig();
+      if(sbCfg && sbCfg.url) {
+        window._supabase = supabase.createClient(sbCfg.url, sbCfg.key);
+        console.log("Supabase Client Ready.");
+      }
+    } catch(e) { console.error("Supabase init failed:", e); }
+
     loadDashboard();
     loadSekolahDropdown();
     loadKategoriList();
@@ -1616,5 +1724,7 @@ async function initApp(){
 initApp();
 </script>
 
+  <script src="../../modules/admin/oversight.js"></script>
+  <script src="../../modules/admin/cloud_drive.js"></script>
 </body>
 </html>

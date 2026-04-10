@@ -155,6 +155,11 @@ ipcMain.handle('get-firebase-config', () => ({
   measurementId:     envConfig.FIREBASE_MEASUREMENT_ID,
 }));
 
+ipcMain.handle('get-supabase-config', () => ({
+  url: envConfig.SUPABASE_URL,
+  key: envConfig.SUPABASE_KEY,
+}));
+
 ipcMain.handle('get-app-config', () => ({
   appName:    envConfig.APP_NAME    || 'Cimega Smart Office',
   appVersion: envConfig.APP_VERSION || app.getVersion() || '1.0.0',
