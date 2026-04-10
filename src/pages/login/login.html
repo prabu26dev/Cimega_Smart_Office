@@ -319,9 +319,16 @@
           setTimeout(()=>{
             if(data.role==='admin'){
               window.location.href='../admin/admin.html';
+            } else if (roles.includes('ops')) {
+              window.location.href='../ops/ops.html';
+            } else if (roles.includes('bendahara')) {
+              window.location.href='../bendahara/bendahara.html';
+            } else if (roles.includes('guru')) {
+              window.location.href='../guru/guru.html';
+            } else if (roles.includes('kepsek')) {
+              window.location.href='../kepsek/kepsek.html';
             } else {
-              // Semua role non-admin (guru, kepsek, bendahara, ops) → dashboard
-              window.location.href='../dashboard/dashboard.html';
+              window.location.href='../login/login.html'; // Fallback
             }
           },800);
 

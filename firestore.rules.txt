@@ -1,0 +1,102 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      // Assuming users collection stores the custom claims equivalents if custom auth is not used
+      // For tight ops/admin security
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isOpsOrAdmin() {
+      let role = getUserRole();
+      return role == 'ops' || role == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOpsOrAdmin() || request.auth.uid == userId;
+    }
+
+    // DAPODIK-Grade Module Rules
+    
+    // STUDENTS:
+    // Only OPS and Admin can write (create, update, delete)
+    // Teachers (guru) and Principals (kepsek) can read
+    match /students/{studentId} {
+      allow read: if isAuthenticated(); // Restrict further based on schoolId if necessary
+      allow write: if isAuthenticated() && isOpsOrAdmin();
+      
+      // Sub-collection parents
+      match /parents/{parentId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && isOpsOrAdmin();
+      }
+    }
+
+    // PTK (Pendidik dan Tenaga Kependidikan):
+    match /ptk/{ptkId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOpsOrAdmin();
+    }
+
+    // SARPRAS:
+    match /ruangan/{ruangId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOpsOrAdmin();
+    }
+    
+    match /inventaris/{itemId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOpsOrAdmin();
+    }
+    
+    // E-OFFICE:
+    match /surat_masuk/{suratId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOpsOrAdmin();
+    }
+    match /surat_keluar/{suratId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOpsOrAdmin();
+    }
+
+    // Existing App Collections... (Defaults)
+    match /academic_years/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOpsOrAdmin();
+    }
+    
+    // BENDAHARA (BOSP / FINANCE)
+    function isFinance() {
+      let role = getUserRole();
+      return role == 'bendahara' || role == 'kepsek' || role == 'admin';
+    }
+    match /rkas/{docId} {
+      allow read, write: if isAuthenticated() && isFinance();
+    }
+    match /bku/{docId} {
+      allow read, write: if isAuthenticated() && isFinance();
+    }
+    match /pajak_transaksi/{docId} {
+      allow read, write: if isAuthenticated() && isFinance();
+    }
+    
+    // KEPSEK / EXECUTIVE
+    match /supervisi/{docId} {
+      allow read, write: if isAuthenticated() && (getUserRole() == 'kepsek' || getUserRole() == 'admin' || getUserRole() == 'ops');
+    }
+    match /antrean_dokumen/{docId} {
+      allow read, write: if isAuthenticated() && (getUserRole() == 'kepsek' || getUserRole() == 'bendahara' || getUserRole() == 'ops' || getUserRole() == 'admin');
+    }
+
+    match /{document=**} {
+      allow read, write: if isAuthenticated(); // Should be locked down in production
+    }
+  }
+}

@@ -246,6 +246,7 @@
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-section">Manajemen</div>
     <div class="nav-item" onclick="showPage('guru',this)"><span class="nav-icon">👥</span>Kelola Pengguna</div>
+    <div class="nav-item" onclick="showPage('akademik',this)"><span class="nav-icon">🏫</span>Data Akademik</div>
     <div class="nav-section">Sistem</div>
     <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📝</span>Kelola Konten</div>
     <div class="nav-item" onclick="showPage('update',this)"><span class="nav-icon">🔄</span>Update Aplikasi</div>
@@ -362,6 +363,11 @@
       </div>
 
     </div><!-- /page-guru -->
+
+    <!-- PAGE: DATA AKADEMIK -->
+    <div class="page" id="page-akademik">
+      <div id="adminAkademikApp"></div>
+    </div>
 
     <!-- PAGE: KONTEN -->
     <div class="page" id="page-konten">
@@ -644,6 +650,8 @@
 
 <script src="../../shared/music.js"></script>
 <script src="../../shared/updater.js"></script>
+<!-- Modul Admin -->
+<script src="../../modules/admin/akademik.js"></script>
 <script>
 'use strict';
 // ══════════════════════════════════════════
@@ -709,9 +717,10 @@ function showPage(page,navEl){
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',akademik:'DATA AKADEMIK',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
   if(page==='guru')       loadSchoolCards();
+  if(page==='akademik')   if(window.AdminAkademik) window.AdminAkademik.init();
   if(page==='konten')     loadKategoriList();
   if(page==='log')        loadLog();
   if(page==='pengaturan') loadPengaturan();
