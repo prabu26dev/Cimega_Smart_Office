@@ -1,220 +1,234 @@
-window.ModulSarpras = {
-  container: null,
-  ruanganData: [],
-  inventarisData: [],
+/**
+ * =============================================================
+ * CIMEGA SMART OFFICE — Modul Operator Sekolah (OPS)
+ * FILE    : sarpras.js
+ * MODUL   : Manajemen Sarana dan Prasarana
+ * STANDAR : Dapodik Sarpras / Simrusak / Emis
+ * =============================================================
+ *
+ * Mencakup:
+ *  1. Data Tanah dan Bangunan
+ *  2. Inventaris Barang (BMN/BMD)
+ *  3. Pemetaan Kerusakan Ruangan
+ * =============================================================
+ */
 
-  init: async function() {
-    this.container = document.getElementById('moduleSarprasApp');
-    this.renderSkeleton();
-    await this.loadData();
-    this.render();
-    this.initGridRuang();
-    this.initGridInventaris();
+// ── KONSTANTA REFERENSI ──────────────────────────────────────
+
+export const JENIS_RUANGAN = [
+  'Ruang Kelas', 'Ruang Kepala Sekolah', 'Ruang Guru', 'Ruang TU',
+  'Perpustakaan', 'Laboratorium IPA', 'Laboratorium Komputer',
+  'Ruang UKS', 'Ruang BK', 'Mushola / Masjid', 'Aula / Gedung Serba Guna',
+  'Kantin', 'WC Siswa', 'WC Guru', 'Gudang', 'Pos Satpam', 'Lapangan',
+];
+
+export const KONDISI_RUANGAN = [
+  'Baik',
+  'Rusak Ringan (1–30%)',
+  'Rusak Sedang (31–60%)',
+  'Rusak Berat (61–100%)',
+];
+
+export const KATEGORI_BARANG = [
+  'Mebel (Kursi, Meja, Lemari)',
+  'Elektronik & IT (Komputer, Proyektor, Printer)',
+  'Alat Olahraga',
+  'Alat Musik & Kesenian',
+  'Alat Praktik / Lab IPA',
+  'Buku & Media Pembelajaran',
+  'Peralatan Kebersihan',
+  'Peralatan Dapur / Kantin',
+  'Kendaraan Dinas',
+  'Infrastruktur (AC, Kipas, Genset)',
+  'Perlengkapan K3 (APAR, P3K)',
+  'Lain-lain',
+];
+
+export const KONDISI_BARANG = {
+  BAIK:           { label: 'Baik',         kode: 'baik',          warna: '#22c55e' },
+  RUSAK_RINGAN:   { label: 'Rusak Ringan', kode: 'rusak_ringan',  warna: '#f59e0b' },
+  RUSAK_BERAT:    { label: 'Rusak Berat',  kode: 'rusak_berat',   warna: '#ef4444' },
+  HILANG:         { label: 'Hilang',       kode: 'hilang',        warna: '#6b7280' },
+  DIHAPUS:        { label: 'Dihapus / Dimusnahkan', kode: 'dihapus', warna: '#374151' },
+};
+
+export const SUMBER_BARANG = [
+  'APBN (BOS Nasional)',
+  'APBD (Dana Pemda)',
+  'BOS Reguler',
+  'BOS Kinerja',
+  'Sumbangan Komite / Orang Tua',
+  'Hibah / Donasi',
+  'Pembelian Sekolah Sendiri',
+];
+
+// ── 1. DATA TANAH DAN BANGUNAN ───────────────────────────────
+
+export const skemaTanahBangunan = {
+  id_sarpras:           '',   // String
+  id_sekolah:           '',   // String
+  tahun_data:           '',   // String  — cth: "2024"
+
+  // — DATA TANAH —
+  tanah: {
+    luas_total_m2:        0,  // Number  — Total luas seluruh tanah (m2)
+    status_kepemilikan:   '', // String  — "Milik Sendiri" | "Sewa" | "Pinjam Pakai" | "Wakaf"
+    no_sertifikat:        '', // String  — Nomor sertifikat / bukti kepemilikan
+    foto_sertifikat:      '', // String  — URL scan sertifikat tanah
+    catatan:              '', // String
   },
 
-  renderSkeleton: function() {
-    this.container.innerHTML = `<div style="text-align:center;padding:50px;"><div class="spinner" style="border-top-color:var(--cyan);width:30px;height:30px"></div></div>`;
-  },
+  // — DATA BANGUNAN UTAMA —
+  luas_bangunan_total_m2: 0,  // Number  — Total luas seluruh bangunan (m2)
+  jumlah_lantai:          0,  // Number  — Lantai bangunan tertinggi
+  tahun_dibangun:         '', // String
+  kondisi_bangunan_utama: '', // String  — Dari KONDISI_RUANGAN
 
-  loadData: async function() {
-    try {
-      const { collection, getDocs, query, where } = window._fb;
-      const qRuang = query(collection(db, 'ruangan'), where('sekolah', '==', userData.sekolah || ''));
-      const snapRuang = await getDocs(qRuang);
-      
-      this.ruanganData = [];
-      snapRuang.forEach(doc => {
-        this.ruanganData.push({ id: doc.id, ...doc.data() });
-      });
-
-      const qInv = query(collection(db, 'inventaris'), where('sekolah', '==', userData.sekolah || ''));
-      const snapInv = await getDocs(qInv);
-      
-      this.inventarisData = [];
-      snapInv.forEach(doc => {
-        this.inventarisData.push({ id: doc.id, ...doc.data() });
-      });
-    } catch(e) {
-      console.error("Gagal memuat Sarpras:", e);
+  // — DAFTAR RUANGAN —
+  daftar_ruangan: [
+    {
+      id_ruangan:         '', // String   — ID unik ruangan
+      nama_ruang:         '', // String   — cth: "Ruang Kelas 4A"
+      jenis_ruangan:      '', // String   — Dari JENIS_RUANGAN
+      peruntukan:         '', // String   — Deskripsi fungsi spesifik
+      lantai:             0,  // Number   — Di lantai berapa
+      luas_m2:            0,  // Number   — Luas ruangan (m2)
+      panjang_m:          0,  // Number
+      lebar_m:            0,  // Number
+      kondisi:            '', // String   — Dari KONDISI_RUANGAN
+      persen_kerusakan:   0,  // Number   — Persentase kerusakan (0–100)
+      fasilitas_dalam: [],    // Array<String>  — cth: ["Papan Tulis", "AC", "LCD"]
+      foto_ruangan:       [], // Array<String>  — URL foto ruangan
+      catatan:            '', // String
     }
+  ],
+
+  // — FASILITAS PENDUKUNG —
+  fasilitas_sanitasi: {
+    wc_siswa_laki:          0, // Number  — Jumlah unit WC siswa pria
+    wc_siswa_perempuan:     0, // Number  — Jumlah unit WC siswa wanita
+    wc_guru_laki:           0, // Number
+    wc_guru_perempuan:      0, // Number
+    kondisi_sanitasi:       '', // String  — "Baik" | "Rusak Ringan" | dst
+    air_tersedia:           false, // Boolean
   },
 
-  render: function() {
-    this.container.innerHTML = `
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">🏫 MANAJEMEN RUANGAN</div>
-            <button class="btn btn-success btn-sm" onclick="window.ModulSarpras.showRuanganForm()">+ Ruangan</button>
-          </div>
-          <div class="card-body">
-            <div id="gridWrapperRuang"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">🗄️ INVENTARIS BARANG (KIR)</div>
-            <button class="btn btn-primary btn-sm" onclick="window.ModulSarpras.showInventarisForm()">+ Barang</button>
-          </div>
-          <div class="card-body">
-            <div id="gridWrapperInventaris"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- FORM RUANGAN -->
-      <div id="ruangModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center;">
-        <div class="card" style="width:100%; max-width:400px; border-color:var(--cyan);">
-          <div class="card-header">
-            <div class="card-title">Tambah Ruangan</div>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ruangModal').style.display='none'">Tutup</button>
-          </div>
-          <div class="card-body">
-            <div class="form-group"><label class="form-label">Nama Ruangan</label><input class="form-control" id="rNama" placeholder="Contoh: Kelas 1A" /></div>
-            <div class="form-group"><label class="form-label">Kapasitas (Orang)</label><input type="number" class="form-control" id="rKapasitas"/></div>
-            <div class="form-group">
-              <label class="form-label">Kondisi Ruangan</label>
-              <select class="form-control" id="rKondisi">
-                <option value="Baik">Baik</option>
-                <option value="Rusak Ringan">Rusak Ringan</option>
-                <option value="Rusak Berat">Rusak Berat</option>
-              </select>
-            </div>
-            <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:10px;" onclick="window.ModulSarpras.saveRuangan()">Simpan Ruangan</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- FORM INVENTARIS -->
-      <div id="invModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999; align-items:center; justify-content:center;">
-        <div class="card" style="width:100%; max-width:500px; border-color:var(--cyan);">
-          <div class="card-header">
-            <div class="card-title">Tambah Inventaris Barang</div>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('invModal').style.display='none'">Tutup</button>
-          </div>
-          <div class="card-body">
-            <div class="grid-2">
-              <div class="form-group"><label class="form-label">Kode Barang</label><input class="form-control" id="iKode"/></div>
-              <div class="form-group"><label class="form-label">Nama Barang</label><input class="form-control" id="iNama"/></div>
-            </div>
-            <div class="grid-2">
-              <div class="form-group"><label class="form-label">Merk / Spesifikasi</label><input class="form-control" id="iMerk"/></div>
-              <div class="form-group"><label class="form-label">Tahun Pengadaan</label><input class="form-control" type="number" id="iTahun"/></div>
-            </div>
-            <div class="grid-3">
-              <div class="form-group"><label class="form-label">Jumlah</label><input class="form-control" type="number" id="iJumlah"/></div>
-              <div class="form-group">
-                <label class="form-label">Kondisi</label>
-                <select class="form-control" id="iKondisi"><option value="Baik">Baik</option><option value="Rusak Ringan">Rusak Ringan</option><option value="Rusak Berat">Rusak Berat</option></select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Sumber Dana</label>
-                <select class="form-control" id="iDana"><option value="BOSP">BOSP</option><option value="Yayasan">Yayasan</option><option value="Bantuan/Lainnya">Lainnya</option></select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Alokasi Ruangan</label>
-              <select class="form-control" id="iRuang">
-                ${this.ruanganData.map(r => '<option value="' + r.id + '">' + r.nama + '</option>').join('')}
-              </select>
-            </div>
-            <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:10px;" onclick="window.ModulSarpras.saveInventaris()">Simpan Inventaris</button>
-          </div>
-        </div>
-      </div>
-    `;
+  fasilitas_olahraga: {
+    lapangan_upacara:   false, // Boolean
+    lapangan_olahraga:  false, // Boolean
+    jenis_lapangan:     '',    // String  — cth: "Basket, Voli, Badminton"
+    kondisi_lapangan:   '',    // String
   },
 
-  initGridRuang: function() {
-    const data = this.ruanganData.map((r, idx) => [
-      r.nama || '-', r.kapasitas || '-', r.kondisi || '-',
-      gridjs.html("<button class='btn btn-ghost btn-sm' onclick='window.ModulSarpras.hapusRuang(\"" + r.id + "\")'>Hapus</button>")
-    ]);
+  tgl_pendataan:      '', // String  — Tanggal data diperbarui
+  diubah_pada:        null, // Date
+};
 
-    new gridjs.Grid({
-      columns: ['Ruangan', 'Kapasitas', 'Kondisi', 'Aksi'],
-      data: data,
-      search: true,
-      pagination: { limit: 5 },
-      language: { search: { placeholder: 'Cari Ruang...' } }
-    }).render(document.getElementById('gridWrapperRuang'));
+// ── 2. INVENTARIS BARANG (BMN/BMD) ───────────────────────────
+
+export const skemaInventarisBarang = {
+  id_inventaris:        '',   // String
+  id_sekolah:           '',   // String
+  tahun_data:           '',   // String
+
+  daftar_barang: [
+    {
+      id_barang:          '', // String   — ID unik barang (kode inventaris)
+      kode_barang:        '', // String   — Kode inventaris / kode akun BMN
+      nama_barang:        '', // String   — Nama lengkap barang
+      merk_tipe:          '', // String   — Merk dan tipe/seri
+      kategori:           '', // String   — Dari KATEGORI_BARANG
+      spesifikasi:        '', // String   — Spesifikasi teknis (opsional)
+
+      // — PENGADAAN —
+      sumber_barang:      '', // String   — Dari SUMBER_BARANG
+      tahun_pengadaan:    '', // String   — Tahun barang diperoleh
+      harga_perolehan:    0,  // Number   — Harga saat dibeli/diterima (Rp)
+      no_dokumen_perolehan: '', // String — Nomor BAST / faktur / SP2D
+
+      // — JUMLAH & LOKASI —
+      jumlah_total:       0,  // Number   — Total unit
+      jumlah_baik:        0,  // Number
+      jumlah_rusak_ringan: 0, // Number
+      jumlah_rusak_berat:  0, // Number
+      jumlah_hilang:      0,  // Number
+      satuan:             '', // String   — "Unit" | "Buah" | "Set" | "Rim" | dst
+      lokasi_ruang:       '', // String   — Ruangan tempat barang berada
+      no_urut_ruang:      '', // String   — Nomor urut inventaris di ruangan
+
+      // — KONDISI & TINDAK LANJUT —
+      kondisi:            '', // String   — Dari KONDISI_BARANG
+      perlu_perbaikan:    false, // Boolean
+      perlu_penghapusan:  false, // Boolean — Barang perlu dihapus dari daftar
+      catatan:            '', // String
+
+      // — FOTO —
+      foto_barang:        [], // Array<String>  — URL foto barang
+    }
+  ],
+
+  // — REKAP OTOMATIS —
+  rekap: {
+    total_jenis_barang:   0, // Number
+    total_unit:           0, // Number
+    total_unit_baik:      0, // Number
+    total_unit_rusak:     0, // Number
+    total_nilai_aset:     0, // Number  — Total nilai perolehan seluruh aset (Rp)
   },
 
-  initGridInventaris: function() {
-    const data = this.inventarisData.map((i, idx) => {
-      const ruang = this.ruanganData.find(r => r.id === i.ruangId);
-      return [
-        i.kode || '-',
-        i.nama || '-',
-        i.jumlah || '-',
-        i.kondisi || '-',
-        ruang ? ruang.nama : '-',
-        gridjs.html("<button class='btn btn-ghost btn-sm' onclick='window.ModulSarpras.hapusInventaris(\"" + i.id + "\")'>Hapus</button>")
-      ];
-    });
+  tgl_pendataan:      '', // String
+  diubah_pada:        null, // Date
+};
 
-    new gridjs.Grid({
-      columns: ['Kode', 'Barang', 'Jml', 'Kondisi', 'Ruang', 'Aksi'],
-      data: data,
-      search: true,
-      pagination: { limit: 10 },
-      sort: true,
-      language: { search: { placeholder: 'Cari Barang...' } }
-    }).render(document.getElementById('gridWrapperInventaris'));
+// ── 3. PEMETAAN KERUSAKAN RUANGAN ────────────────────────────
+
+export const skemaPemetaanKerusakan = {
+  id_kerusakan:         '',   // String
+  id_sekolah:           '',   // String
+  tahun_data:           '',   // String
+  semester:             '',   // String
+
+  daftar_kerusakan: [
+    {
+      id_kerusakan_item:    '', // String
+      nama_ruang:           '', // String  — Nama ruangan yang rusak
+      jenis_kerusakan:      '', // String  — "Atap" | "Dinding" | "Lantai" | "Pintu/Jendela" | "Plafon" | "Instalasi Listrik" | "Sanitasi"
+      deskripsi_kerusakan:  '', // String  — Penjelasan detail kerusakan
+      persen_rusak:         0,  // Number  — Persentase kerusakan (0–100)
+      tingkat_kerusakan:    '', // String  — Dihitung otomatis dari persen_rusak
+
+      // — DOKUMENTASI —
+      foto_bukti:           [], // Array<String>  — URL foto kerusakan (min 2 foto)
+      sketsa_denah:         '', // String  — URL sketsa denah lokasi kerusakan
+
+      // — ESTIMASI PERBAIKAN —
+      estimasi_biaya:       0,  // Number  — Estimasi biaya perbaikan (Rp)
+      sumber_dana_rencana:  '', // String  — "BOS" | "APBD" | "Dana Komite" | "Lainnya"
+      rencana_perbaikan:    '', // String  — Deskripsi rencana tindak lanjut
+      target_selesai:       '', // String  — Target tanggal selesai (YYYY-MM-DD)
+      prioritas:            '', // String  — "Mendesak" | "Segera" | "Bisa Ditunda"
+
+      // — STATUS PERBAIKAN —
+      status_perbaikan:     '', // String  — "Belum Diperbaiki" | "Sedang Diperbaiki" | "Sudah Selesai"
+      tgl_mulai_perbaikan:  '', // String  — "YYYY-MM-DD"
+      tgl_selesai_perbaikan: '', // String
+      biaya_realisasi:      0,  // Number  — Biaya aktual perbaikan (Rp)
+      foto_setelah_perbaikan: [], // Array<String>  — URL foto sesudah perbaiki
+      catatan:              '', // String
+    }
+  ],
+
+  // — REKAP —
+  rekap: {
+    total_ruang_rusak:        0, // Number
+    total_ruang_rusak_ringan: 0, // Number
+    total_ruang_rusak_berat:  0, // Number
+    total_estimasi_biaya:     0, // Number  — Total estimasi perbaikan semua kerusakan (Rp)
   },
 
-  showRuanganForm: function() { document.getElementById('ruangModal').style.display='flex'; },
-  showInventarisForm: function() { 
-    if(this.ruanganData.length === 0) { alert("Tambahkan Ruangan terlebih dahulu!"); return; }
-    document.getElementById('invModal').style.display='flex'; 
-  },
-
-  saveRuangan: async function() {
-    const data = {
-      nama: document.getElementById('rNama').value.trim(),
-      kapasitas: document.getElementById('rKapasitas').value,
-      kondisi: document.getElementById('rKondisi').value,
-      sekolah: userData.sekolah
-    };
-    if(!data.nama) return alert("Nama ruangan wajib diisi");
-
-    try {
-      const { collection, addDoc, serverTimestamp } = window._fb;
-      await addDoc(collection(db, 'ruangan'), { ...data, createdAt: serverTimestamp() });
-      document.getElementById('ruangModal').style.display = 'none';
-      this.init();
-    } catch(e) { alert(e.message); }
-  },
-
-  saveInventaris: async function() {
-    const data = {
-      kode: document.getElementById('iKode').value.trim(),
-      nama: document.getElementById('iNama').value.trim(),
-      merk: document.getElementById('iMerk').value.trim(),
-      tahun: document.getElementById('iTahun').value,
-      jumlah: document.getElementById('iJumlah').value,
-      kondisi: document.getElementById('iKondisi').value,
-      sumber_dana: document.getElementById('iDana').value,
-      ruangId: document.getElementById('iRuang').value,
-      sekolah: userData.sekolah
-    };
-    if(!data.nama) return alert("Nama barang wajib diisi");
-
-    try {
-      const { collection, addDoc, serverTimestamp } = window._fb;
-      await addDoc(collection(db, 'inventaris'), { ...data, createdAt: serverTimestamp() });
-      document.getElementById('invModal').style.display = 'none';
-      this.init();
-    } catch(e) { alert(e.message); }
-  },
-
-  hapusRuang: async function(id) {
-    if(!confirm("Menghapus ruangan tidak akan menghapus barang di dalamnya. Lanjutkan?")) return;
-    try { const { doc, deleteDoc } = window._fb; await deleteDoc(doc(db, 'ruangan', id)); this.init(); } catch(e) { alert(e.message); }
-  },
-  hapusInventaris: async function(id) {
-    if(!confirm("Yakin menghapus barang ini?")) return;
-    try { const { doc, deleteDoc } = window._fb; await deleteDoc(doc(db, 'inventaris', id)); this.init(); } catch(e) { alert(e.message); }
-  }
+  dilaporkan_ke_dinas: false, // Boolean  — Sudah dilaporkan ke Dinas Pendidikan?
+  no_laporan_dinas:    '',    // String   — Nomor laporan ke dinas
+  tgl_laporan:         '',    // String
+  dibuat_pada:         null,  // Date
+  diubah_pada:         null,  // Date
 };

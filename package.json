@@ -12,7 +12,10 @@
     "release": "electron-builder --win --x64 --publish always"
   },
   "dependencies": {
+    "@google/genai": "^1.49.0",
+    "cors": "^2.8.6",
     "electron-log": "^5.4.3",
+    "express": "^5.2.1",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.8.0",
     "react": "^19.2.4",

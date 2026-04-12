@@ -7,6 +7,20 @@ const path  = require('path');
 const fs    = require('fs');
 const https = require('https');
 const url   = require('url');
+const admin = require('firebase-admin');
+const { seedInitialTemplates } = require('./src/services/seeder_service');
+
+// ── Init Firebase Admin ──────────────────────
+try {
+  const serviceAccount = require('./serviceAccountKey.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: 'cimega-smart-office.appspot.com' // Sesuaikan dengan Bucket Anda
+  });
+} catch (err) {
+  console.error('Firebase Admin Init Error:', err.message);
+}
+const db = admin.firestore();
 
 // ── Baca .env ──────────────────────────────
 function loadEnv() {
@@ -29,21 +43,42 @@ function loadEnv() {
 }
 const envConfig = loadEnv();
 
-// ── Musik state ────────────────────────────
-const musicFiles = [
-  'Kang Prabu - Himne SDN Cimega.mp3',
-  'Kang Prabu - Mars SDN Cimega.mp3',
-  'Kang Prabu - Langkah Kecil Cimega.mp3',
-  'Kang Prabu - Duhai Pemilik Jiwa.mp3',
-  'Kang Prabu - Juara Di Atas Bumi Mulia.mp3',
-  'Kang Prabu - Restu Terakhir.mp3',
-  'Kang Prabu - Senam Kreasi Cimega.mp3',
-];
+// ── Jalankan AI Generator Service (Port 3001) ──────────────
+try {
+  require('./src/services/ai_generator_service.js');
+} catch (err) {
+  console.error('Gagal menjalankan AI Service:', err.message);
+}
+
+// ── Musik state (Sekarang Dinamis) ──────────
+let musicFiles = []; // Akan diisi dari Firestore
 const musicState = {
-  index:    Math.floor(Math.random() * musicFiles.length),
+  index:    0,
   muted:    false,
-  position: 0,   // posisi detik lagu, agar tidak mulai dari awal saat pindah halaman
+  position: 0,
 };
+
+// Sync Musik dari Firestore
+function syncMusicFromFirestore() {
+  db.collection('app_music').where('status', '==', 'active').onSnapshot(snap => {
+    const updatedFiles = [];
+    snap.forEach(doc => {
+      const data = doc.data();
+      updatedFiles.push({
+        id: doc.id,
+        title: data.title,
+        url: data.audioUrl
+      });
+    });
+    
+    musicFiles = updatedFiles;
+    console.log(`🎵 Sync Musik: ${musicFiles.length} lagu aktif.`);
+    
+    // Jika sedang main dan lagu hilang/berubah, broadcast ulang
+    broadcastMusicState();
+  });
+}
+syncMusicFromFirestore();
 
 // ── Update state ───────────────────────────
 let updateInfo = null; // simpan info update yang tersedia
@@ -86,10 +121,18 @@ function broadcastMusicState() {
 }
 
 function playMusicOnBgWindow() {
-  if (!bgMusicWindow) return;
-  const file = musicFiles[musicState.index];
-  const absPath = path.join(__dirname, 'assets_music', file);
-  const audioUrl = url.pathToFileURL(absPath).href;
+  if (!bgMusicWindow || musicFiles.length === 0) return;
+  
+  const music = musicFiles[musicState.index];
+  let audioUrl = '';
+  
+  if (music.url.startsWith('http')) {
+    audioUrl = music.url;
+  } else {
+    // Local assets fallback
+    const absPath = path.join(__dirname, music.url);
+    audioUrl = url.pathToFileURL(absPath).href;
+  }
 
   bgMusicWindow.webContents.executeJavaScript(`
     if (!window._bgm) {
@@ -98,8 +141,8 @@ function playMusicOnBgWindow() {
     }
     window._bgm.src = "${audioUrl}";
     window._bgm.volume = ${musicState.muted ? 0 : 0.8};
-    window._bgm.play().catch(e=>console.error('BGM Error 123:', e));
-  `).catch(e => console.error('IPC Exec JS Error:', e));
+    window._bgm.play().catch(e=>console.error('BGM Error:', e));
+  `).catch(e => console.error('BGM Play Error:', e));
   broadcastMusicState();
 }
 
@@ -424,6 +467,10 @@ ipcMain.handle('gemini-ask', async (e, { messages, system, maxTokens }) => {
 });
 
 // ══════════════════════════════════════════
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  // Jalankan Seeder
+  await seedInitialTemplates(db);
+  createWindow();
+});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (!mainWindow) createWindow(); });

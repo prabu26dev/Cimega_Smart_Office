@@ -1,268 +1,356 @@
-window.ModulPerencanaan = {
-  container: null,
-  lastGeneratedData: null,
-  userData: null,
+/**
+ * =============================================================
+ * CIMEGA SMART OFFICE — Modul Guru
+ * FILE    : perencanaan.js
+ * MODUL   : Perencanaan & Pedoman Guru
+ * STANDAR : Kurikulum Merdeka (SD)
+ * =============================================================
+ *
+ * Mencakup:
+ *  1. Kalender Pendidikan
+ *  2. Capaian Pembelajaran (CP)
+ *  3. Alur Tujuan Pembelajaran (ATP)
+ *  4. Program Tahunan (Prota)
+ *  5. Program Semester (Promes)
+ *  6. Modul Ajar (RPP+)
+ *  7. KKTP (Kriteria Ketercapaian Tujuan Pembelajaran)
+ * =============================================================
+ */
 
-  init: function() {
-    this.container = document.getElementById('modulPerencanaanApp');
-    this.userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
-    this.render();
-  },
+// ── KONSTANTA REFERENSI ──────────────────────────────────────
 
-  render: function() {
-    this.container.innerHTML = `
-      <div class="card" style="margin-bottom: 16px;">
-        <div class="card-header">
-          <div class="card-title">📝 GENERATOR ADMINISTRASI AI</div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-ghost btn-sm" onclick="window.ModulPerencanaan.switchView('ma')">Modul Ajar</button>
-            <button class="btn btn-ghost btn-sm" onclick="window.ModulPerencanaan.switchView('prota')">Prota/Prosem</button>
-            <button class="btn btn-ghost btn-sm" onclick="window.ModulPerencanaan.switchView('p5')">Projek P5</button>
-          </div>
-        </div>
-        <div class="card-body">
-          <!-- MODUL AJAR VIEW -->
-          <div id="view-ma" class="plan-subview">
-            <div class="grid-2">
-              <div class="form-group"><label class="form-label">Mata Pelajaran</label><input class="form-control" id="mpMapel" placeholder="Matematika" /></div>
-              <div class="form-group"><label class="form-label">Fase & Kelas</label><select class="form-control" id="mpFase">
-                <option value="A (Kelas 1-2)">Fase A (Kelas 1-2)</option><option value="B (Kelas 3-4)">Fase B (Kelas 3-4)</option><option value="C (Kelas 5-6)">Fase C (Kelas 5-6)</option>
-              </select></div>
-            </div>
-            <div class="form-group"><label class="form-label">Capaian Pembelajaran (CP) / Elemen</label><input class="form-control" id="mpCP" placeholder="Contoh: Bilangan" /></div>
-            <div class="form-group"><label class="form-label">Tujuan Pembelajaran (TP)</label><textarea class="form-control" id="mpTP" placeholder="Peserta didik dapat membandingkan dua bilangan pecahan..."></textarea></div>
-            <button class="btn btn-primary" id="btnGenModul" onclick="window.ModulPerencanaan.generateModulAjar()">✨ Generate Isi Modul Ajar Lengkap (AI)</button>
-          </div>
+export const FASE_SD = {
+  A: { label: 'Fase A', kelas: ['Kelas 1', 'Kelas 2'] },
+  B: { label: 'Fase B', kelas: ['Kelas 3', 'Kelas 4'] },
+  C: { label: 'Fase C', kelas: ['Kelas 5', 'Kelas 6'] },
+};
 
-          <!-- PROTA PROSEM VIEW -->
-          <div id="view-prota" class="plan-subview" style="display:none;">
-            <div class="grid-2">
-              <div class="form-group"><label class="form-label">Tahun Pelajaran</label><input class="form-control" id="ptTahun" value="2024/2025" /></div>
-              <div class="form-group"><label class="form-label">Mata Pelajaran</label><input class="form-control" id="ptMapel" placeholder="Bahasa Indonesia" /></div>
-            </div>
-            <div class="form-group"><label class="form-label">Daftar Lingkup Materi (Opsional)</label><textarea class="form-control" id="ptMateri" placeholder="Biarkan kosong jika ingin AI yang menentukan materi standar..."></textarea></div>
-            <button class="btn btn-primary" id="btnGenProta" onclick="window.ModulPerencanaan.generateProta()">📅 Generate Rencana Semester (AI)</button>
-          </div>
+export const PROFIL_PANCASILA = [
+  'Beriman, Bertakwa kepada Tuhan YME, dan Berakhlak Mulia',
+  'Berkebhinekaan Global',
+  'Bergotong Royong',
+  'Mandiri',
+  'Bernalar Kritis',
+  'Kreatif',
+];
 
-          <!-- P5 VIEW -->
-          <div id="view-p5" class="plan-subview" style="display:none;">
-            <div class="form-group">
-              <label class="form-label">Tema Proyek</label>
-              <select class="form-control" id="p5Tema">
-                <option value="Gaya Hidup Berkelanjutan">Gaya Hidup Berkelanjutan</option>
-                <option value="Kearifan Lokal">Kearifan Lokal</option>
-                <option value="Bhinneka Tunggal Ika">Bhinneka Tunggal Ika</option>
-                <option value="Bangunlah Jiwa dan Raganya">Bangunlah Jiwa dan Raganya</option>
-                <option value="Kewirausahaan">Kewirausahaan</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label">Judul Proyek (Identitas)</label><input class="form-control" id="p5Judul" placeholder="Contoh: Apotek Hidup Cilik" /></div>
-            <button class="btn btn-primary" id="btnGenP5" onclick="window.ModulPerencanaan.generateP5()">🌱 Generate Modul Projek Lengkap (AI)</button>
-          </div>
-        </div>
-      </div>
+export const MATA_PELAJARAN_SD = [
+  'Pendidikan Agama dan Budi Pekerti',
+  'Pendidikan Pancasila',
+  'Bahasa Indonesia',
+  'Matematika',
+  'Ilmu Pengetahuan Alam dan Sosial (IPAS)',
+  'Pendidikan Jasmani Olahraga dan Kesehatan (PJOK)',
+  'Seni Budaya',
+  'Bahasa Inggris',
+  'Muatan Lokal',
+];
 
-      <div id="hasilAnalisisAI" style="display:none;"></div>
-    `;
-  },
+export const MODEL_PEMBELAJARAN = [
+  'Problem Based Learning (PBL)',
+  'Project Based Learning (PjBL)',
+  'Discovery Learning',
+  'Inquiry Learning',
+  'Direct Instruction',
+  'Cooperative Learning',
+  'Think Pair Share (TPS)',
+];
 
-  generateModulAjar: async function() {
-    const mapel = document.getElementById('mpMapel').value.trim();
-    const fase = document.getElementById('mpFase').value;
-    const tp = document.getElementById('mpTP').value.trim();
+// ── 1. KALENDER PENDIDIKAN ───────────────────────────────────
 
-    if (!mapel || !tp) {
-      showToast('warn', 'Perhatian', 'Mapel dan Tujuan Pembelajaran (TP) harus diisi!');
-      return;
+export const skemaKalenderPendidikan = {
+  id_kalender:        '',     // String  — ID unik dokumen
+  id_sekolah:         '',     // String  — ID sekolah (multi-tenant)
+  tahun_pelajaran:    '',     // String  — cth: "2024/2025"
+  semester:           '',     // String  — "Ganjil" | "Genap"
+
+  daftar_bulan: [
+    {
+      bulan:          '',     // String  — "Juli", "Agustus", ...
+      urutan:         0,      // Number  — Urutan bulan (1–12)
+
+      daftar_kejadian: [
+        {
+          tanggal:        '',   // String  — Format "YYYY-MM-DD"
+          nama_kegiatan:  '',   // String  — cth: "Hari Pertama Sekolah"
+          status_libur:   false, // Boolean — true = hari libur / tidak masuk
+          keterangan:     '',   // String  — Keterangan tambahan
+        }
+      ],
+
+      jumlah_hari_efektif:  0, // Number  — Hari masuk aktif di bulan ini
+      jumlah_minggu_efektif: 0, // Number  — Minggu aktif di bulan ini
     }
+  ],
 
-    const btn = document.getElementById('btnGenModul');
-    btn.disabled = true;
-    btn.innerHTML = '⏳ AI Sedang Merancang Modul...';
+  total_hari_efektif_semester: 0, // Number
+  total_minggu_efektif:        0, // Number
+  disahkan_kepsek:    false,      // Boolean
+  dibuat_pada:        null,       // Date (Timestamp)
+  diubah_pada:        null,       // Date (Timestamp)
+};
 
-    try {
-      const systemPrompt = `Anda adalah "Asisten Kurikulum Merdeka SDN Cimega" yang ahli dalam merancang Modul Ajar untuk Sekolah Dasar.
-TUGAS ANDA:
-Buatkan "Pertanyaan Pemantik" dan "Langkah Kegiatan" (Pendahuluan, Inti, Penutup) berdasarkan Mata Pelajaran, Fase, dan Tujuan Pembelajaran berikut.
-Anda HARUS menghasilkan output dalam format JSON murni yang sesuai dengan struktur berikut:
-{
-  "pertanyaan_pemantik": ["pertanyaan 1", "pertanyaan 2"],
-  "langkah_kegiatan": {
-    "pendahuluan": ["langkah 1", "langkah 2"],
-    "inti": ["langkah 1", "langkah 2", "langkah 3"],
-    "penutup": ["langkah 1", "langkah 2"]
-  }
-}
-DILARANG memberikan teks pengantar atau markdown lain selain JSON murni tersebut.`;
+// ── 2. CAPAIAN PEMBELAJARAN (CP) ─────────────────────────────
 
-      const userPrompt = `Mata Pelajaran: ${mapel}\nFase: ${fase}\nTujuan Pembelajaran (TP): ${tp}`;
+export const skemaCP = {
+  id_cp:              '',     // String
+  id_sekolah:         '',     // String
+  id_guru:            '',     // String
+  mata_pelajaran:     '',     // String
+  fase:               '',     // String  — "A" | "B" | "C"
+  kelas:              [],     // Array<String>  — Bisa lebih dari 1 kelas per fase
 
-      const res = await window.CimegaAI.ask({
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-        maxTokens: 1500
-      });
+  elemen_cp: [
+    {
+      nama_elemen:        '', // String  — cth: "Bilangan", "Geometri", "Membaca"
+      deskripsi_cp:       '', // String  — Narasi CP resmi dari pemerintah
+      catatan_penjabaran: '', // String  — Penafsiran guru terhadap elemen ini
+    }
+  ],
 
-      if (res.error) throw new Error(res.error);
+  sumber_dokumen:     '',     // String  — Nomor SK / referensi resmi
+  tahun_pelajaran:    '',     // String
+  dibuat_pada:        null,   // Date
+  diubah_pada:        null,   // Date
+};
 
-      let parsedData;
-      try {
-        const text = res.text.replace(/```json/g, '').replace(/```/g, '').trim();
-        parsedData = JSON.parse(text);
-      } catch(e) {
-        throw new Error("Keluaran AI tidak berformat JSON yang valid.");
+// ── 3. ALUR TUJUAN PEMBELAJARAN (ATP) ────────────────────────
+
+export const skemaATP = {
+  id_atp:             '',     // String
+  id_sekolah:         '',     // String
+  id_guru:            '',     // String
+  mata_pelajaran:     '',     // String
+  fase:               '',     // String  — "A" | "B" | "C"
+  kelas:              '',     // String  — "Kelas 3"
+  semester:           '',     // String  — "Ganjil" | "Genap"
+  tahun_pelajaran:    '',     // String
+
+  daftar_tp: [
+    {
+      urutan:             0,  // Number  — Urutan pengajaran dalam semester
+      id_tp:              '', // String  — cth: "TP-MTK-3A-01"
+      tujuan_pembelajaran: '', // String — "Murid dapat ..."
+      materi_inti:        '', // String  — Topik / materi pokok
+      profil_pancasila:   [], // Array<String>  — Dimensi PPP yang dikembangkan
+      alokasi_waktu:      0,  // Number  — Jumlah Jam Pelajaran (JP)
+      jenis_penilaian:    '', // String  — "Formatif" | "Sumatif" | "Keduanya"
+      keterangan:         '', // String  — Catatan tambahan
+    }
+  ],
+
+  total_jp:           0,      // Number  — Total JP semester ini
+  dibuat_pada:        null,   // Date
+  diubah_pada:        null,   // Date
+};
+
+// ── 4. PROGRAM TAHUNAN (PROTA) ───────────────────────────────
+
+export const skemaProta = {
+  id_prota:           '',     // String
+  id_sekolah:         '',     // String
+  id_guru:            '',     // String
+  mata_pelajaran:     '',     // String
+  fase:               '',     // String
+  kelas:              '',     // String
+  tahun_pelajaran:    '',     // String
+
+  daftar_tp_tahunan: [
+    {
+      semester:           '', // String  — "Ganjil" | "Genap"
+      no_urut:            0,  // Number
+      id_tp:              '', // String
+      tujuan_pembelajaran: '', // String
+      materi_inti:        '', // String
+      alokasi_jp:         0,  // Number
+    }
+  ],
+
+  total_jp_ganjil:    0,      // Number
+  total_jp_genap:     0,      // Number
+  total_jp:           0,      // Number  — Total JP setahun
+  diketahui_kepsek:   '',     // String  — Nama kepala sekolah
+  dibuat_pada:        null,   // Date
+  diubah_pada:        null,   // Date
+};
+
+// ── 5. PROGRAM SEMESTER (PROMES) ─────────────────────────────
+
+export const skemaPromes = {
+  id_promes:          '',     // String
+  id_sekolah:         '',     // String
+  id_guru:            '',     // String
+  mata_pelajaran:     '',     // String
+  kelas:              '',     // String
+  semester:           '',     // String  — "Ganjil" | "Genap"
+  tahun_pelajaran:    '',     // String
+  jumlah_minggu_efektif: 0,   // Number
+
+  detail_mingguan: [
+    {
+      bulan:          '',     // String  — "Juli", "Agustus", ...
+      minggu_ke:      0,      // Number  — Minggu ke berapa di bulan ini
+      id_tp:          '',     // String  — Referensi ke ATP
+      tujuan_pembelajaran: '', // String
+      materi:         '',     // String
+      jp:             0,      // Number  — JP di minggu ini
+      keterangan:     '',     // String  — cth: "Libur Nasional", "Ujian"
+    }
+  ],
+
+  total_jp:           0,      // Number
+  diketahui_kepsek:   '',     // String
+  dibuat_pada:        null,   // Date
+  diubah_pada:        null,   // Date
+};
+
+// ── 6. MODUL AJAR (RPP+) ────────────────────────────────────
+
+export const skemaModulAjar = {
+  id_modul_ajar:      '',     // String
+  id_sekolah:         '',     // String
+  id_guru:            '',     // String
+  status:             'draft', // String — "draft" | "selesai" | "disetujui"
+
+  // — IDENTITAS —
+  identitas: {
+    nama_guru:          '', // String
+    nip:                '', // String
+    nama_sekolah:       '', // String
+    mata_pelajaran:     '', // String
+    fase:               '', // String
+    kelas:              '', // String  — cth: "Kelas 4"
+    semester:           '', // String
+    tahun_pelajaran:    '', // String
+    alokasi_waktu:      '', // String  — cth: "2 x 35 menit"
+    jumlah_pertemuan:   0,  // Number
+    model_pembelajaran: '', // String
+    moda:               '', // String  — "Tatap Muka" | "PJJ Daring" | "Hybrid"
+  },
+
+  // — KOMPONEN UTAMA —
+  kompetensi_awal:    '', // String  — Kemampuan prasyarat murid
+  profil_pancasila:   [], // Array<String>
+  target_murid:       '', // String  — "Reguler" | "Berkebutuhan Khusus" | "Cerdas Berbakat"
+
+  // — TUJUAN —
+  tujuan: {
+    capaian_pembelajaran:   '', // String  — Elemen CP yang dituju
+    id_tp:                  '', // String  — Referensi ke ATP
+    tujuan_pembelajaran:    '', // String  — "Murid dapat ..."
+    pemahaman_bermakna:     '', // String  — Manfaat nyata bagi murid
+    pertanyaan_pemantik:    [], // Array<String>  — Pertanyaan pembuka (≥2)
+  },
+
+  // — MEDIA & ALAT BAHAN —
+  media_ajar: {
+    alat_dan_bahan: [
+      {
+        nama:       '', // String  — cth: "Kartu Pecahan"
+        jumlah:     '', // String  — cth: "1 set/kelompok"
+        keterangan: '', // String
       }
+    ],
+    sumber_belajar: [], // Array<String>  — Buku, video, website
+    tautan_media:   [], // Array<String>  — Link video, gambar interaktif
+  },
 
-      this.lastGeneratedData = { ...parsedData, mapel, fase, tp };
-      this.renderHasilAI(parsedData);
-      showToast('success', 'Selesai', 'Modul Ajar berhasil digenerate AI');
+  // — LANGKAH KEGIATAN —
+  langkah_kegiatan: {
+    pendahuluan: [], // Array<String>  — Aktivitas pembuka
+    inti:        [], // Array<String>  — Aktivitas utama
+    penutup:     [], // Array<String>  — Aktivitas penutup & refleksi
+    durasi: {
+      pendahuluan_menit: 0, // Number
+      inti_menit:        0, // Number
+      penutup_menit:     0, // Number
+    },
+  },
 
-    } catch(err) {
-      showToast('error', 'Gagal', err.message);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '✨ Generate Isi Modul Ajar Lengkap (AI)';
+  // — DIFERENSIASI —
+  diferensiasi: {
+    strategi_konten:  '', // String  — Penyesuaian isi materi
+    strategi_proses:  '', // String  — Penyesuaian cara belajar
+    strategi_produk:  '', // String  — Penyesuaian hasil karya
+    belum_mencapai:   '', // String  — Langkah untuk murid yang belum mencapai TP
+    sudah_mencapai:   '', // String  — Langkah untuk murid yang sudah mencapai TP
+    melampaui:        '', // String  — Tantangan untuk murid yang melampaui TP
+  },
+
+  // — PENILAIAN —
+  rencana_penilaian: {
+    diagnostik:   '', // String  — Teknik penilaian awal
+    formatif:     '', // String  — Teknik selama proses belajar
+    sumatif:      '', // String  — Teknik penilaian akhir unit
+  },
+
+  // — REFLEKSI —
+  refleksi_guru:   [], // Array<String>  — Pertanyaan refleksi untuk guru
+  refleksi_murid:  [], // Array<String>  — Pertanyaan refleksi untuk murid
+
+  // — LAMPIRAN LKPD —
+  lampiran_lkpd: [
+    {
+      judul_lkpd:       '', // String
+      petunjuk_umum:    '', // String
+      soal_atau_tugas:  [], // Array<String>
     }
-  },
+  ],
 
-  switchView: function(view) {
-    document.querySelectorAll('.plan-subview').forEach(v => v.style.display = 'none');
-    document.getElementById('view-' + view).style.display = 'block';
-    document.getElementById('hasilAnalisisAI').style.display = 'none';
-  },
+  // — LAMPIRAN BACAAN —
+  bahan_bacaan_murid: '',  // String  — Teks/materi bacaan pendek
+  bahan_bacaan_guru:  '',  // String  — Latar belakang materi untuk guru
 
-  generateProta: async function() {
-    const mapel = document.getElementById('ptMapel').value.trim();
-    const tahun = document.getElementById('ptTahun').value;
-    const materi = document.getElementById('ptMateri').value.trim();
-
-    if (!mapel) return showToast('warn', 'Ops', 'Mata Pelajaran wajib diisi!');
-
-    const btn = document.getElementById('btnGenProta');
-    btn.disabled = true;
-    btn.innerHTML = '⏳ AI Menghitung Alokasi Waktu...';
-
-    try {
-      const res = await window.CimegaAI.ask({
-        system: `Anda adalah Ahli Penjadwalan Kurikulum Merdeka. Buatkan Program Semester (Prosem) dalam format tabel HTML untuk mata pelajaran ${mapel} tahun ${tahun}. Tentukan lingkup materi jika input kosong, alokasi JP (Jam Pelajaran) yang masuk akal, dan bulan pelaksanaan (Juli-Desember untuk Ganjil, Januari-Juni untuk Genap).`,
-        messages: [{ role: 'user', content: `Buatkan Prosem lengkap untuk: ${mapel}. Materi Referensi: ${materi || 'Sesuai kurikulum standar'}` }]
-      });
-
-      if (res.error) throw new Error(res.error);
-      this.renderHasilGeneric(res.text, 'Rencana Semester (Prosem)');
-    } catch(e) { showToast('error', 'Gagal', e.message); }
-    finally { btn.disabled = false; btn.innerHTML = '📅 Generate Rencana Semester (AI)'; }
-  },
-
-  generateP5: async function() {
-    const tema = document.getElementById('p5Tema').value;
-    const judul = document.getElementById('p5Judul').value.trim() || "Proyek Tanpa Judul";
-
-    const btn = document.getElementById('btnGenP5');
-    btn.disabled = true;
-    btn.innerHTML = '⏳ AI Merancang Modul Projek P5...';
-
-    try {
-      const res = await window.CimegaAI.ask({
-        system: `Anda adalah Fasilitator Projek Penguatan Profil Pelajar Pancasila (P5). Buatkan draf modul projek lengkap mencakup: 1. Dimensi, Elemen, Sub Elemen. 2. Deskripsi Projek. 3. Alur Kegiatan (Tahap Pengenalan, Kontekstualisasi, Aksi, Refleksi, Tindak Lanjut).`,
-        messages: [{ role: 'user', content: `Buat modul P5 bertema: ${tema} dengan judul: ${judul}` }]
-      });
-
-      if (res.error) throw new Error(res.error);
-      this.renderHasilGeneric(res.text, 'Modul Projek P5');
-    } catch(e) { showToast('error', 'Gagal', e.message); }
-    finally { btn.disabled = false; btn.innerHTML = '🌱 Generate Modul Projek Lengkap (AI)'; }
-  },
-
-  renderHasilGeneric: function(textContent, title) {
-    const hasilDiv = document.getElementById('hasilAnalisisAI');
-    hasilDiv.innerHTML = `
-      <div class="card" style="margin-bottom: 20px; border-color: var(--cyan);">
-        <div class="card-header">
-          <div class="card-title">✅ ${title} (AI GENERATED)</div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-ghost btn-sm" onclick="CimegaSharing.share('${title}', 'Perencanaan', document.getElementById('genPlanContent').innerHTML)">🔗 Bagikan</button>
-            <button class="btn btn-primary btn-sm" onclick="CimegaPrinter.showPrintDialog(document.getElementById('genPlanContent').outerHTML, 'Rencana_Cimega')">🖨️ Ekspor</button>
-            <button class="btn btn-success btn-sm" onclick="window.ModulPerencanaan.saveGeneric('${title}')">💾 Simpan</button>
-          </div>
-        </div>
-        <div class="card-body" id="genPlanContent" style="font-size:13px; line-height:1.6; white-space:pre-wrap; background:#fff; color:#000; padding:30px;">${textContent}</div>
-      </div>
-    `;
-    hasilDiv.style.display = 'block';
-    hasilDiv.scrollIntoView({ behavior: 'smooth' });
-  },
-
-  renderHasilAI: function(data) {
-    const hasilDiv = document.getElementById('hasilAnalisisAI');
-    
-    let html = `
-      <div class="card" style="margin-bottom: 16px; border-color: var(--success);">
-        <div class="card-header">
-          <div class="card-title" style="color: var(--success);">✅ HASIL GENERATE AI</div>
-          <div style="display:flex; gap:8px;">
-             <button class="btn btn-ghost btn-sm" onclick="CimegaSharing.share('Modul Ajar', 'Modul Ajar', document.getElementById('modulAjarContent').innerHTML)">🔗 Bagikan</button>
-             <button class="btn btn-primary btn-sm" onclick="CimegaPrinter.showPrintDialog(document.getElementById('modulAjarContent').outerHTML, 'Modul_Ajar_Cimega')">🖨️ Ekspor</button>
-             <button class="btn btn-success btn-sm" onclick="window.ModulPerencanaan.saveModul()">💾 Ajukan</button>
-          </div>
-        </div>
-        <div class="card-body" id="modulAjarContent" style="background:#fff; color:#000; padding:30px;">
-          <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:8px">❓ Pertanyaan Pemantik</h3>
-          <ul style="margin-left: 20px; font-size:12px; color:var(--text); margin-bottom: 14px;">
-            ${(data.pertanyaan_pemantik || []).map(p => `<li style="margin-bottom:4px;">${p}</li>`).join('')}
-          </ul>
-          <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;color:var(--cyan);margin-bottom:8px">🏃‍♂️ Langkah Kegiatan</h3>
-          <div style="font-size:12px; color:var(--text);">
-             <strong>Pendahuluan:</strong>
-             <ul style="margin-left:20px; margin-bottom:10px;">${(data.langkah_kegiatan?.pendahuluan || []).map(p => `<li>${p}</li>`).join('')}</ul>
-             <strong>Inti:</strong>
-             <ul style="margin-left:20px; margin-bottom:10px;">${(data.langkah_kegiatan?.inti || []).map(p => `<li>${p}</li>`).join('')}</ul>
-             <strong>Penutup:</strong>
-             <ul style="margin-left:20px;">${(data.langkah_kegiatan?.penutup || []).map(p => `<li>${p}</li>`).join('')}</ul>
-          </div>
-        </div>
-      </div>
-    `;
-
-    hasilDiv.innerHTML = html;
-    hasilDiv.style.display = 'block';
-    hasilDiv.scrollIntoView({ behavior: 'smooth' });
-  },
-
-  saveGeneric: async function(tipe) {
-    const content = document.getElementById('hasilAnalisisAI').innerText;
-    try {
-      const { collection, addDoc, serverTimestamp } = window._fb;
-      await addDoc(collection(db, "administrasi_guru"), {
-        tipe: tipe,
-        content: content,
-        school_id: this.userData.school_id || 'Global',
-        teacher_id: this.userData.id,
-        teacher_name: this.userData.nama,
-        createdAt: serverTimestamp()
-      });
-      showToast('success', 'Tersimpan', `${tipe} berhasil disimpan ke Cloud.`);
-    } catch(e) { showToast('error', 'Gagal', e.message); }
-  },
-
-  saveModul: async function() {
-    if (!this.lastGeneratedData) return;
-    
-    try {
-      const { collection, addDoc, serverTimestamp } = window._fb;
-      await addDoc(collection(db, "perencanaan"), {
-        ...this.lastGeneratedData,
-        school_id: this.userData.school_id || 'NPSN_MIGRATE',
-        teacher_id: this.userData.id,
-        teacher_name: this.userData.nama,
-        status: 'waiting_approval',
-        createdAt: serverTimestamp()
-      });
-      
-      showToast('success', 'Berhasil', 'Modul Ajar disimpan dan diajukan pengesahan.');
-      document.getElementById('hasilAnalisisAI').style.display = 'none';
-    } catch (e) {
-      showToast('error', 'Gagal', e.message);
+  daftar_istilah: [
+    {
+      istilah:    '', // String
+      penjelasan: '', // String
     }
-  }
+  ],
+
+  daftar_buku_referensi: [
+    {
+      judul:      '', // String
+      pengarang:  '', // String
+      penerbit:   '', // String
+      tahun:      '', // String
+    }
+  ],
+
+  dibuat_pada:  null, // Date
+  diubah_pada:  null, // Date
+};
+
+// ── 7. KKTP (KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN) ──────
+
+export const skemaKKTP = {
+  id_kktp:            '',     // String
+  id_sekolah:         '',     // String
+  id_guru:            '',     // String
+  mata_pelajaran:     '',     // String
+  kelas:              '',     // String
+  semester:           '',     // String
+  tahun_pelajaran:    '',     // String
+
+  daftar_kktp: [
+    {
+      id_tp:              '', // String  — Referensi ke ATP
+      tujuan_pembelajaran: '', // String
+
+      indikator_tuntas: [], // Array<String>  — Daftar indikator pencapaian TP
+
+      rentang_nilai: {
+        perlu_bimbingan:  { min: 0,  max: 60,  label: 'Perlu Bimbingan',  kode: 'D' }, // Object
+        cukup:            { min: 61, max: 70,  label: 'Cukup',            kode: 'C' }, // Object
+        baik:             { min: 71, max: 85,  label: 'Baik',             kode: 'B' }, // Object
+        sangat_baik:      { min: 86, max: 100, label: 'Sangat Baik',      kode: 'A' }, // Object
+      },
+
+      teknik_penilaian: '', // String  — "Tes Tertulis" | "Observasi" | "Portofolio" | dll
+      keterangan:       '', // String
+    }
+  ],
+
+  dibuat_pada:  null, // Date
+  diubah_pada:  null, // Date
 };

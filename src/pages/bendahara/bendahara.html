@@ -1,273 +1,474 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8"/>
-  <title>Bendahara BOSP - Cimega Smart Office</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bendahara Workstation - Cimega Smart Office</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- UI LIBRARY: Grid.js -->
-  <link href="https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
-
   <style>
-    :root{
-      --cyan:#00e5ff; --gold:#ffd000; --dark:#020b18; --dark2:#041428; 
-      --card:rgba(4,20,45,0.95); --border:rgba(255,208,0,0.25); 
-      --text:#e0f4ff; --muted:#5a8aaa; --success:#00ff88; --danger:#ff4466; 
-      --warn:#ffaa00; --sidebar:245px;
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS (PREMIUM TREASURY THEME)
+    ═══════════════════════════════════════════════ */
+    :root {
+      --gold:    #ffd700;
+      --cyan:    #00e5ff;
+      --purple:  #aa55ff;
+      --green:   #00ff88;
+      --pink:    #ff4477;
+      --dark:    #030a16;
+      --dark2:   #061122;
+      --card:    rgba(6, 17, 34, 0.95);
+      --border:  rgba(255, 215, 0, 0.15);
+      --text:    #e0f0ff;
+      --muted:   #7a8fa1;
+      --sidebar: 260px;
     }
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Exo 2',sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:13px}
-    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,208,0,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,208,0,0.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 
-    /* SIDEBAR */
-    .sidebar{width:var(--sidebar);background:var(--dark2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;z-index:10;box-shadow:2px 0 20px rgba(255,208,0,0.05);}
-    .sidebar-header{padding:16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-    .sidebar-logo-text{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1.3}
-    .sidebar-logo-text span{color:var(--gold);display:block;font-size:10px}
-    .user-card{background:rgba(255,208,0,0.05);border:1px solid rgba(255,208,0,0.15);padding:10px;margin:10px;border-radius:10px;text-align:center;}
-    .user-name{font-size:13px;font-weight:600;color:#fff;}
-    .user-role{font-size:11px;color:var(--gold);margin-top:4px;font-weight:600;font-family:'Orbitron',sans-serif;}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    .sidebar-nav{flex:1;overflow-y:auto;padding:10px}
-    .nav-section{font-size:10px;font-family:'Orbitron',sans-serif;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:10px 8px 4px}
-    .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;transition:all .2s;color:var(--muted);margin-bottom:2px}
-    .nav-item:hover{background:rgba(255,208,0,0.05);color:var(--text)}
-    .nav-item.active{background:rgba(255,208,0,0.12);color:var(--gold);border:1px solid rgba(255,208,0,0.2)}
-    
-    .btn-logout{display:block;width:calc(100% - 20px);margin:10px;padding:10px;background:rgba(255,68,102,0.07);border:1px solid rgba(255,68,102,0.15);border-radius:8px;color:#ff8899;text-align:center;cursor:pointer;font-weight:700;letter-spacing:1px;}
-
-    /* MUSIC WIDGET */
-    .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); }
-    .sidebar-music { background: rgba(255,208,0,0.04); border: 1px solid rgba(255,208,0,0.1); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
-    .sm-row1 { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-    .sm-bars { display: flex; gap: 2px; height: 12px; align-items: flex-end; }
-    .sm-bars .b { width: 2px; background: var(--gold); animation: musicBars 0.6s infinite alternate; }
-    @keyframes musicBars { from { height: 2px; } to { height: 12px; } }
-    .sm-bars.paused .b { animation-play-state: paused; height: 2px; }
-    .sm-title { font-family: 'Orbitron'; font-size: 10px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-    .sm-sub { font-size: 9px; color: var(--muted); margin-bottom: 8px; }
-    .sm-controls { display: flex; justify-content: center; gap: 15px; }
-    .sm-btn { cursor: pointer; color: var(--gold); font-size: 14px; transition: opacity 0.2s; }
-    .sm-btn:hover { opacity: 0.7; }
-
-    /* MAIN */
-    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1}
-    .topbar{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--dark2);display:flex;align-items:center;justify-content:space-between}
-    .topbar-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:#fff;letter-spacing:1px}
-    .content{flex:1;overflow-y:auto;padding:20px}
-    .page{display:none;animation:fadein .3s ease}
-    .page.active{display:block}
-    @keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-    /* COMPONENTS */
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;overflow:hidden;}
-    .card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,208,0,0.02)}
-    .card-title{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--gold);font-weight:700}
-    .card-body{padding:20px}
-    .form-group{margin-bottom:15px}
-    .form-label{display:block;font-size:11px;color:var(--gold);margin-bottom:6px;font-weight:600;text-transform:uppercase}
-    .form-control{width:100%;padding:10px;background:rgba(255,208,0,0.03);border:1px solid rgba(255,208,0,0.2);border-radius:8px;color:var(--text);font-family:'Exo 2',sans-serif;}
-    .form-control:focus{outline:none;border-color:var(--gold);background:rgba(255,208,0,0.08)}
-    
-    .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'Exo 2',sans-serif;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .2s;}
-    .btn-primary{background:linear-gradient(135deg,#ffaa00,#ffd000);color:#000}
-    .btn-primary:hover{box-shadow:0 0 15px rgba(255,208,0,0.4); transform:translateY(-1px);}
-    .btn-success{background:rgba(0,255,136,0.15);color:var(--success);border:1px solid rgba(0,255,136,0.3)}
-    .btn-ghost{background:rgba(255,208,0,0.05);color:var(--gold);border:1px solid rgba(255,208,0,0.2)}
-    
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px}
-    .stat-box{padding:15px; border-radius:10px; border:1px solid; text-align:center;}
-    .stat-num{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;}
-
-    /* GRID.js Overrides for Bendahara */
-    .gridjs-container{color:var(--text);font-family:'Exo 2',sans-serif;}
-    .gridjs-wrapper{background:transparent !important;border:none !important;box-shadow:none !important;}
-    .gridjs-table{background:transparent !important;}
-    .gridjs-th{background:rgba(255,208,0,0.05) !important;color:var(--gold) !important;border:1px solid rgba(255,208,0,0.15) !important;font-family:'Orbitron',sans-serif;font-size:11px;}
-    .gridjs-td{background:transparent !important;color:var(--text) !important;border:1px solid rgba(255,208,0,0.05) !important;font-size:12px;}
-    .gridjs-tr:hover .gridjs-td{background:rgba(255,208,0,0.03) !important;}
-    .gridjs-footer{background:rgba(255,208,0,0.02) !important;border:1px solid rgba(255,208,0,0.1) !important;box-shadow:none !important;}
-    .gridjs-search-input{background:rgba(255,208,0,0.03);color:var(--text);border:1px solid rgba(255,208,0,0.2);border-radius:8px;}
-
-    /* PRINT LAYOUT FOR KWITANSI (E-PRINT) */
-    @media print {
-      body * { visibility: hidden; }
-      .sidebar, .topbar, .btn { display: none !important; }
-      #printableSpj, #printableSpj * { visibility: visible; }
-      #printableSpj {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: #fff;
-        color: #000;
-        padding: 1cm;
-        font-family: Arial, sans-serif;
-      }
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
     }
+
+    /* Grid Overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 215, 0, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 215, 0, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ═══════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar);
+      background: var(--dark2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .sidebar-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      color: #fff;
+    }
+    .sidebar-logo span { color: var(--gold); }
+
+    .user-card {
+      margin: 15px;
+      padding: 12px;
+      background: rgba(255, 215, 0, 0.05);
+      border: 1px solid rgba(255, 215, 0, 0.1);
+      border-radius: 12px;
+    }
+    .user-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .user-role { font-size: 10px; color: var(--gold); font-family: 'Orbitron'; letter-spacing: 1px; }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .nav-section {
+      font-family: 'Orbitron';
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      padding: 15px 10px 5px;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      transition: all 0.3s;
+    }
+    .nav-item:hover { background: rgba(255, 215, 0, 0.05); color: #fff; }
+    .nav-item.active { background: rgba(255, 215, 0, 0.1); color: var(--gold); border: 1px solid rgba(255, 215, 0, 0.2); }
+
+    .sidebar-footer { padding: 15px; border-top: 1px solid var(--border); }
+    .btn-logout {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255, 68, 119, 0.1);
+      border: 1px solid rgba(255, 68, 119, 0.2);
+      color: var(--pink);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 11px;
+      font-family: 'Orbitron';
+      transition: all 0.3s;
+    }
+    .btn-logout:hover { background: var(--pink); color: #fff; }
+
+    /* ═══════════════════════════════
+       MAIN VIEW
+    ═══════════════════════════════ */
+    .main { flex: 1; display: flex; flex-direction: column; z-index: 1; }
+
+    .topbar {
+      padding: 15px 25px;
+      background: var(--dark2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .topbar-title { font-family: 'Orbitron'; font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+
+    .content { flex: 1; overflow-y: auto; padding: 25px; }
+
+    /* ═══════════════════════════════
+       MODULAR PAGE SYSTEM
+    ═══════════════════════════════ */
+    .bendahara-page { display: none; }
+    .bendahara-page.active { display: block; animation: pageFade 0.4s ease; }
+    @keyframes pageFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Placeholder Card Styles */
+    .module-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      gap: 20px;
+    }
+    .ph-icon { font-size: 60px; opacity: 0.3; }
+    .ph-title { font-family: 'Orbitron'; font-size: 18px; color: var(--gold); }
+    .ph-desc { font-size: 13px; color: var(--muted); max-width: 500px; line-height: 1.6; }
+
+    .schema-info {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(255, 215, 0, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: left;
+    }
+    .schema-header { font-family: 'Orbitron'; font-size: 10px; color: var(--gold); margin-bottom: 15px; letter-spacing: 2px; }
+    .schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .schema-item { display: flex; flex-direction: column; padding: 8px; border-bottom: 1px solid rgba(255,215,0,0.05); }
+    .s-key { color: var(--cyan); font-weight: 700; font-size: 11px; }
+    .s-type { color: var(--purple); font-size: 9px; margin-top: 2px; }
+    .s-desc { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+    /* Music Box */
+    .music-box { background: rgba(255,215,0,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 15px; }
+    .mb-title { font-size: 10px; font-weight: 700; color: #fff; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mb-artist { font-size: 9px; color: var(--muted); margin-bottom: 10px; }
+    .mb-controls { display: flex; justify-content: space-around; font-size: 16px; color: var(--gold); }
+    .mb-btn { cursor: pointer; transition: 0.2s; }
+    .mb-btn:hover { transform: scale(1.2); }
+
+    .spinner { border: 3px solid rgba(255, 215, 0, 0.1); border-top: 3px solid var(--gold); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo-text">CIMEGA <span>SMART OFFICE</span></div>
+      <div class="sidebar-logo">CIMEGA <span>OFFICE</span></div>
     </div>
-    <div class="user-card" id="userCard">
-      <div class="user-name" id="loginName">Memuat...</div>
-      <div class="user-role">💰 BENDAHARA BOSP</div>
+    
+    <div class="user-card">
+      <div class="user-name" id="userName">Bendahara Sekolah</div>
+      <div class="user-role">💰 FINANCIAL TREASURY</div>
     </div>
-    <div class="sidebar-nav">
-      <div class="nav-section">Perencanaan</div>
-      <div class="nav-item active" onclick="BendaharaUI.nav('rkas', this)">📑 e-RKAS</div>
-      <div class="nav-section">Pembukuan</div>
-      <div class="nav-item" onclick="BendaharaUI.nav('bku', this)">📘 BKU & Pembantu</div>
-      <div class="nav-section">Perpajakan & SPJ</div>
-      <div class="nav-item" onclick="BendaharaUI.nav('pajak', this)">🤖 Kalkulator Pajak (AI)</div>
-      <div class="nav-item" onclick="BendaharaUI.nav('spj', this)">🧾 Kwitansi & SPJ</div>
-      <div class="nav-section">Kolaborasi</div>
-      <div class="nav-item" onclick="BendaharaUI.nav('sharing', this)">📩 Berbagi Dokumen</div>
-    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <!-- Nav items injected by dashboard_ui.js -->
+    </nav>
+
     <div class="sidebar-footer">
-      <div class="sidebar-music">
-        <div class="sm-row1">
-          <div id="musicBars" class="sm-bars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
-          <div id="musicTitle" class="sm-title">Radio Cimega...</div>
-        </div>
-        <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Kang Prabu</div>
-        <div class="sm-controls">
-          <div class="sm-btn" onclick="CimegaMusic.prev()">⏮</div>
-          <div id="musicMuteBtn" class="sm-btn" onclick="CimegaMusic.toggleMute()">🔊</div>
-          <div class="sm-btn" onclick="CimegaMusic.next()">⏭</div>
+      <div class="music-box">
+        <div class="mb-title" id="musicTitle">Radio Keuangan...</div>
+        <div class="mb-artist">Cimega Sound System</div>
+        <div class="mb-controls">
+          <span class="mb-btn" onclick="CimegaMusic.prev()">⏮</span>
+          <span class="mb-btn" onclick="CimegaMusic.toggleMute()">⏯</span>
+          <span class="mb-btn" onclick="CimegaMusic.next()">⏭</span>
         </div>
       </div>
-      <button class="btn-logout" onclick="logout()">LOGOUT</button>
+      <button class="btn-logout" onclick="logout()">LOGOUT SYSTEM</button>
     </div>
-  </div>
+  </aside>
 
-  <!-- MAIN VIEW -->
-  <div class="main">
-    <div class="topbar">
-      <div class="topbar-title" id="topTitle">E-RKAS BOSP</div>
-    </div>
-    <div class="content">
+  <!-- MAIN AREA -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="topTitle">MANAJEMEN KEUANGAN SEKOLAH</div>
+      <div id="topDate" style="font-size: 11px; color: var(--gold); font-family: 'Orbitron';">BOSP 2024</div>
+    </header>
 
-      <!-- PAGE: RKAS -->
-      <div class="page active" id="page-rkas">
-        <div id="moduleRkasApp"></div>
+    <div class="content" id="mainContent">
+      
+      <!-- PAGE: HOME -->
+      <div id="page-home" class="bendahara-page active"></div>
+
+      <!-- PAGE: e-RKAS -->
+      <div id="page-rkas-bendahara" class="bendahara-page">
+        <div class="module-placeholder">
+          <div class="ph-icon">📑</div>
+          <div class="ph-title">Penyusunan e-RKAS</div>
+          <div class="ph-desc">Perencanaan anggaran tahunan berdasarkan standar Juknis BOSP. Hubungkan rencana kegiatan sekolah dengan sumber dana yang tersedia.</div>
+          <div class="schema-info">
+            <div class="schema-header">DATA SCHEMA: SKEMARKAS</div>
+            <div class="schema-grid">
+              <div class="schema-item"><span class="s-key">kode_program</span><span class="s-type">String</span><span class="s-desc">Kode standar ARKAS</span></div>
+              <div class="schema-item"><span class="s-key">total_anggaran</span><span class="s-type">Number</span><span class="s-desc">Volume * Harga Satuan</span></div>
+              <div class="schema-item"><span class="s-key">terkait_p5</span><span class="s-type">Boolean</span><span class="s-desc">Flag anggaran Proyek P5</span></div>
+              <div class="schema-item"><span class="s-key">status_pengajuan</span><span class="s-type">String</span><span class="s-desc">Draft / Diajukan / Disetujui</span></div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- PAGE: BKU -->
-      <div class="page" id="page-bku">
-        <div id="moduleBkuApp"></div>
+      <!-- PAGE: BKU UTAMA -->
+      <div id="page-bku-utama" class="bendahara-page">
+        <div class="module-placeholder">
+          <div class="ph-icon">📖</div>
+          <div class="ph-title">Buku Kas Umum (BKU)</div>
+          <div class="ph-desc">Buku induk pencatatan seluruh transaksi keuangan sekolah baik tunai maupun transfer bank secara kronologis.</div>
+          <div class="schema-info">
+            <div class="schema-header">DATA SCHEMA: SKEMABKU</div>
+            <div class="schema-grid">
+              <div class="schema-item"><span class="s-key">uang_masuk / keluar</span><span class="s-type">Number</span><span class="s-desc">Debit dan Kredit (Rp)</span></div>
+              <div class="schema-item"><span class="s-key">sisa_saldo</span><span class="s-type">Number</span><span class="s-desc">Running balance saldo</span></div>
+              <div class="schema-item"><span class="s-key">no_bukti</span><span class="s-type">String</span><span class="s-desc">Ref Nota/Kwitansi SPJ</span></div>
+              <div class="schema-item"><span class="s-key">metode_pembayaran</span><span class="s-type">String</span><span class="s-desc">Tunai / Transfer (Bank)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: KAS TUNAI -->
+      <div id="page-kas-tunai" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">💵</div><div class="ph-title">Buku Kas Tunai</div><div class="ph-desc">Catatan khusus uang fisik yang ada di brankas Bendahara.</div></div>
+      </div>
+
+      <!-- PAGE: KAS BANK -->
+      <div id="page-kas-bank" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">🏦</div><div class="ph-title">Buku Kas Bank</div><div class="ph-desc">Sinkronisasi data transaksi harian dengan Rekening Koran sekolah.</div></div>
       </div>
 
       <!-- PAGE: PAJAK -->
-      <div class="page" id="page-pajak">
-        <div id="modulePajakApp"></div>
-      </div>
-
-      <!-- PAGE: SPJ -->
-      <div class="page" id="page-spj">
-        <div id="moduleSpjApp"></div>
-      </div>
-
-      <div class="page" id="page-sharing">
-        <div class="card">
-          <div class="card-header"><div class="card-title">📩 DOKUMEN DITERIMA (INBOX)</div></div>
-          <div class="card-body" id="sharingInbox"></div>
+      <div id="page-bantu-pajak" class="bendahara-page">
+        <div class="module-placeholder">
+          <div class="ph-icon">⚖️</div>
+          <div class="ph-title">Buku Pembantu Pajak</div>
+          <div class="ph-desc">Rekapitulasi pemotongan dan penyetoran pajak (PPN, PPh 21, 22, 23) ke Kas Negara.</div>
+          <div class="schema-info">
+            <div class="schema-header">DATA SCHEMA: SKEMABUKUPAJAK</div>
+            <div class="schema-grid">
+              <div class="schema-item"><span class="s-key">nominal_potongan</span><span class="s-type">Number</span><span class="s-desc">Pajak yang dipungut</span></div>
+              <div class="schema-item"><span class="s-key">status_lapor</span><span class="s-type">Boolean</span><span class="s-desc">Sudah lapor DJP Online?</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
+      <!-- PAGE: ARSIP SSP -->
+      <div id="page-arsip-ssp" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">📁</div><div class="ph-title">Arsip SSP / Billing</div><div class="ph-desc">Penyimpanan riwayat kode billing dan bukti setor pajak digital.</div></div>
+      </div>
+
+      <!-- PAGE: KWITANSI -->
+      <div id="page-kwitansi-ops" class="bendahara-page">
+        <div class="module-placeholder">
+          <div class="ph-icon">🎟️</div>
+          <div class="ph-title">Kwitansi & Nota SPJ</div>
+          <div class="ph-desc">Input rincian belanja dan unggah bukti fisik nota sebagai lampiran pertanggungjawaban.</div>
+          <div class="schema-info">
+            <div class="schema-header">DATA SCHEMA: SKEMAKWITANSI</div>
+            <div class="schema-grid">
+              <div class="schema-item"><span class="s-key">daftar_barang</span><span class="s-type">Array</span><span class="s-desc">List item belanja & harga</span></div>
+              <div class="schema-item"><span class="s-key">file_nota</span><span class="s-type">String (URL)</span><span class="s-desc">Scan nota/kwitansi fisik</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: HONOR P5 -->
+      <div id="page-honor-p5" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">👥</div><div class="ph-title">Daftar Honor & Transport</div><div class="ph-desc">Manajemen pembayaran insentif Guru, Staf, dan Panitia Proyek P5.</div></div>
+      </div>
+
+      <!-- PAGE: BAST -->
+      <div id="page-bast-asset" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">🤝</div><div class="ph-title">Berita Acara (BAST)</div><div class="ph-desc">Dokumentasi serah terima barang dari penyedia ke sekolah.</div></div>
+      </div>
+
+      <!-- PAGE: LRA -->
+      <div id="page-lra-realisasi" class="bendahara-page">
+        <div class="module-placeholder">
+          <div class="ph-icon">📊</div>
+          <div class="ph-title">Laporan Realisasi (LRA)</div>
+          <div class="ph-desc">Analisis persentase serapan dana per triwulan dan per standar program sekolah.</div>
+          <div class="schema-info">
+            <div class="schema-header">DATA SCHEMA: SKEMALRA</div>
+            <div class="schema-grid">
+              <div class="schema-item"><span class="s-key">persen_serap</span><span class="s-type">Number</span><span class="s-desc">Realisasi / Anggaran%</span></div>
+              <div class="schema-item"><span class="s-key">sisa_anggaran</span><span class="s-type">Number</span><span class="s-desc">Sisa dana per program</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: OPNAME KAS -->
+      <div id="page-opname-kas" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">🔍</div><div class="ph-title">Opname Kas</div><div class="ph-desc">Pemeriksaan fisik saldo brankas secara periodik oleh Kepala Sekolah.</div></div>
+      </div>
+
+      <!-- PAGE: TUTUP KAS -->
+      <div id="page-tutup-kas" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">🔒</div><div class="ph-title">Penutupan Kas</div><div class="ph-desc">Penguncian transaksi bulanan untuk pelaporan final ke dinas terkait.</div></div>
+      </div>
+
+      <!-- PAGE: ASSET MODAL -->
+      <div id="page-aset-modal" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">🏗️</div><div class="ph-title">Inventaris Belanja Modal</div><div class="ph-desc">Sinkronisasi belanja barang modal ke dalam sistem inventaris sekolah.</div></div>
+      </div>
+
+      <!-- PAGE: KAS KECIL -->
+      <div id="page-kas-kecil" class="bendahara-page">
+        <div class="module-placeholder"><div class="ph-icon">💳</div><div class="ph-title">Peminjaman Kas Kecil</div><div class="ph-desc">Manajemen dana panjar / pinjaman sementara untuk kegiatan operasional sekolah.</div></div>
+      </div>
+
+      <!-- COMMON PAGES -->
+      <div id="page-chat" class="bendahara-page"><div id="chatContent"></div></div>
+      <div id="page-ai" class="bendahara-page"><div id="aiContent"></div></div>
+      <div id="page-sharing" class="bendahara-page"><div id="sharingContent"></div></div>
+
     </div>
-  </div>
+  </main>
 
-  <!-- CORE LOGIC -->
-  <script>
-    // JS Math absolute IDR formatter helper
-    window.formatIDR = (num) => {
-      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num || 0);
-    };
-
-    window.BendaharaUI = {
-      nav: function(pageId, el) {
-        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-        el.classList.add('active');
-        document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        
-        const titles = {
-          'rkas': 'E-RENCANA KEGIATAN & ANGGARAN',
-          'bku': 'BUKU KAS UMUM (BKU)',
-          'pajak': 'ASISTEN PAJAK BOSP (AI)',
-          'spj': 'E-PRINT KWITANSI / SPJ',
-          'sharing': 'KOLABORASI & BERBAGI DOKUMEN'
-        };
-        document.getElementById('topTitle').innerText = titles[pageId];
-        if(pageId === 'sharing') window.CimegaSharing.renderInbox('sharingInbox');
-      }
-    };
-    
-    // Auth Check
-    const userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
-    if (!userData.roles || !userData.roles.includes('bendahara')) {
-      window.location.href = '../login/login.html';
-    }
-    document.getElementById('loginName').innerText = userData.nama || 'Bendahara';
-
-    function logout() {
-      localStorage.removeItem('cimega_user');
-      window.location.href = '../login/login.html';
-    }
-    
-    // Firebase Init Placeholder
-    let db;
-    async function initFirestore() {
-      try {
-        const firebaseConfig = await window.cimegaAPI.getFirebaseConfig();
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-        const { getFirestore, collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where, orderBy, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        window._fb = { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where, orderBy, serverTimestamp };
-        
-        // Boot Modules
-        if(window.ModulSpj) window.ModulSpj.init();
-
-        // Multi-Tenant SaaS Update: Secure Chat
-        if(window.CimegaChat) window.CimegaChat.init(db);
-      } catch(e) {
-        console.error("Firebase init failed in bendahara", e);
-      }
-    }
-    
-    initFirestore();
-  </script>
-
-  <!-- SHARED SaaS UPGRADE -->
+  <!-- SCRIPTS -->
   <script src="../../shared/crypto_helper.js"></script>
+  <script src="../../shared/ai_helper.js"></script>
   <script src="../../shared/chat.js"></script>
   <script src="../../shared/music.js"></script>
   <script src="../../shared/printer.js"></script>
   <script src="../../shared/sharing.js"></script>
   <script src="../../shared/ai_chatbot.js"></script>
+  <script src="../../shared/dashboard_ui.js"></script>
 
-  <!-- MODULE SCRIPTS -->
-  <script src="../../modules/bendahara/rkas.js"></script>
-  <script src="../../modules/bendahara/bku.js"></script>
-  <script src="../../modules/bendahara/pajak.js"></script>
-  <script src="../../modules/bendahara/spj.js"></script>
+  <!-- BENDHARA SCHEMA MODULES -->
+  <script type="module">
+    import * as Perencanaan from '../../modules/bendahara/perencanaan_anggaran.js';
+    import * as BukuKas     from '../../modules/bendahara/buku_kas.js';
+    import * as Pajak       from '../../modules/bendahara/pajak.js';
+    import * as SPJ         from '../../modules/bendahara/spj.js';
+    import * as Pelaporan   from '../../modules/bendahara/pelaporan_evaluasi.js';
+    import * as Pendukung   from '../../modules/bendahara/pendukung_bendahara.js';
+
+    window.BendaharaSchema = { Perencanaan, BukuKas, Pajak, SPJ, Pelaporan, Pendukung };
+    console.log("✅ Cimega Bendahara: All modules loaded.", window.BendaharaSchema);
+  </script>
 
   <script>
-    async function startCimegaShared() {
-       if(window.CimegaMusic) window.CimegaMusic.init();
-       if(window.CimegaAIChatbot) window.CimegaAIChatbot.init();
-       if(window.CimegaSharing) window.CimegaSharing.init();
+    window.BendaharaUI = {
+      nav: function(pageId) {
+        const titles = {
+          'home': '🏠 DASHBOARD UTAMA BENDAHARA',
+          'rkas-bendahara': '📑 PENYUSUNAN e-RKAS',
+          'rapbs': '📊 ESTIMASI RAPBS',
+          'bku-utama': '📖 BUKU KAS UMUM (BKU)',
+          'kas-tunai': '💵 BUKU KAS TUNAI',
+          'kas-bank': '🏦 BUKU KAS BANK',
+          'bantu-pajak': '📜 BUKU PEMBANTU PAJAK',
+          'arsip-ssp': '📁 ARSIP SSP / BILLING',
+          'kwitansi-ops': '🎟️ KWITANSI & NOTA SPJ',
+          'honor-p5': '👥 DAFTAR HONOR & TRANSPORT P5',
+          'bast-asset': '🤝 BERITA ACARA SERAH TERIMA',
+          'lra-realisasi': '📈 REALISASI ANGGARAN (LRA)',
+          'opname-kas': '🔍 OPNAME KAS FISIK',
+          'tutup-kas': '🔒 PENUTUPAN KAS BULANAN',
+          'aset-modal': '🏗️ BELANJA MODAL & ASET',
+          'kas-kecil': '💳 PINJAMAN KAS KECIL',
+          'chat': '💬 CHAT SEKOLAH',
+          'ai': '🤖 CIMEGA AI ASISTEN',
+          'sharing': '📩 KOLABORASI DOKUMEN'
+        };
+
+        const title = titles[pageId] || 'CIMEGA BENDHARA OFFICE';
+        document.getElementById('topTitle').innerText = title;
+
+        // Lazy load modules
+        if(pageId === 'chat' && window.CimegaChat) window.CimegaChat.init(db, 'chatContent');
+        if(pageId === 'ai' && window.CimegaAIChatbot) window.CimegaAIChatbot.renderTo('aiContent');
+        if(pageId === 'sharing' && window.CimegaSharing) window.CimegaSharing.renderInbox('sharingContent');
+      }
+    };
+
+    // Initialize Identity
+    const userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
+    if (!userData.roles || !userData.roles.includes('bendahara')) {
+      window.location.href = '../login/login.html';
     }
-    setTimeout(startCimegaShared, 1000);
+    document.getElementById('userName').innerText = userData.nama || 'Bendahara';
+
+    function logout() {
+      localStorage.removeItem('cimega_user');
+      window.location.href = '../login/login.html';
+    }
+
+    // Initialize Dashboard
+    window.addEventListener('load', () => {
+      if(window.CimegaDashboard) {
+        window.CimegaDashboard.init((pid) => window.BendaharaUI.nav(pid));
+      }
+      if(window.CimegaMusic) window.CimegaMusic.init();
+    });
+
+    let db;
+    async function initEnv() {
+      try {
+        const config = await window.cimegaAPI.getFirebaseConfig();
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+        const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const app = initializeApp(config);
+        db = getFirestore(app);
+      } catch(e) { console.error("Firebase init error", e); }
+    }
+    initEnv();
   </script>
 </body>
 </html>

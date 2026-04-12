@@ -3,32 +3,34 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard Guru - Cimega Smart Office</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Guru — Cimega Smart Office</title>
+  <meta name="description" content="Workstation digital guru SD berbasis Kurikulum Merdeka. Kelola perencanaan, penilaian, P5, wali kelas, dan administrasi harian dalam satu platform." />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════════════ */
     :root {
-      --cyan: #00e5ff;
-      --blue: #0066ff;
-      --purple: #aa55ff;
-      --dark: #020b18;
-      --dark2: #041428;
-      --card: rgba(4, 20, 45, 0.95);
-      --border: rgba(0, 102, 255, 0.25);
-      --text: #e0f4ff;
-      --muted: #5a8aaa;
+      --cyan:    #00e5ff;
+      --blue:    #0066ff;
+      --purple:  #aa55ff;
+      --green:   #00ff88;
+      --orange:  #ff8800;
+      --pink:    #e040fb;
+      --dark:    #020b18;
+      --dark2:   #041428;
+      --card:    rgba(4, 20, 45, 0.97);
+      --border:  rgba(0, 102, 255, 0.22);
+      --text:    #e0f4ff;
+      --muted:   #5a8aaa;
       --success: #00ff88;
-      --danger: #ff4466;
-      --sidebar: 245px;
+      --danger:  #ff4466;
+      --sidebar: 255px;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Exo 2', sans-serif;
@@ -37,20 +39,25 @@
       display: flex;
       height: 100vh;
       overflow: hidden;
-      font-size: 13px
+      font-size: 13px;
     }
 
+    /* Grid background */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image: linear-gradient(rgba(0, 102, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 102, 255, 0.02) 1px, transparent 1px);
+      background-image:
+        linear-gradient(rgba(0, 102, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 102, 255, 0.025) 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
-      z-index: 0
+      z-index: 0;
     }
 
-    /* SIDEBAR */
+    /* ═══════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════ */
     .sidebar {
       width: var(--sidebar);
       background: var(--dark2);
@@ -60,115 +67,94 @@
       flex-shrink: 0;
       overflow: hidden;
       z-index: 10;
-      box-shadow: 2px 0 20px rgba(0, 102, 255, 0.05);
+      box-shadow: 2px 0 20px rgba(0, 102, 255, 0.06);
     }
 
     .sidebar-header {
-      padding: 16px 14px;
+      padding: 15px 14px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 10px
+      gap: 10px;
     }
+
+    .sidebar-logo-icon { font-size: 22px; }
 
     .sidebar-logo-text {
       font-family: 'Orbitron', sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: #fff;
       letter-spacing: 1px;
-      line-height: 1.3
+      line-height: 1.3;
     }
 
     .sidebar-logo-text span {
       color: var(--cyan);
       display: block;
-      font-size: 10px
+      font-size: 9px;
+      letter-spacing: 2px;
     }
 
+    /* User card */
     .user-card {
-      background: rgba(0, 102, 255, 0.05);
+      background: rgba(0, 102, 255, 0.06);
       border: 1px solid rgba(0, 102, 255, 0.15);
-      padding: 10px;
+      padding: 10px 12px;
       margin: 10px;
       border-radius: 10px;
-      text-align: center;
     }
 
-    .user-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 2px;
-    }
+    .user-name { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 10px; color: var(--cyan); font-weight: 600; font-family: 'Orbitron', sans-serif; }
+    .user-school { font-size: 10px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .user-role {
-      font-size: 11px;
-      color: var(--cyan);
-      font-weight: 600;
-      font-family: 'Orbitron', sans-serif;
-    }
-
+    /* Nav */
     .sidebar-nav {
       flex: 1;
       overflow-y: auto;
-      padding: 10px
+      padding: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0,102,255,0.2) transparent;
     }
 
     .nav-section {
-      font-size: 10px;
+      font-size: 9px;
       font-family: 'Orbitron', sans-serif;
       font-weight: 700;
       color: var(--muted);
-      letter-spacing: 1.5px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
-      padding: 10px 8px 4px
+      padding: 12px 8px 4px;
     }
 
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px;
+      gap: 7px;
+      padding: 9px 10px;
       border-radius: 8px;
       cursor: pointer;
       transition: all .2s;
       color: var(--muted);
-      margin-bottom: 2px
+      margin-bottom: 1px;
+      font-size: 12px;
     }
 
-    .nav-item:hover {
-      background: rgba(0, 102, 255, 0.07);
-      color: var(--text)
-    }
+    .nav-item:hover  { background: rgba(0, 102, 255, 0.08); color: var(--text); }
+    .nav-item.active { background: rgba(0, 102, 255, 0.16); color: var(--cyan); border: 1px solid rgba(0, 102, 255, 0.28); }
 
-    .nav-item.active {
-      background: rgba(0, 102, 255, 0.15);
-      color: var(--cyan);
-      border: 1px solid rgba(0, 102, 255, 0.25)
-    }
-
-    .btn-logout {
-      display: block;
-      width: calc(100% - 20px);
-      margin: 10px;
-      padding: 10px;
-      background: rgba(255, 68, 102, 0.07);
-      border: 1px solid rgba(255, 68, 102, 0.15);
-      border-radius: 8px;
-      color: #ff8899;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    /* MUSIC WIDGET */
+    /* Footer sidebar */
     .sidebar-footer { padding: 10px; border-top: 1px solid var(--border); }
+
+    /* Music widget */
     .sidebar-music { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.1); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
     .sm-row1 { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
     .sm-bars { display: flex; gap: 2px; height: 12px; align-items: flex-end; }
     .sm-bars .b { width: 2px; background: var(--cyan); animation: musicBars 0.6s infinite alternate; }
+    .sm-bars .b:nth-child(2) { animation-delay: .1s; }
+    .sm-bars .b:nth-child(3) { animation-delay: .2s; }
+    .sm-bars .b:nth-child(4) { animation-delay: .3s; }
     @keyframes musicBars { from { height: 2px; } to { height: 12px; } }
     .sm-bars.paused .b { animation-play-state: paused; height: 2px; }
     .sm-title { font-family: 'Orbitron'; font-size: 10px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
@@ -177,272 +163,907 @@
     .sm-btn { cursor: pointer; color: var(--cyan); font-size: 14px; transition: opacity 0.2s; }
     .sm-btn:hover { opacity: 0.7; }
 
-    /* MAIN */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-      z-index: 1
+    .btn-logout {
+      display: block;
+      width: 100%;
+      padding: 9px;
+      background: rgba(255, 68, 102, 0.07);
+      border: 1px solid rgba(255, 68, 102, 0.18);
+      border-radius: 8px;
+      color: #ff8899;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 1px;
+      font-size: 11px;
+      transition: all .2s;
     }
+    .btn-logout:hover { background: rgba(255,68,102,0.15); }
+
+    /* ═══════════════════════════════
+       MAIN CONTENT
+    ═══════════════════════════════ */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 1; }
 
     .topbar {
-      padding: 14px 20px;
+      padding: 13px 22px;
       border-bottom: 1px solid var(--border);
       background: var(--dark2);
       display: flex;
       align-items: center;
-      justify-content: space-between
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .topbar-title {
       font-family: 'Orbitron', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: #fff;
-      letter-spacing: 1px
+      letter-spacing: 1px;
     }
 
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px
-    }
-
-    .guru-module-page {
-      display: none;
-      animation: fadein .3s ease
-    }
-
-    .guru-module-page.active {
-      display: block
-    }
-
-    @keyframes fadein {
-      from {
-        opacity: 0;
-        transform: translateY(10px)
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0)
-      }
-    }
-
-    /* COMPONENTS REUSABLE BY JS MODULES */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(0, 102, 255, 0.02)
-    }
-
-    .card-title {
+    .topbar-badge {
+      font-size: 10px;
+      color: var(--cyan);
+      background: rgba(0,229,255,0.08);
+      border: 1px solid rgba(0,229,255,0.2);
+      padding: 4px 10px;
+      border-radius: 20px;
       font-family: 'Orbitron', sans-serif;
-      font-size: 12px;
-      color: var(--cyan);
-      font-weight: 700
+      white-space: nowrap;
     }
 
-    .card-body {
-      padding: 20px
-    }
+    .content { flex: 1; overflow-y: auto; padding: 22px; scrollbar-width: thin; scrollbar-color: rgba(0,102,255,0.2) transparent; }
 
-    .form-group {
-      margin-bottom: 15px
-    }
+    /* ═══════════════════════════════
+       PAGE SYSTEM
+    ═══════════════════════════════ */
+    .guru-module-page { display: none; animation: fadein .3s ease; }
+    .guru-module-page.active { display: block; }
+    .page { display: none; animation: fadein .3s ease; }
+    .page.active { display: block; }
 
-    .form-label {
-      display: block;
-      font-size: 11px;
-      color: var(--cyan);
-      margin-bottom: 6px;
-      font-weight: 600;
-      text-transform: uppercase
-    }
+    @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    .form-control {
-      width: 100%;
-      padding: 10px;
-      background: rgba(0, 102, 255, 0.03);
-      border: 1px solid rgba(0, 102, 255, 0.2);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'Exo 2', sans-serif;
-      outline: none;
-    }
-
-    .form-control:focus {
-      border-color: var(--cyan);
-      background: rgba(0, 102, 255, 0.08)
-    }
-
-    .btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-family: 'Exo 2', sans-serif;
-      font-weight: 600;
-      display: inline-flex;
+    /* ═══════════════════════════════
+       PLACEHOLDER / COMING SOON
+    ═══════════════════════════════ */
+    .page-placeholder {
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      transition: all .2s;
+      justify-content: center;
+      min-height: 55vh;
+      gap: 16px;
+      text-align: center;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #00aaff, #0066ff);
-      color: #fff
-    }
-
-    .btn-primary:hover {
-      box-shadow: 0 0 15px rgba(0, 102, 255, 0.4);
-      transform: translateY(-1px);
-    }
-
-    /* UTILS USED BY MODULES */
-    .ai-bubble {
-      background: rgba(0, 229, 255, 0.05);
-      border: 1px solid rgba(0, 229, 255, 0.2);
-      padding: 15px;
+    .placeholder-icon { font-size: 56px; opacity: 0.4; }
+    .placeholder-title { font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--cyan); }
+    .placeholder-desc { font-size: 12px; color: var(--muted); max-width: 420px; line-height: 1.6; }
+    .placeholder-schema {
+      background: rgba(0,102,255,0.05);
+      border: 1px solid rgba(0,102,255,0.15);
       border-radius: 12px;
+      padding: 14px 20px;
+      text-align: left;
+      max-width: 540px;
+      width: 100%;
     }
+    .placeholder-schema h4 { font-family: 'Orbitron', sans-serif; font-size: 9px; color: var(--cyan); margin-bottom: 10px; letter-spacing: 1px; }
+    .schema-field { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(0,102,255,0.07); font-size: 11px; }
+    .schema-field:last-child { border-bottom: none; }
+    .schema-key { color: var(--cyan); font-weight: 600; min-width: 160px; }
+    .schema-type { color: var(--purple); font-size: 10px; min-width: 60px; }
+    .schema-desc { color: var(--muted); }
 
-    .badge-subject {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      background: rgba(170, 85, 255, 0.1);
-      color: var(--purple);
-      border: 1px solid rgba(170, 85, 255, 0.2);
-    }
+    /* ═══════════════════════════════
+       MODULE CSS SYSTEM (shared)
+    ═══════════════════════════════ */
+    .form-group { margin-bottom: 13px; }
+    .form-label { display: block; font-size: 10px; color: var(--cyan); margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control { width: 100%; padding: 9px 12px; background: rgba(0,102,255,0.04); border: 1px solid rgba(0,102,255,0.2); border-radius: 8px; color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 13px; outline: none; transition: all 0.2s; }
+    .form-control:focus { border-color: var(--cyan); background: rgba(0,102,255,0.08); }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    textarea.form-control { resize: vertical; min-height: 70px; }
+
+    .module-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 20px; overflow: hidden; }
+    .module-card-header { padding: 16px 20px; background: rgba(0,102,255,0.04); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .module-card-title { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; }
+    .module-card-subtitle { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .module-card-body { padding: 20px; }
+    .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .config-section { background: rgba(0,102,255,0.02); border: 1px solid rgba(0,102,255,0.1); border-radius: 10px; padding: 14px; }
+    .section-label { font-family: 'Orbitron', sans-serif; font-size: 9px; color: var(--cyan); letter-spacing: 1.5px; margin-bottom: 10px; }
+
+    .tab-bar { display: flex; gap: 4px; background: rgba(0,0,0,0.2); padding: 6px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .tab-btn { padding: 7px 14px; border-radius: 7px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-family: 'Exo 2', sans-serif; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    .tab-btn:hover { color: var(--text); background: rgba(0,102,255,0.08); }
+    .tab-btn.active { background: rgba(0,102,255,0.15); color: var(--cyan); border: 1px solid rgba(0,102,255,0.2); }
+
+    .generate-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 0 0; border-top: 1px solid var(--border); margin-top: 8px; flex-wrap: wrap; }
+    .generate-hint { font-size: 11px; color: #ff9944; flex: 1; }
+    .btn-generate { padding: 12px 28px; background: linear-gradient(135deg, #aa55ff, #6600ff); color: #fff; border: none; border-radius: 10px; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; box-shadow: 0 4px 18px rgba(102,0,255,0.3); }
+    .btn-generate:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(102,0,255,0.5); }
+    .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .result-card { background: var(--card); border: 1px solid rgba(0,229,255,0.2); border-radius: 14px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    .result-header { padding: 14px 20px; background: rgba(0,229,255,0.04); border-bottom: 1px solid rgba(0,229,255,0.15); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .result-title { font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--cyan); font-weight: 700; }
+    .result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-action { padding: 7px 14px; background: linear-gradient(135deg, #0066ff, #00e5ff); color: #fff; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-action:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-action-secondary { padding: 7px 14px; background: rgba(0,102,255,0.1); color: var(--cyan); border: 1px solid rgba(0,102,255,0.2); border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+
+    .print-body { padding: 20px; }
+    .print-header-doc { text-align: center; margin-bottom: 16px; }
+    .print-header-doc h2 { font-size: 15px; font-family: 'Orbitron', sans-serif; color: #fff; }
+    .print-header-doc h3 { font-size: 13px; color: var(--cyan); margin: 4px 0; }
+    .print-header-doc p, .print-header-doc hr { color: var(--muted); font-size: 11px; margin: 4px 0; border-color: var(--border); }
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; }
+    .info-table td { padding: 7px 10px; border: 1px solid var(--border); color: var(--text); }
+    .info-table td:first-child { color: var(--cyan); font-weight: 600; width: 35%; white-space: nowrap; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 14px; }
+    .data-table th { background: rgba(0,102,255,0.12); padding: 8px 10px; text-align: left; font-family: 'Orbitron', sans-serif; font-size: 9px; color: var(--cyan); border: 1px solid rgba(0,102,255,0.15); }
+    .data-table td { padding: 7px 10px; border: 1px solid rgba(0,102,255,0.08); color: var(--text); }
+    .data-table tr:hover td { background: rgba(0,102,255,0.04); }
+
+    .spinner { width: 30px; height: 30px; border: 3px solid rgba(0,102,255,0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+    .spinner-inline { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Exo 2', sans-serif; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; }
+    .btn-primary { background: linear-gradient(135deg, #00aaff, #0066ff); color: #fff; }
+    .ai-bubble { background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.2); padding: 15px; border-radius: 12px; }
 
     @media print {
-      body * {
-        visibility: hidden;
-      }
-
-      .sidebar,
-      .topbar {
-        display: none !important;
-      }
-
-      /* Modules can target print specifically */
+      body * { visibility: hidden; }
+      .sidebar, .topbar { display: none !important; }
+      .print-body, .print-body * { visibility: visible; }
+      .print-body { position: fixed; top: 0; left: 0; width: 100%; color: #000; background: #fff; }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- SIDEBAR -->
+  <!-- ══════════════════════════════════════
+       SIDEBAR
+  ══════════════════════════════════════ -->
   <div class="sidebar">
     <div class="sidebar-header">
+      <div class="sidebar-logo-icon">🏫</div>
       <div class="sidebar-logo-text">CIMEGA <span>SMART OFFICE</span></div>
     </div>
-    <div class="user-card" id="userCard">
+
+    <div class="user-card">
       <div class="user-name" id="loginName">Memuat...</div>
       <div class="user-role">👩‍🏫 GURU KELAS / MAPEL</div>
+      <div class="user-school" id="loginSchool">—</div>
     </div>
+
+    <!-- Nav diisi oleh dashboard_ui.js -->
     <div class="sidebar-nav">
-      <div class="nav-section">Administrasi Mengajar</div>
-      <div class="nav-item active" onclick="GuruUI.nav('perencanaan', this)">📑 Perencanaan (Modul)</div>
-      <div class="nav-item" onclick="GuruUI.nav('pelaksanaan', this)">📝 Pelaksanaan (Jurnal)</div>
-      <div class="nav-item" onclick="GuruUI.nav('asesmen', this)">💡 Asesmen (Bank Soal)</div>
-      <div class="nav-item" onclick="GuruUI.nav('nilai', this)">📈 Pengolahan Nilai</div>
-      <div class="nav-section">Kolaborasi</div>
-      <div class="nav-item" onclick="GuruUI.nav('sharing', this)">📩 Berbagi Dokumen</div>
+      <div class="spinner"></div>
     </div>
+
     <div class="sidebar-footer">
+      <!-- Music Widget -->
       <div class="sidebar-music">
         <div class="sm-row1">
-          <div id="musicBars" class="sm-bars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+          <div id="musicBars" class="sm-bars">
+            <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+          </div>
           <div id="musicTitle" class="sm-title">Radio Cimega...</div>
         </div>
-        <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Kang Prabu</div>
+        <div class="sm-sub">Track <span id="musicTrackInfo">—</span> · Cimega FM</div>
         <div class="sm-controls">
           <div class="sm-btn" onclick="CimegaMusic.prev()">⏮</div>
           <div id="musicMuteBtn" class="sm-btn" onclick="CimegaMusic.toggleMute()">🔊</div>
           <div class="sm-btn" onclick="CimegaMusic.next()">⏭</div>
         </div>
       </div>
-      <button class="btn-logout" onclick="logout()">LOGOUT</button>
+      <button class="btn-logout" onclick="logout()">⏻ LOGOUT</button>
     </div>
   </div>
 
-  <!-- MAIN VIEW -->
+  <!-- ══════════════════════════════════════
+       MAIN AREA
+  ══════════════════════════════════════ -->
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title" id="topTitle">PERENCANAAN PEMBELAJARAN (MODUL AJAR & P5)</div>
+      <div class="topbar-title" id="topTitle">🏠 BERANDA WORKSTATION GURU</div>
+      <div class="topbar-badge" id="topBadge">Kurikulum Merdeka · SD</div>
     </div>
+
     <div class="content">
 
-      <!-- PAGE WRAPPERS AS REQUESTED -->
-      <div id="page-perencanaan" class="guru-module-page active">
-        <div id="modulAjarContainer"></div> <!-- Target inject Perencanaan.js -->
+      <!-- ── BERANDA ── -->
+      <div id="page-home" class="guru-module-page active">
+        <!-- Diisi oleh dashboard_ui.js → CimegaDashboard.renderHome() -->
       </div>
 
-      <div id="page-pelaksanaan" class="guru-module-page">
-        <div id="modulPelaksanaanContainer"></div> <!-- Target inject Pelaksanaan.js -->
-      </div>
+      <!-- ══════════════════════════════════════
+           MODUL 1: PERENCANAAN & PEDOMAN
+      ══════════════════════════════════════ -->
 
-      <div id="page-asesmen" class="guru-module-page">
-        <div id="modulAsesmenContainer"></div> <!-- Target inject Asesmen.js -->
-      </div>
-
-      <div id="page-nilai" class="guru-module-page">
-        <div id="modulNilaiContainer"></div> <!-- Target inject Nilai.js -->
-      </div>
-
-      <div id="page-sharing" class="guru-module-page">
-        <div class="card">
-          <div class="card-header"><div class="card-title">📩 DOKUMEN DITERIMA (INBOX)</div></div>
-          <div class="card-body" id="sharingInbox"></div>
+      <div id="page-kalender" class="guru-module-page">
+        <div id="modulKalenderApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📆</div>
+            <div class="placeholder-title">Kalender Pendidikan</div>
+            <div class="placeholder-desc">Jadwal lengkap hari efektif, libur nasional, dan kegiatan sekolah per semester. Data bersumber dari Kalender Akademik Dinas Pendidikan.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaKalenderPendidikan</h4>
+              <div class="schema-field"><span class="schema-key">tahun_pelajaran</span><span class="schema-type">String</span><span class="schema-desc">cth: "2024/2025"</span></div>
+              <div class="schema-field"><span class="schema-key">semester</span><span class="schema-type">String</span><span class="schema-desc">"Ganjil" | "Genap"</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_bulan[].bulan</span><span class="schema-type">String</span><span class="schema-desc">"Juli", "Agustus", dst.</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kejadian[].tanggal</span><span class="schema-type">String</span><span class="schema-desc">Format YYYY-MM-DD</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kejadian[].nama_kegiatan</span><span class="schema-type">String</span><span class="schema-desc">Keterangan acara</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kejadian[].status_libur</span><span class="schema-type">Boolean</span><span class="schema-desc">true = hari libur</span></div>
+              <div class="schema-field"><span class="schema-key">total_hari_efektif_semester</span><span class="schema-type">Number</span><span class="schema-desc">Total hari aktif KBM</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
-    </div>
-  </div>
+      <div id="page-cp" class="guru-module-page">
+        <div id="modulCPApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🎯</div>
+            <div class="placeholder-title">Capaian Pembelajaran (CP)</div>
+            <div class="placeholder-desc">Dokumen CP per mata pelajaran dan fase sesuai Kepmendikbudristek No. 262/M/2022. Berisi elemen dan deskripsi target capaian murid.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaCP</h4>
+              <div class="schema-field"><span class="schema-key">mata_pelajaran</span><span class="schema-type">String</span><span class="schema-desc">cth: "Matematika"</span></div>
+              <div class="schema-field"><span class="schema-key">fase</span><span class="schema-type">String</span><span class="schema-desc">"A" | "B" | "C"</span></div>
+              <div class="schema-field"><span class="schema-key">elemen_cp[].nama_elemen</span><span class="schema-type">String</span><span class="schema-desc">cth: "Bilangan", "Geometri"</span></div>
+              <div class="schema-field"><span class="schema-key">elemen_cp[].deskripsi_cp</span><span class="schema-type">String</span><span class="schema-desc">Narasi CP resmi pemerintah</span></div>
+              <div class="schema-field"><span class="schema-key">elemen_cp[].catatan_penjabaran</span><span class="schema-type">String</span><span class="schema-desc">Penafsiran & kontekstualisasi guru</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-  <!-- CORE UI NAVIGATION LOGIC -->
+      <div id="page-atp" class="guru-module-page">
+        <div id="modulATPApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🗺️</div>
+            <div class="placeholder-title">Alur Tujuan Pembelajaran (ATP)</div>
+            <div class="placeholder-desc">Rancangan urutan Tujuan Pembelajaran (TP) yang sistematis dari awal hingga akhir semester, dilengkapi alokasi JP dan dimensi Profil Pelajar Pancasila.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaATP</h4>
+              <div class="schema-field"><span class="schema-key">daftar_tp[].id_tp</span><span class="schema-type">String</span><span class="schema-desc">cth: "TP-MTK-3A-01"</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_tp[].tujuan_pembelajaran</span><span class="schema-type">String</span><span class="schema-desc">"Murid dapat ..."</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_tp[].materi_inti</span><span class="schema-type">String</span><span class="schema-desc">Topik / materi pokok</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_tp[].profil_pancasila</span><span class="schema-type">Array</span><span class="schema-desc">Dimensi PPP yang dikembangkan</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_tp[].alokasi_waktu</span><span class="schema-type">Number</span><span class="schema-desc">Jumlah Jam Pelajaran (JP)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-prota" class="guru-module-page">
+        <div id="modulProtaApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📅</div>
+            <div class="placeholder-title">Program Tahunan (Prota)</div>
+            <div class="placeholder-desc">Peta distribusi seluruh Tujuan Pembelajaran dalam satu tahun pelajaran, mencakup Semester Ganjil dan Genap beserta total Jam Pelajaran.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaProta</h4>
+              <div class="schema-field"><span class="schema-key">daftar_tp_tahunan[].semester</span><span class="schema-type">String</span><span class="schema-desc">"Ganjil" | "Genap"</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_tp_tahunan[].id_tp</span><span class="schema-type">String</span><span class="schema-desc">Kode TP unik</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_tp_tahunan[].materi_inti</span><span class="schema-type">String</span><span class="schema-desc">Nama materi pokok</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_tp_tahunan[].alokasi_jp</span><span class="schema-type">Number</span><span class="schema-desc">JP per TP</span></div>
+              <div class="schema-field"><span class="schema-key">total_jp</span><span class="schema-type">Number</span><span class="schema-desc">Total JP seluruh tahun</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-promes" class="guru-module-page">
+        <div id="modulPromesApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📆</div>
+            <div class="placeholder-title">Program Semester (Promes)</div>
+            <div class="placeholder-desc">Penjabaran detail rencana pembelajaran per minggu dalam satu semester, dipetakan berdasarkan bulan dan minggu aktif.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaPromes</h4>
+              <div class="schema-field"><span class="schema-key">detail_mingguan[].bulan</span><span class="schema-type">String</span><span class="schema-desc">"Juli", "Agustus", dst.</span></div>
+              <div class="schema-field"><span class="schema-key">detail_mingguan[].minggu_ke</span><span class="schema-type">Number</span><span class="schema-desc">Minggu aktif ke berapa</span></div>
+              <div class="schema-field"><span class="schema-key">detail_mingguan[].id_tp</span><span class="schema-type">String</span><span class="schema-desc">TP yang diajarkan minggu ini</span></div>
+              <div class="schema-field"><span class="schema-key">detail_mingguan[].materi</span><span class="schema-type">String</span><span class="schema-desc">Materi spesifik minggu ini</span></div>
+              <div class="schema-field"><span class="schema-key">detail_mingguan[].keterangan</span><span class="schema-type">String</span><span class="schema-desc">cth: "Libur Nasional", "Ujian"</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-modul-ajar" class="guru-module-page">
+        <div id="modulAjarApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📑</div>
+            <div class="placeholder-title">Modul Ajar / RPP+</div>
+            <div class="placeholder-desc">Rencana Pembelajaran lengkap sesuai Kurikulum Merdeka: mencakup identitas, tujuan, langkah kegiatan, diferensiasi, penilaian, dan lampiran LKPD.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaModulAjar</h4>
+              <div class="schema-field"><span class="schema-key">identitas.model_pembelajaran</span><span class="schema-type">String</span><span class="schema-desc">PBL / PjBL / Discovery, dst.</span></div>
+              <div class="schema-field"><span class="schema-key">tujuan.pemahaman_bermakna</span><span class="schema-type">String</span><span class="schema-desc">Manfaat nyata bagi murid</span></div>
+              <div class="schema-field"><span class="schema-key">tujuan.pertanyaan_pemantik</span><span class="schema-type">Array</span><span class="schema-desc">Pertanyaan pembuka ≥2</span></div>
+              <div class="schema-field"><span class="schema-key">langkah_kegiatan.inti</span><span class="schema-type">Array</span><span class="schema-desc">Langkah kegiatan utama</span></div>
+              <div class="schema-field"><span class="schema-key">diferensiasi.belum_mencapai</span><span class="schema-type">String</span><span class="schema-desc">Langkah remedial dalam proses</span></div>
+              <div class="schema-field"><span class="schema-key">lampiran_lkpd[].soal_atau_tugas</span><span class="schema-type">Array</span><span class="schema-desc">Tugas / soal LKPD</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-kktp" class="guru-module-page">
+        <div id="modulKKTPApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">✅</div>
+            <div class="placeholder-title">KKTP — Kriteria Ketercapaian Tujuan Pembelajaran</div>
+            <div class="placeholder-desc">Dokumen penetapan indikator tuntas untuk setiap TP beserta rentang nilai: Perlu Bimbingan, Cukup, Baik, dan Sangat Baik.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaKKTP</h4>
+              <div class="schema-field"><span class="schema-key">daftar_kktp[].id_tp</span><span class="schema-type">String</span><span class="schema-desc">Referensi ke ATP</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kktp[].indikator_tuntas</span><span class="schema-type">Array</span><span class="schema-desc">Daftar indikator pencapaian</span></div>
+              <div class="schema-field"><span class="schema-key">rentang_nilai.perlu_bimbingan</span><span class="schema-type">Object</span><span class="schema-desc">min: 0, max: 60, kode: "D"</span></div>
+              <div class="schema-field"><span class="schema-key">rentang_nilai.cukup</span><span class="schema-type">Object</span><span class="schema-desc">min: 61, max: 70, kode: "C"</span></div>
+              <div class="schema-field"><span class="schema-key">rentang_nilai.baik</span><span class="schema-type">Object</span><span class="schema-desc">min: 71, max: 85, kode: "B"</span></div>
+              <div class="schema-field"><span class="schema-key">rentang_nilai.sangat_baik</span><span class="schema-type">Object</span><span class="schema-desc">min: 86, max: 100, kode: "A"</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           MODUL 2: PELAKSANAAN HARIAN
+      ══════════════════════════════════════ -->
+
+      <div id="page-absensi" class="guru-module-page">
+        <div id="modulAbsensiApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">👥</div>
+            <div class="placeholder-title">Absensi Murid (Daftar Hadir Harian)</div>
+            <div class="placeholder-desc">Pencatatan kehadiran murid per hari. Status: Hadir (H), Sakit (S), Izin (I), Alpa (A). Dilengkapi rekap otomatis per bulan dan semester.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaAbsensi</h4>
+              <div class="schema-field"><span class="schema-key">tanggal</span><span class="schema-type">String</span><span class="schema-desc">Format YYYY-MM-DD</span></div>
+              <div class="schema-field"><span class="schema-key">list_kehadiran[].id_murid</span><span class="schema-type">String</span><span class="schema-desc">Referensi ke data murid</span></div>
+              <div class="schema-field"><span class="schema-key">list_kehadiran[].nama</span><span class="schema-type">String</span><span class="schema-desc">Nama lengkap murid</span></div>
+              <div class="schema-field"><span class="schema-key">list_kehadiran[].status</span><span class="schema-type">String</span><span class="schema-desc">"H" | "S" | "I" | "A"</span></div>
+              <div class="schema-field"><span class="schema-key">rekap.jumlah_hadir</span><span class="schema-type">Number</span><span class="schema-desc">Dihitung otomatis</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-jurnal" class="guru-module-page">
+        <div id="modulJurnalApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📝</div>
+            <div class="placeholder-title">Jurnal Harian Guru</div>
+            <div class="placeholder-desc">Catatan pelaksanaan pembelajaran harian: materi, metode, ketercapaian TP, hambatan, dan refleksi yang bisa dibantu AI.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaJurnalGuru</h4>
+              <div class="schema-field"><span class="schema-key">daftar_sesi[].jam_ke</span><span class="schema-type">Number</span><span class="schema-desc">Jam pelajaran ke berapa</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_sesi[].materi_diajarkan</span><span class="schema-type">String</span><span class="schema-desc">Topik yang diajarkan hari ini</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_sesi[].ketercapaian_tp</span><span class="schema-type">String</span><span class="schema-desc">"Tercapai" | "Sebagian" | "Belum"</span></div>
+              <div class="schema-field"><span class="schema-key">catatan_kejadian</span><span class="schema-type">String</span><span class="schema-desc">Kejadian penting / insiden hari ini</span></div>
+              <div class="schema-field"><span class="schema-key">refleksi.rencana_besok</span><span class="schema-type">String</span><span class="schema-desc">Rencana kegiatan esok hari</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-jadwal" class="guru-module-page">
+        <div id="modulJadwalApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🕐</div>
+            <div class="placeholder-title">Jadwal Pelajaran</div>
+            <div class="placeholder-desc">Jadwal KBM mingguan dalam format grid per hari dan jam pelajaran. Mendukung perubahan jadwal dan keterangan pengganti.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaJadwalPelajaran</h4>
+              <div class="schema-field"><span class="schema-key">slot_waktu[].jam_ke</span><span class="schema-type">Number</span><span class="schema-desc">Slot jam pelajaran ke-1, 2, dst.</span></div>
+              <div class="schema-field"><span class="schema-key">slot_waktu[].jam_mulai</span><span class="schema-type">String</span><span class="schema-desc">cth: "07.00"</span></div>
+              <div class="schema-field"><span class="schema-key">slot_waktu[].is_istirahat</span><span class="schema-type">Boolean</span><span class="schema-desc">true jika slot istirahat</span></div>
+              <div class="schema-field"><span class="schema-key">jadwal_per_hari[].hari</span><span class="schema-type">String</span><span class="schema-desc">"Senin" | "Selasa" | dst.</span></div>
+              <div class="schema-field"><span class="schema-key">jadwal_per_hari[].slot_kegiatan[].mata_pelajaran</span><span class="schema-type">String</span><span class="schema-desc">Mapel yang diajarkan</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           MODUL 3: PENILAIAN & EVALUASI
+      ══════════════════════════════════════ -->
+
+      <div id="page-kisi-kisi" class="guru-module-page">
+        <div id="modulKisiKisiApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📋</div>
+            <div class="placeholder-title">Kisi-Kisi Soal</div>
+            <div class="placeholder-desc">Kerangka penyusunan soal berdasarkan TP, materi, indikator, bentuk soal, level kognitif (C1–C6), dan bobot nilai.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaKisiKisi</h4>
+              <div class="schema-field"><span class="schema-key">daftar_kisi[].id_tp</span><span class="schema-type">String</span><span class="schema-desc">Referensi TP dari ATP</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kisi[].indikator_soal</span><span class="schema-type">String</span><span class="schema-desc">"Disajikan ..., murid dapat ..."</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kisi[].bentuk_soal</span><span class="schema-type">String</span><span class="schema-desc">PG / Isian / Uraian</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kisi[].level_kognitif</span><span class="schema-type">String</span><span class="schema-desc">"C1" hingga "C6"</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_kisi[].bobot_skor</span><span class="schema-type">Number</span><span class="schema-desc">Poin per soal (total = 100)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-bank-soal" class="guru-module-page">
+        <div id="modulBankSoalApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🏦</div>
+            <div class="placeholder-title">Bank Soal & Naskah Ujian</div>
+            <div class="placeholder-desc">Kumpulan soal PG, Isian, dan Uraian lengkap dengan kunci jawaban, rubrik, dan sistem perakitan naskah ujian (Harian / PTS / PAS).</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaBankSoal & skemaNaskahUjian</h4>
+              <div class="schema-field"><span class="schema-key">daftar_soal[].teks_pertanyaan</span><span class="schema-type">String</span><span class="schema-desc">Narasi soal lengkap</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_soal[].pilihan_jawaban</span><span class="schema-type">Array</span><span class="schema-desc">[{kode:"A", teks:"..."}]</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_soal[].kunci_benar</span><span class="schema-type">String</span><span class="schema-desc">Jawaban benar / rubrik uraian</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_soal[].tingkat_kesulitan</span><span class="schema-type">String</span><span class="schema-desc">"Mudah" | "Sedang" | "Sulit"</span></div>
+              <div class="schema-field"><span class="schema-key">naskahUjian.daftar_id_soal</span><span class="schema-type">Array</span><span class="schema-desc">Urutan soal dalam naskah</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-nilai" class="guru-module-page">
+        <div id="modulNilaiApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📈</div>
+            <div class="placeholder-title">Daftar Nilai Murid</div>
+            <div class="placeholder-desc">Rekap nilai formatif (harian/proses) dan sumatif (ujian) per murid per mapel, dengan konversi nilai akhir dan predikat untuk rapor.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaNilaiMurid</h4>
+              <div class="schema-field"><span class="schema-key">daftar_nilai[].nilai_formatif[]</span><span class="schema-type">Array</span><span class="schema-desc">Nilai proses harian per TP</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_nilai[].nilai_sumatif[]</span><span class="schema-type">Array</span><span class="schema-desc">Nilai ujian PTS / PAS</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_nilai[].nilai_akhir_rapor</span><span class="schema-type">Number</span><span class="schema-desc">Nilai gabungan (0–100)</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_nilai[].predikat</span><span class="schema-type">String</span><span class="schema-desc">"A" | "B" | "C" | "D"</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_nilai[].deskripsi_rapor</span><span class="schema-type">String</span><span class="schema-desc">Narasi deskriptif untuk rapor</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-analisis" class="guru-module-page">
+        <div id="modulAnalisisApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🔍</div>
+            <div class="placeholder-title">Analisis Hasil Penilaian</div>
+            <div class="placeholder-desc">Analisis mendalam per soal dan per murid: persentase ketuntasan, soal problematik, distribusi nilai, dan rekomendasi tindak lanjut.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaAnalisisPenilaian</h4>
+              <div class="schema-field"><span class="schema-key">hasil_per_murid[].skor_per_nomor</span><span class="schema-type">Array</span><span class="schema-desc">Skor tiap nomor soal</span></div>
+              <div class="schema-field"><span class="schema-key">hasil_per_murid[].status</span><span class="schema-type">String</span><span class="schema-desc">"Tuntas" | "Remedial"</span></div>
+              <div class="schema-field"><span class="schema-key">analisis_soal[].persen_benar</span><span class="schema-type">Number</span><span class="schema-desc">% murid yang menjawab benar</span></div>
+              <div class="schema-field"><span class="schema-key">statistik_kelas.persen_ketuntasan</span><span class="schema-type">Number</span><span class="schema-desc">% murid yang tuntas</span></div>
+              <div class="schema-field"><span class="schema-key">rekomendasi_tindak_lanjut</span><span class="schema-type">String</span><span class="schema-desc">Saran guru (bisa dibantu AI)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-remedial" class="guru-module-page">
+        <div id="modulRemedialApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🔄</div>
+            <div class="placeholder-title">Remedial & Pengayaan</div>
+            <div class="placeholder-desc">Pencatatan kegiatan remedial bagi murid yang belum tuntas dan pengayaan bagi yang sudah melampaui KKTP, lengkap dengan nilai sebelum dan sesudah.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaRemedialPengayaan</h4>
+              <div class="schema-field"><span class="schema-key">jenis</span><span class="schema-type">String</span><span class="schema-desc">"Remedial" | "Pengayaan"</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_peserta[].id_tp</span><span class="schema-type">String</span><span class="schema-desc">TP yang menjadi fokus</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_peserta[].materi_fokus</span><span class="schema-type">String</span><span class="schema-desc">Materi yang diulang/diperdalam</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_peserta[].nilai_awal</span><span class="schema-type">Number</span><span class="schema-desc">Nilai sebelum kegiatan</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_peserta[].nilai_akhir</span><span class="schema-type">Number</span><span class="schema-desc">Nilai sesudah kegiatan</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-portofolio" class="guru-module-page">
+        <div id="modulPortofolioApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🗂️</div>
+            <div class="placeholder-title">Portofolio Murid</div>
+            <div class="placeholder-desc">Kumpulan karya terbaik murid sebagai bukti perkembangan belajar. Berisi nama tugas, file/link karya, feedback guru, dan nilai karya.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaPortofolio</h4>
+              <div class="schema-field"><span class="schema-key">koleksi_karya[].nama_tugas</span><span class="schema-type">String</span><span class="schema-desc">Judul / nama karya</span></div>
+              <div class="schema-field"><span class="schema-key">koleksi_karya[].link_file</span><span class="schema-type">String</span><span class="schema-desc">URL Google Drive / Firebase Storage</span></div>
+              <div class="schema-field"><span class="schema-key">koleksi_karya[].jenis_file</span><span class="schema-type">String</span><span class="schema-desc">"Dokumen" | "Gambar" | "Video"</span></div>
+              <div class="schema-field"><span class="schema-key">koleksi_karya[].feedback_guru</span><span class="schema-type">String</span><span class="schema-desc">Komentar & umpan balik guru</span></div>
+              <div class="schema-field"><span class="schema-key">deskripsi_perkembangan</span><span class="schema-type">String</span><span class="schema-desc">Narasi perkembangan keseluruhan</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-legger" class="guru-module-page">
+        <div id="modulLeggerApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📊</div>
+            <div class="placeholder-title">Legger Nilai — Rekap Semua Mata Pelajaran</div>
+            <div class="placeholder-desc">Daftar rekapitulasi nilai akhir seluruh murid untuk semua mata pelajaran dalam satu semester, dilengkapi rata-rata, peringkat, dan status kenaikan kelas.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaLegger</h4>
+              <div class="schema-field"><span class="schema-key">rekap_semua_mapel[].nilai_per_mapel</span><span class="schema-type">Array</span><span class="schema-desc">Nilai tiap mapel per murid</span></div>
+              <div class="schema-field"><span class="schema-key">rekap_semua_mapel[].rata_rata</span><span class="schema-type">Number</span><span class="schema-desc">Rata-rata semua mapel</span></div>
+              <div class="schema-field"><span class="schema-key">rekap_semua_mapel[].peringkat</span><span class="schema-type">Number</span><span class="schema-desc">Peringkat di kelas</span></div>
+              <div class="schema-field"><span class="schema-key">rekap_semua_mapel[].jumlah_hadir</span><span class="schema-type">Number</span><span class="schema-desc">Total hari hadir semester ini</span></div>
+              <div class="schema-field"><span class="schema-key">rekap_semua_mapel[].catatan_kenaikan</span><span class="schema-type">String</span><span class="schema-desc">"Naik Kelas" | "Tidak Naik" | "Lulus"</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           MODUL 4: PROYEK P5
+      ══════════════════════════════════════ -->
+
+      <div id="page-modul-p5" class="guru-module-page">
+        <div id="modulP5App">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📒</div>
+            <div class="placeholder-title">Modul Proyek P5</div>
+            <div class="placeholder-desc">Rancangan lengkap Proyek Penguatan Profil Pelajar Pancasila: tema, topik, dimensi karakter, alur kegiatan (Pengenalan → Aksi → Refleksi), dan rubrik penilaian.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaModulP5</h4>
+              <div class="schema-field"><span class="schema-key">identitas.tema_p5</span><span class="schema-type">String</span><span class="schema-desc">Dari 7 tema resmi P5 SD</span></div>
+              <div class="schema-field"><span class="schema-key">dimensi_karakter[].nama_dimensi</span><span class="schema-type">String</span><span class="schema-desc">Dimensi PPP (6 dimensi)</span></div>
+              <div class="schema-field"><span class="schema-key">alur_kegiatan[].nama_tahap</span><span class="schema-type">String</span><span class="schema-desc">"Pengenalan" | "Aksi" | "Refleksi"</span></div>
+              <div class="schema-field"><span class="schema-key">alur_kegiatan[].aktivitas</span><span class="schema-type">Array</span><span class="schema-desc">Daftar aktivitas spesifik</span></div>
+              <div class="schema-field"><span class="schema-key">rubrik_penilaian[].MB / SB / BSH / SAB</span><span class="schema-type">String</span><span class="schema-desc">Deskriptor 4 level capaian</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-jurnal-p5" class="guru-module-page">
+        <div id="modulJurnalP5App">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🔬</div>
+            <div class="placeholder-title">Jurnal Observasi P5</div>
+            <div class="placeholder-desc">Catatan perkembangan karakter murid selama proyek P5 berlangsung, termasuk bukti perilaku yang teramati dan level dimensi sementara.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaJurnalObservasiP5</h4>
+              <div class="schema-field"><span class="schema-key">tahap_proyek</span><span class="schema-type">String</span><span class="schema-desc">Tahap P5 yang berlangsung</span></div>
+              <div class="schema-field"><span class="schema-key">catatan_per_murid[].catatan_proses</span><span class="schema-type">String</span><span class="schema-desc">Apa yang dilakukan murid</span></div>
+              <div class="schema-field"><span class="schema-key">catatan_per_murid[].karakter_yang_muncul</span><span class="schema-type">Array</span><span class="schema-desc">Dimensi karakter yang terlihat</span></div>
+              <div class="schema-field"><span class="schema-key">catatan_per_murid[].penilaian_dimensi[].level</span><span class="schema-type">String</span><span class="schema-desc">"MB" | "SB" | "BSH" | "SAB"</span></div>
+              <div class="schema-field"><span class="schema-key">catatan_per_murid[].penilaian_dimensi[].bukti</span><span class="schema-type">String</span><span class="schema-desc">Bukti perilaku yang teramati</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-rapor-p5" class="guru-module-page">
+        <div id="modulRaporP5App">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📝</div>
+            <div class="placeholder-title">Rapor Proyek P5</div>
+            <div class="placeholder-desc">Laporan akhir capaian murid dalam proyek P5: level capaian tiap dimensi (MB/SB/BSH/SAB) dan narasi perkembangan dari guru.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaRaporP5</h4>
+              <div class="schema-field"><span class="schema-key">capaian_per_murid[].daftar_dimensi[].nama_dimensi</span><span class="schema-type">String</span><span class="schema-desc">Nama dimensi PPP</span></div>
+              <div class="schema-field"><span class="schema-key">capaian_per_murid[].daftar_dimensi[].level_capaian</span><span class="schema-type">String</span><span class="schema-desc">"MB" | "SB" | "BSH" | "SAB"</span></div>
+              <div class="schema-field"><span class="schema-key">capaian_per_murid[].daftar_dimensi[].deskripsi</span><span class="schema-type">String</span><span class="schema-desc">Narasi capaian per dimensi</span></div>
+              <div class="schema-field"><span class="schema-key">capaian_per_murid[].narasi_guru</span><span class="schema-type">String</span><span class="schema-desc">Cerita perkembangan murid</span></div>
+              <div class="schema-field"><span class="schema-key">capaian_per_murid[].karya_unggulan</span><span class="schema-type">String</span><span class="schema-desc">Momen / karya menonjol murid</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           MODUL 5: ADMINISTRASI WALI KELAS
+      ══════════════════════════════════════ -->
+
+      <div id="page-buku-induk" class="guru-module-page">
+        <div id="modulBukuIndukApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📖</div>
+            <div class="placeholder-title">Buku Induk Kelas</div>
+            <div class="placeholder-desc">Data lengkap murid: biodata pribadi, alamat, data orang tua/wali, riwayat masuk sekolah, kondisi sosial-ekonomi, dan catatan prestasi.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaBukuIndukMurid</h4>
+              <div class="schema-field"><span class="schema-key">data_pribadi.nisn</span><span class="schema-type">String</span><span class="schema-desc">Nomor Induk Siswa Nasional</span></div>
+              <div class="schema-field"><span class="schema-key">data_pribadi.tanggal_lahir</span><span class="schema-type">String</span><span class="schema-desc">Format YYYY-MM-DD</span></div>
+              <div class="schema-field"><span class="schema-key">alamat.kecamatan</span><span class="schema-type">String</span><span class="schema-desc">Alamat domisili lengkap</span></div>
+              <div class="schema-field"><span class="schema-key">data_ayah.pekerjaan</span><span class="schema-type">String</span><span class="schema-desc">Pekerjaan ayah</span></div>
+              <div class="schema-field"><span class="schema-key">kondisi_sosekbud</span><span class="schema-type">String</span><span class="schema-desc">"Mampu" | "Kurang Mampu" | "KIP"</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-mutasi" class="guru-module-page">
+        <div id="modulMutasiApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🔀</div>
+            <div class="placeholder-title">Mutasi Murid</div>
+            <div class="placeholder-desc">Pencatatan perpindahan murid masuk maupun keluar, lengkap dengan tanggal mutasi, alasan, sekolah asal/tujuan, dan nomor surat resmi.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaMutasiMurid</h4>
+              <div class="schema-field"><span class="schema-key">jenis_mutasi</span><span class="schema-type">String</span><span class="schema-desc">"masuk" | "keluar"</span></div>
+              <div class="schema-field"><span class="schema-key">tanggal_mutasi</span><span class="schema-type">String</span><span class="schema-desc">Format YYYY-MM-DD</span></div>
+              <div class="schema-field"><span class="schema-key">alasan_mutasi</span><span class="schema-type">String</span><span class="schema-desc">Alasan kepindahan</span></div>
+              <div class="schema-field"><span class="schema-key">sekolah_asal_tujuan</span><span class="schema-type">String</span><span class="schema-desc">Nama sekolah asal/tujuan</span></div>
+              <div class="schema-field"><span class="schema-key">nomor_surat</span><span class="schema-type">String</span><span class="schema-desc">Nomor surat mutasi resmi</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-tata-ruang" class="guru-module-page">
+        <div id="modulTataRuangApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🪑</div>
+            <div class="placeholder-title">Tata Ruang Kelas</div>
+            <div class="placeholder-desc">Pengaturan denah tempat duduk murid dalam format grid baris-kolom, lengkap dengan struktur organisasi kelas (Ketua, Sekretaris, Bendahara, Seksi).</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaTataRuang</h4>
+              <div class="schema-field"><span class="schema-key">struktur_organisasi.ketua_kelas</span><span class="schema-type">Object</span><span class="schema-desc">{id_murid, nama}</span></div>
+              <div class="schema-field"><span class="schema-key">jumlah_baris</span><span class="schema-type">Number</span><span class="schema-desc">Jumlah baris kursi di kelas</span></div>
+              <div class="schema-field"><span class="schema-key">jumlah_kolom</span><span class="schema-type">Number</span><span class="schema-desc">Jumlah kolom kursi di kelas</span></div>
+              <div class="schema-field"><span class="schema-key">denah_duduk[].baris</span><span class="schema-type">Number</span><span class="schema-desc">Posisi baris (1 = depan)</span></div>
+              <div class="schema-field"><span class="schema-key">denah_duduk[].id_murid</span><span class="schema-type">String</span><span class="schema-desc">Murid di posisi ini (kosong = bangku kosong)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-kesepakatan" class="guru-module-page">
+        <div id="modulKesepakatanApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">🤝</div>
+            <div class="placeholder-title">Kesepakatan Kelas</div>
+            <div class="placeholder-desc">Aturan kelas yang disepakati bersama antara guru dan murid, beserta konsekuensi positif (reward) dan tindak lanjut jika dilanggar.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaKesepakatanKelas</h4>
+              <div class="schema-field"><span class="schema-key">proses_pembuatan</span><span class="schema-type">String</span><span class="schema-desc">Deskripsi cara aturan dibuat</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_aturan[].aturan</span><span class="schema-type">String</span><span class="schema-desc">Narasi aturan yang disepakati</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_aturan[].kategori</span><span class="schema-type">String</span><span class="schema-desc">"Kebersihan" | "Disiplin" | dst.</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_aturan[].konsekuensi_positif</span><span class="schema-type">String</span><span class="schema-desc">Reward jika dipatuhi</span></div>
+              <div class="schema-field"><span class="schema-key">hak_murid</span><span class="schema-type">Array</span><span class="schema-desc">Hak-hak yang disepakati murid</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           MODUL 6: HUMAS & PENDUKUNG
+      ══════════════════════════════════════ -->
+
+      <div id="page-buku-kasus" class="guru-module-page">
+        <div id="modulBukuKasusApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📓</div>
+            <div class="placeholder-title">Buku Kasus & Prestasi Murid</div>
+            <div class="placeholder-desc">Catatan terstruktur untuk setiap kejadian penting (kasus/masalah) maupun prestasi murid, dilengkapi tindak lanjut dan status penyelesaian.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaBukuKasusPrestasi</h4>
+              <div class="schema-field"><span class="schema-key">jenis_catatan</span><span class="schema-type">String</span><span class="schema-desc">"masalah" | "prestasi" | "penting"</span></div>
+              <div class="schema-field"><span class="schema-key">detail_kejadian</span><span class="schema-type">String</span><span class="schema-desc">Narasi lengkap kejadian</span></div>
+              <div class="schema-field"><span class="schema-key">solusi_tindak_lanjut</span><span class="schema-type">String</span><span class="schema-desc">Langkah penanganan</span></div>
+              <div class="schema-field"><span class="schema-key">status_penyelesaian</span><span class="schema-type">String</span><span class="schema-desc">"Sedang Diproses" | "Selesai"</span></div>
+              <div class="schema-field"><span class="schema-key">tingkat_kasus</span><span class="schema-type">String</span><span class="schema-desc">"Ringan" | "Sedang" | "Berat"</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-komunikasi-ortu" class="guru-module-page">
+        <div id="modulKomunikasiOrtuApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">💬</div>
+            <div class="placeholder-title">Komunikasi dengan Orang Tua</div>
+            <div class="placeholder-desc">Log setiap komunikasi antara guru dan orang tua/wali murid (tatap muka, telepon, chat, surat), dilengkapi hasil pertemuan dan butir kesepakatan.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaKomunikasiOrtu</h4>
+              <div class="schema-field"><span class="schema-key">jenis_komunikasi</span><span class="schema-type">String</span><span class="schema-desc">"Tatap Muka" | "Telepon" | "Chat"</span></div>
+              <div class="schema-field"><span class="schema-key">topik_pembicaraan</span><span class="schema-type">String</span><span class="schema-desc">Ringkasan topik / agenda</span></div>
+              <div class="schema-field"><span class="schema-key">hasil_pertemuan</span><span class="schema-type">String</span><span class="schema-desc">Kesimpulan yang dicapai</span></div>
+              <div class="schema-field"><span class="schema-key">kesepakatan</span><span class="schema-type">Array</span><span class="schema-desc">Butir-butir kesepakatan</span></div>
+              <div class="schema-field"><span class="schema-key">jadwal_follow_up</span><span class="schema-type">String</span><span class="schema-desc">Tanggal pertemuan berikutnya</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-inventaris" class="guru-module-page">
+        <div id="modulInventarisApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📦</div>
+            <div class="placeholder-title">Inventaris Kelas</div>
+            <div class="placeholder-desc">Daftar seluruh barang di kelas beserta kondisi (Baik / Rusak Ringan / Rusak Berat / Hilang), sumber barang, dan kebutuhan pengadaan baru.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaInventaris</h4>
+              <div class="schema-field"><span class="schema-key">daftar_barang[].nama_barang</span><span class="schema-type">String</span><span class="schema-desc">cth: "Kursi Murid", "Proyektor"</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_barang[].jumlah_baik</span><span class="schema-type">Number</span><span class="schema-desc">Jumlah dalam kondisi baik</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_barang[].jumlah_rusak_ringan</span><span class="schema-type">Number</span><span class="schema-desc">Jumlah rusak ringan</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_barang[].kondisi_dominan</span><span class="schema-type">String</span><span class="schema-desc">"baik" | "rusak_ringan" | dst.</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_barang[].butuh_penggantian</span><span class="schema-type">Boolean</span><span class="schema-desc">Perlu pengadaan baru?</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-log-logistik" class="guru-module-page">
+        <div id="modulLogLogistikApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📋</div>
+            <div class="placeholder-title">Log Logistik (Tanda Terima Rapor & Pinjam Buku)</div>
+            <div class="placeholder-desc">Pencatatan tanda terima rapor per murid (siapa yang mengambil, kapan) dan peminjaman buku perpustakaan kelas (tanggal pinjam, kembali, denda).</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaTandaTerimaRapor & skemaPinjamBuku</h4>
+              <div class="schema-field"><span class="schema-key">daftar_pengambilan[].nama_pengambil</span><span class="schema-type">String</span><span class="schema-desc">Nama orang yang mengambil rapor</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_pengambilan[].sudah_ambil</span><span class="schema-type">Boolean</span><span class="schema-desc">Status pengambilan rapor</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_pinjaman[].judul_buku</span><span class="schema-type">String</span><span class="schema-desc">Buku yang dipinjam</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_pinjaman[].tgl_wajib_kembali</span><span class="schema-type">String</span><span class="schema-desc">Batas pengembalian</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_pinjaman[].sudah_kembali</span><span class="schema-type">Boolean</span><span class="schema-desc">Status pengembalian</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-kas-kelas" class="guru-module-page">
+        <div id="modulKasKelasApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">💰</div>
+            <div class="placeholder-title">Keuangan / Kas Kelas</div>
+            <div class="placeholder-desc">Buku kas harian kelas: pencatatan pemasukan dan pengeluaran kas, perhitungan saldo otomatis, dan laporan keuangan transparan per semester.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaKeuanganKelas</h4>
+              <div class="schema-field"><span class="schema-key">saldo_awal</span><span class="schema-type">Number</span><span class="schema-desc">Saldo awal periode (Rp)</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_transaksi[].keterangan</span><span class="schema-type">String</span><span class="schema-desc">Deskripsi transaksi</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_transaksi[].jumlah_masuk</span><span class="schema-type">Number</span><span class="schema-desc">Pemasukan (Rp)</span></div>
+              <div class="schema-field"><span class="schema-key">daftar_transaksi[].jumlah_keluar</span><span class="schema-type">Number</span><span class="schema-desc">Pengeluaran (Rp)</span></div>
+              <div class="schema-field"><span class="schema-key">saldo_akhir</span><span class="schema-type">Number</span><span class="schema-desc">Saldo terkini (dihitung otomatis)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-notulen" class="guru-module-page">
+        <div id="modulNotulenApp">
+          <div class="page-placeholder">
+            <div class="placeholder-icon">📄</div>
+            <div class="placeholder-title">Notulen Rapat</div>
+            <div class="placeholder-desc">Dokumentasi resmi hasil rapat (rapat guru, rapat wali murid, atau rapat komite): agenda, daftar hadir, hasil pembahasan, dan keputusan beserta penanggung jawab.</div>
+            <div class="placeholder-schema">
+              <h4>🗂 Schema Data — skemaNotulenRapat</h4>
+              <div class="schema-field"><span class="schema-key">judul_rapat</span><span class="schema-type">String</span><span class="schema-desc">cth: "Rapat Wali Murid Semester Ganjil"</span></div>
+              <div class="schema-field"><span class="schema-key">jenis_rapat</span><span class="schema-type">String</span><span class="schema-desc">"Internal Guru" | "Wali Murid" | "Komite"</span></div>
+              <div class="schema-field"><span class="schema-key">agenda</span><span class="schema-type">Array</span><span class="schema-desc">Daftar poin agenda rapat</span></div>
+              <div class="schema-field"><span class="schema-key">poin_keputusan[].isi_keputusan</span><span class="schema-type">String</span><span class="schema-desc">Keputusan yang disepakati</span></div>
+              <div class="schema-field"><span class="schema-key">poin_keputusan[].penanggung_jawab</span><span class="schema-type">String</span><span class="schema-desc">Siapa yang bertanggung jawab</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           SHARED / KOLABORASI
+      ══════════════════════════════════════ -->
+
+      <div id="page-chat" class="guru-module-page">
+        <div id="chatContent"></div>
+      </div>
+
+      <div id="page-ai" class="guru-module-page">
+        <div id="aiContent"></div>
+      </div>
+
+      <div id="page-sharing" class="guru-module-page">
+        <div class="module-card">
+          <div class="module-card-header">
+            <div>
+              <div class="module-card-title">📩 BERBAGI DOKUMEN — INBOX</div>
+              <div class="module-card-subtitle">Dokumen yang dikirimkan ke Anda oleh rekan sejawat</div>
+            </div>
+          </div>
+          <div class="module-card-body" id="sharingInbox">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <!-- ══════════════════════════════════════
+       NAVIGATION LOGIC
+  ══════════════════════════════════════ -->
   <script>
     window.GuruUI = {
-      nav: function (pageId, el) {
-        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-        el.classList.add('active');
-        document.querySelectorAll('.guru-module-page').forEach(e => e.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-
+      nav: function (pageId) {
         const titles = {
-          'perencanaan': 'PERENCANAAN PEMBELAJARAN (MODUL AJAR & P5)',
-          'pelaksanaan': 'PELAKSANAAN (JURNAL & PRESENSI)',
-          'asesmen': 'ASESMEN (BANK SOAL & HOTS)',
-          'nilai': 'PENGOLAHAN NILAI & NARASI RAPOR',
-          'sharing': 'KOLABORASI & BERBAGI DOKUMEN'
+          // BERANDA
+          'home':           '🏠 BERANDA WORKSTATION GURU',
+
+          // MODUL 1 — PERENCANAAN & PEDOMAN
+          'kalender':       '📆 KALENDER PENDIDIKAN',
+          'cp':             '🎯 CAPAIAN PEMBELAJARAN (CP)',
+          'atp':            '🗺️ ALUR TUJUAN PEMBELAJARAN (ATP)',
+          'prota':          '📅 PROGRAM TAHUNAN (PROTA)',
+          'promes':         '📆 PROGRAM SEMESTER (PROMES)',
+          'modul-ajar':     '📑 MODUL AJAR / RPP+',
+          'kktp':           '✅ KKTP — KRITERIA KETERCAPAIAN TP',
+
+          // MODUL 2 — PELAKSANAAN HARIAN
+          'absensi':        '👥 ABSENSI MURID (DAFTAR HADIR HARIAN)',
+          'jurnal':         '📝 JURNAL HARIAN GURU',
+          'jadwal':         '🕐 JADWAL PELAJARAN',
+
+          // MODUL 3 — PENILAIAN & EVALUASI
+          'kisi-kisi':      '📋 KISI-KISI SOAL',
+          'bank-soal':      '🏦 BANK SOAL & NASKAH UJIAN',
+          'nilai':          '📈 DAFTAR NILAI MURID',
+          'analisis':       '🔍 ANALISIS HASIL PENILAIAN',
+          'remedial':       '🔄 REMEDIAL & PENGAYAAN',
+          'portofolio':     '🗂️ PORTOFOLIO MURID',
+          'legger':         '📊 LEGGER NILAI — REKAP SEMUA MAPEL',
+
+          // MODUL 4 — PROYEK P5
+          'modul-p5':       '📒 MODUL PROYEK P5',
+          'jurnal-p5':      '🔬 JURNAL OBSERVASI P5',
+          'rapor-p5':       '📝 RAPOR PROYEK P5',
+
+          // MODUL 5 — WALI KELAS
+          'buku-induk':     '📖 BUKU INDUK KELAS',
+          'mutasi':         '🔀 MUTASI MURID',
+          'tata-ruang':     '🪑 TATA RUANG & DENAH DUDUK',
+          'kesepakatan':    '🤝 KESEPAKATAN KELAS',
+
+          // MODUL 6 — HUMAS & PENDUKUNG
+          'buku-kasus':        '📓 BUKU KASUS & PRESTASI MURID',
+          'komunikasi-ortu':   '💬 KOMUNIKASI DENGAN ORANG TUA',
+          'inventaris':        '📦 INVENTARIS KELAS',
+          'log-logistik':      '📋 LOG LOGISTIK (RAPOR & BUKU)',
+          'kas-kelas':         '💰 KEUANGAN / KAS KELAS',
+          'notulen':           '📄 NOTULEN RAPAT',
+
+          // KOLABORASI
+          'chat':           '💬 CHAT SEKOLAH',
+          'ai':             '🤖 CIMEGA AI CO-PILOT',
+          'sharing':        '📩 BERBAGI DOKUMEN — INBOX',
         };
-        document.getElementById('topTitle').innerText = titles[pageId];
-        if(pageId === 'sharing') window.CimegaSharing.renderInbox('sharingInbox');
+
+        const title = titles[pageId] || 'CIMEGA SMART OFFICE';
+        document.getElementById('topTitle').innerText = title;
+
+        // ─ Lazy-boot kolaborasi ─
+        if (pageId === 'sharing' && window.CimegaSharing) {
+          window.CimegaSharing.renderInbox('sharingInbox');
+        }
+        if (pageId === 'chat') {
+          const chatDiv = document.getElementById('chatContent');
+          if (chatDiv) chatDiv.innerHTML = '<div class="spinner" style="margin:40px auto;"></div>';
+          if (typeof db !== 'undefined' && db && window.CimegaChat) window.CimegaChat.init(db, 'chatContent');
+        }
+        if (pageId === 'ai' && window.CimegaAIChatbot) {
+          window.CimegaAIChatbot.renderTo('aiContent');
+        }
       }
     };
 
-    // Auth Check
+    // ─ Auth guard ─
     const userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
     if (!userData.roles || !userData.roles.includes('guru')) {
-      window.location.href = '../login/login.html'; // Kick non-guru
+      window.location.href = '../login/login.html';
     }
-    document.getElementById('loginName').innerText = userData.nama || 'Guru';
+    document.getElementById('loginName').innerText    = userData.nama     || 'Guru';
+    document.getElementById('loginSchool').innerText  = userData.sekolah  || '—';
 
     function logout() {
       localStorage.removeItem('cimega_user');
@@ -450,58 +1071,80 @@
     }
   </script>
 
-  <!-- FIREBASE & AI INITIALIZATION (MOCK/WRAPPER) -->
+  <!-- ══════════════════════════════════════
+       FIREBASE INIT
+  ══════════════════════════════════════ -->
   <script>
     let db;
     async function initEnvironment() {
       try {
         const firebaseConfig = await window.cimegaAPI.getFirebaseConfig();
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-        const { getFirestore, collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const { initializeApp }   = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+        const {
+          getFirestore, collection, addDoc, getDocs, getDoc,
+          updateDoc, doc, deleteDoc, query, where, orderBy,
+          limit, onSnapshot, serverTimestamp
+        } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
-        window._fb = { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where, serverTimestamp };
-
-        // Modules usually self-initialize if detecting the page, but we ensure calling their boot if available
-        if (window.ModulPerencanaan) window.ModulPerencanaan.init();
-        if (window.ModulPelaksanaan) window.ModulPelaksanaan.init();
-        if (window.ModulAsesmen) window.ModulAsesmen.init();
-        if (window.ModulNilai) window.ModulNilai.init();
-
-        // Multi-Tenant SaaS Update: Secure Chat
-        if (window.CimegaChat) window.CimegaChat.init(db);
-
+        window._fb = {
+          collection, addDoc, getDocs, getDoc, updateDoc, doc,
+          deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp
+        };
       } catch (e) {
-        console.error("Environment init fail", e);
+        console.error('Cimega: Firebase init fail', e);
       }
     }
     initEnvironment();
+
+    // ─ Boot dashboard (sidebar + beranda) ─
+    window.addEventListener('load', () => {
+      if (window.CimegaDashboard) {
+        window.CimegaDashboard.init((pid) => window.GuruUI.nav(pid));
+      }
+    });
   </script>
 
-  <!-- SHARED SaaS UPGRADE -->
+  <!-- ══════════════════════════════════════
+       SHARED MODULES
+  ══════════════════════════════════════ -->
   <script src="../../shared/crypto_helper.js"></script>
+  <script src="../../shared/ai_helper.js"></script>
   <script src="../../shared/chat.js"></script>
   <script src="../../shared/music.js"></script>
   <script src="../../shared/printer.js"></script>
   <script src="../../shared/sharing.js"></script>
   <script src="../../shared/ai_chatbot.js"></script>
+  <script src="../../shared/dashboard_ui.js"></script>
 
-  <!-- SCRIPT INJECTIONS -->
-  <script type="module" src="../../modules/guru/perencanaan.js"></script>
-  <script type="module" src="../../modules/guru/pelaksanaan.js"></script>
-  <script type="module" src="../../modules/guru/asesmen.js"></script>
-  <script type="module" src="../../modules/guru/nilai.js"></script>
+  <!-- ══════════════════════════════════════
+       MODUL ADMINISTRASI GURU (6 MODULE BARU)
+       Hanya schema / data — UI masing-masing
+       dibangun secara progressive per page.
+  ══════════════════════════════════════ -->
+  <script type="module">
+    import * as Perencanaan from '../../modules/guru/perencanaan.js';
+    import * as Pelaksanaan from '../../modules/guru/pelaksanaan.js';
+    import * as Penilaian   from '../../modules/guru/penilaian.js';
+    import * as ProyekP5    from '../../modules/guru/proyek_p5.js';
+    import * as WaliKelas   from '../../modules/guru/wali_kelas.js';
+    import * as Pendukung   from '../../modules/guru/pendukung.js';
 
+    // Expose ke window agar bisa dipakai modul UI non-module
+    window.GuruSchema = { Perencanaan, Pelaksanaan, Penilaian, ProyekP5, WaliKelas, Pendukung };
+    console.log('✅ Cimega Guru: 6 modul schema berhasil dimuat.', Object.keys(window.GuruSchema));
+  </script>
+
+  <!-- ══════════════════════════════════════
+       GLOBAL FEATURE INIT
+  ══════════════════════════════════════ -->
   <script>
-    // Global Feature Init
-    async function startCimegaShared() {
-       if(window.CimegaMusic) window.CimegaMusic.init();
-       if(window.CimegaAIChatbot) window.CimegaAIChatbot.init();
-       if(window.CimegaSharing) window.CimegaSharing.init();
-    }
-    setTimeout(startCimegaShared, 1000);
+    setTimeout(() => {
+      if (window.CimegaMusic)   window.CimegaMusic.init();
+      if (window.CimegaSharing) window.CimegaSharing.init();
+    }, 1000);
   </script>
 
 </body>
-
 </html>
