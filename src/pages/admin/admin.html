@@ -1570,19 +1570,296 @@ async function importDefaultDokumen(){
 }
 
 // ════════════════════════════════════════════
+// KELOLA KONTEN — KATEGORI
+// ════════════════════════════════════════════
+
+async function loadKategoriList() {
+  const { collection, getDocs, query, orderBy } = window._fb;
+  const container = document.getElementById('katItemsContainer');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Memuat...</div>';
+
+  try {
+    const snap = await getDocs(query(collection(db, 'kategori'), orderBy('urutan', 'asc')));
+    kontenKategoriMeta = {};
+    kontenKategori = {};
+
+    if (snap.empty) {
+      // Tampilkan tombol seed jika kosong
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Belum ada kategori.<br><button class="btn btn-ghost btn-sm" onclick="seedKategoriDefault()" style="margin-top:8px">↩ Seed Default</button></div>';
+      return;
+    }
+
+    let html = '';
+    snap.forEach(d => {
+      const data = d.data();
+      kontenKategori[d.id] = data.nama;
+      kontenKategoriMeta[d.id] = { nama: data.nama, icon: data.icon || '📄', urutan: data.urutan || 0, visibleTo: data.visibleTo || [], deskripsi: data.deskripsi || '' };
+      const isActive = _currentKat === d.id;
+      html += `<div class="kat-item${isActive ? ' active' : ''}" id="kat-${d.id}">
+        <button class="kat-item-btn" onclick="selectKat('${d.id}')">
+          <span class="kat-item-icon">${data.icon || '📄'}</span>
+          <span class="kat-item-name">${data.nama}</span>
+        </button>
+        <div class="kat-item-actions">
+          <button class="kat-act-btn" onclick="openModalKategori('${d.id}')" title="Edit">✏</button>
+          <button class="kat-act-btn del" onclick="deleteKategori('${d.id}', '${data.nama}')" title="Hapus">🗑</button>
+        </div>
+      </div>`;
+    });
+    container.innerHTML = html;
+    rebuildKategoriSelect();
+    if (_currentKat) loadKontenByKat(_currentKat);
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--danger);padding:12px;font-size:11px">Gagal: ${e.message}</div>`;
+    console.error('loadKategoriList:', e);
+  }
+}
+
+function selectKat(katId) {
+  _currentKat = katId;
+  document.querySelectorAll('#katItemsContainer .kat-item').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('kat-' + katId);
+  if (target) target.classList.add('active');
+  document.getElementById('btnTambahKontenKat').style.display = 'block';
+  const meta = kontenKategoriMeta[katId];
+  document.getElementById('kontenListLabel').textContent = meta ? `📁 ${meta.nama}` : '';
+  loadKontenByKat(katId);
+}
+
+async function loadKontenByKat(katId) {
+  const { collection, getDocs, query, where, orderBy } = window._fb;
+  const listEl = document.getElementById('kontenList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Memuat...</p></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'konten'), where('kategori', '==', katId), orderBy('createdAt', 'asc')));
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>Belum ada dokumen di kategori ini</p></div>';
+      return;
+    }
+    let html = '';
+    snap.forEach(d => {
+      const data = d.data();
+      const roles = (data.visibleTo || []).map(r => `<span class="badge badge-${r}">${r}</span>`).join('');
+      html += `<div class="content-item" id="konten-item-${d.id}">
+        <div class="content-item-icon">📄</div>
+        <div class="content-item-body">
+          <div class="content-item-name">${data.nama}</div>
+          <div class="content-item-cat">${kontenKategori[data.kategori] || data.kategori}</div>
+          <div class="content-item-roles">${roles}</div>
+        </div>
+        <div class="content-item-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editKonten('${d.id}')">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${data.nama.replace(/'/g,"\\'")}')">🗑</button>
+        </div>
+      </div>`;
+    });
+    listEl.innerHTML = html;
+  } catch(e) {
+    listEl.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>${e.message}</p></div>`;
+  }
+}
+
+function rebuildKategoriSelect() {
+  const sel = document.getElementById('kontenKategori');
+  if (!sel) return;
+  sel.innerHTML = Object.entries(kontenKategori)
+    .map(([id, nama]) => `<option value="${id}">${nama}</option>`)
+    .join('') || '<option value="">— Belum ada kategori —</option>';
+}
+
+// ── Modal Kategori ────────────────────────────────────────
+function openModalKategori(editId) {
+  const m = editId ? kontenKategoriMeta[editId] : null;
+  document.getElementById('kategoriId').value = editId || '';
+  document.getElementById('kategoriSlug').value = editId || '';
+  document.getElementById('kategoriSlug').disabled = !!editId;
+  document.getElementById('kategoriNama').value = m?.nama || '';
+  document.getElementById('kategoriIcon').value = m?.icon || '📄';
+  document.getElementById('kategoriUrutan').value = m?.urutan || (Object.keys(kontenKategori).length + 1);
+  document.getElementById('kategoriDeskripsi').value = m?.deskripsi || '';
+  setCheckedRoles('kategoriVisibleTo', m?.visibleTo || ['guru','kepsek']);
+  document.getElementById('modalKategoriTitle').textContent = editId ? '✏ Edit Kategori' : '🗂 Tambah Kategori';
+  openModal('modalKategori');
+}
+
+async function saveKategori() {
+  const { doc, setDoc, serverTimestamp } = window._fb;
+  const editId = document.getElementById('kategoriId').value;
+  const slug = editId || document.getElementById('kategoriSlug').value.trim();
+  const nama = document.getElementById('kategoriNama').value.trim();
+  const icon = document.getElementById('kategoriIcon').value || '📄';
+  const urutan = parseInt(document.getElementById('kategoriUrutan').value) || 1;
+  const deskripsi = document.getElementById('kategoriDeskripsi').value.trim();
+  const visibleTo = getCheckedRoles('kategoriVisibleTo');
+
+  if (!slug || !nama) { showToast('warn','Peringatan','ID dan Nama kategori wajib diisi!'); return; }
+  try {
+    await setDoc(doc(db, 'kategori', slug), { nama, icon, urutan, visibleTo, deskripsi, updatedAt: serverTimestamp() }, { merge: true });
+    closeModal('modalKategori');
+    await loadKategoriList();
+    addLog('Kategori', `${editId ? 'Edit' : 'Tambah'} kategori: ${nama}`);
+    showToast('success','Tersimpan', `Kategori "${nama}" berhasil disimpan`);
+  } catch(e) { showToast('error','Error',e.message); }
+}
+
+async function deleteKategori(id, nama) {
+  if (!confirm(`Hapus kategori "${nama}"?`)) return;
+  const { doc, deleteDoc } = window._fb;
+  try {
+    await deleteDoc(doc(db, 'kategori', id));
+    if (_currentKat === id) { _currentKat = ''; document.getElementById('kontenList').innerHTML = '<div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>'; }
+    await loadKategoriList();
+    addLog('Kategori', `Hapus kategori: ${nama}`);
+    showToast('success','Dihapus',`Kategori "${nama}" dihapus`);
+  } catch(e) { showToast('error','Error',e.message); }
+}
+
+async function seedKategoriDefault() {
+  const { doc, setDoc, getDocs, collection, serverTimestamp } = window._fb;
+  const snap = await getDocs(collection(db, 'kategori'));
+  if (!snap.empty && !confirm('Kategori sudah ada. Timpa dengan default?')) return;
+  const defaultKat = [
+    { id:'adm_guru', nama:'Administrasi Guru & Pembelajaran', icon:'📚', urutan:1, visibleTo:['guru','kepsek'] },
+    { id:'adm_kepsek', nama:'Administrasi Kepala Sekolah', icon:'🏦', urutan:2, visibleTo:['kepsek'] },
+    { id:'kosp', nama:'Kurikulum Operasional (KOSP)', icon:'📖', urutan:3, visibleTo:['guru','kepsek','ops'] },
+    { id:'adm_umum', nama:'Administrasi Umum Sekolah', icon:'🏢', urutan:4, visibleTo:['kepsek','ops'] },
+    { id:'keuangan', nama:'Keuangan & BOS', icon:'💰', urutan:5, visibleTo:['bendahara','kepsek'] },
+    { id:'evaluasi', nama:'Evaluasi & Pelaporan', icon:'📊', urutan:6, visibleTo:['guru','kepsek'] },
+    { id:'perpus', nama:'Administrasi Perpustakaan', icon:'📕', urutan:7, visibleTo:['guru','ops'] },
+    { id:'tata_usaha', nama:'Tata Usaha & Surat Menyurat', icon:'✉️', urutan:8, visibleTo:['ops','kepsek'] },
+  ];
+  try {
+    await Promise.all(defaultKat.map(k => setDoc(doc(db,'kategori',k.id), { nama:k.nama, icon:k.icon, urutan:k.urutan, visibleTo:k.visibleTo, deskripsi:'', updatedAt:serverTimestamp() }, {merge:true})));
+    await loadKategoriList();
+    addLog('Kategori','Pulihkan kategori default: 8 kategori');
+    showToast('success','Selesai','8 kategori Kurikulum Merdeka dipulihkan');
+  } catch(e) { showToast('error','Error',e.message); }
+}
+
+// ── Modal Konten ──────────────────────────────────────────
+function openModalKonten() {
+  document.getElementById('kontenId').value = '';
+  document.getElementById('kontenNama').value = '';
+  document.getElementById('kontenDeskripsi').value = '';
+  document.getElementById('kontenTemplate').value = '';
+  setCheckedRoles('kontenVisibleTo', ['guru','kepsek']);
+  rebuildKategoriSelect();
+  if (_currentKat) document.getElementById('kontenKategori').value = _currentKat;
+  document.getElementById('modalKontenTitle').textContent = 'Tambah Konten';
+  openModal('modalKonten');
+}
+
+async function editKonten(id) {
+  const { doc, getDoc } = window._fb;
+  const snap = await getDoc(doc(db, 'konten', id));
+  if (!snap.exists()) return;
+  const data = snap.data();
+  document.getElementById('kontenId').value = id;
+  document.getElementById('kontenNama').value = data.nama || '';
+  document.getElementById('kontenDeskripsi').value = data.deskripsi || '';
+  document.getElementById('kontenTemplate').value = data.template || '';
+  rebuildKategoriSelect();
+  document.getElementById('kontenKategori').value = data.kategori || '';
+  setCheckedRoles('kontenVisibleTo', data.visibleTo || []);
+  document.getElementById('modalKontenTitle').textContent = 'Edit Konten';
+  openModal('modalKonten');
+}
+
+async function saveKonten() {
+  const { doc, addDoc, updateDoc, collection, serverTimestamp } = window._fb;
+  const id = document.getElementById('kontenId').value;
+  const nama = document.getElementById('kontenNama').value.trim();
+  const kategori = document.getElementById('kontenKategori').value;
+  const deskripsi = document.getElementById('kontenDeskripsi').value.trim();
+  const template = document.getElementById('kontenTemplate').value.trim();
+  const visibleTo = getCheckedRoles('kontenVisibleTo');
+
+  if (!nama || !kategori) { showToast('warn','Peringatan','Nama dan Kategori wajib diisi!'); return; }
+  try {
+    const payload = { nama, kategori, deskripsi, template, visibleTo, updatedAt: serverTimestamp() };
+    if (id) {
+      await updateDoc(doc(db, 'konten', id), payload);
+    } else {
+      await addDoc(collection(db, 'konten'), { ...payload, createdAt: serverTimestamp() });
+    }
+    closeModal('modalKonten');
+    if (_currentKat === kategori) loadKontenByKat(kategori);
+    loadDashboard();
+    addLog('Konten', `${id ? 'Edit' : 'Tambah'} konten: ${nama}`);
+    showToast('success','Berhasil',`Konten "${nama}" ${id ? 'diperbarui' : 'ditambahkan'}`);
+  } catch(e) { showToast('error','Error',e.message); }
+}
+
+// ════════════════════════════════════════════
+// KELOLA PENGGUNA — KARTU SEKOLAH
+// ════════════════════════════════════════════
+async function loadSchoolCards() {
+  const { collection, getDocs } = window._fb;
+  try {
+    const masterApp = document.getElementById('masterApp');
+    if (masterApp && window.AdminMaster) { window.AdminMaster.init(); return; }
+    const [skolSnap, usrSnap] = await Promise.all([
+      getDocs(collection(db,'sekolah')),
+      getDocs(collection(db,'users')),
+    ]);
+    _allSekolah = [];
+    skolSnap.forEach(d => _allSekolah.push({id:d.id,...d.data()}));
+    _allUsers = [];
+    usrSnap.forEach(d => _allUsers.push({id:d.id,...d.data()}));
+  } catch(e) { console.warn('loadSchoolCards:', e.message); }
+}
+
+// ── Template: hapus ────────────────────────────────────────
+async function deleteTemplate(id) {
+  if (!confirm('Hapus template ini?')) return;
+  const { doc, deleteDoc } = window._fb;
+  const d = window._fb.db;
+  await deleteDoc(doc(d, 'admin_templates', id));
+  loadTemplates();
+  showToast('success','Dihapus','Template dihapus.');
+}
+
+function openModalTemplate() {
+  document.getElementById('tmpId').value = '';
+  document.getElementById('tmpNama').value = '';
+  document.getElementById('tmpRole').value = 'guru';
+  document.getElementById('tmpKategori').value = 'perencanaan';
+  document.getElementById('tmpIcon').value = '📄';
+  document.getElementById('tmpPrompt').value = '';
+  document.getElementById('tmpComponents').value = '[]';
+  openModal('modalTemplate');
+}
+
+// ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
 async function initApp(){
   try{
-    const firebaseConfig=await window.cimegaAPI.getFirebaseConfig();
-    const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-    const{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    const fbApp=initializeApp(firebaseConfig);
-    db=getFirestore(fbApp);
-    window._fb={collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp};
+    // ── Ambil config ─────────────────────────────────────────────
+    const firebaseConfig = window.cimegaConfig?.firebase
+      || await window.cimegaAPI?.getFirebaseConfig();
+    if (!firebaseConfig?.apiKey) throw new Error('Firebase config kosong');
 
+    // ── Load Firebase SDK dari CDN ─────────────────────────────
+    const{initializeApp,getApp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const fbFs=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp}=fbFs;
+
+    // ── Safe init Firebase ───────────────────────────────────
+    let fbApp;
+    try{fbApp=getApp();}catch(_){fbApp=initializeApp(firebaseConfig);}
+    db=getFirestore(fbApp);
+
+    // ── Inject db ke window._fb ──────────────────────────────
+    window._fb={db,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp};
+    console.log('✅ Admin: Firebase ready →', firebaseConfig.projectId);
+
+    // ── Data admin ──────────────────────────────────────────
     try{const snap=await getDocs(query(collection(db,'users'),where('username','==','admin')));if(!snap.empty)adminData=snap.docs[0].data();}catch(e){}
 
+    // ── Versi app ───────────────────────────────────────────
     try{
       const v=await getDoc(doc(db,'appConfig','version'));
       if(v.exists()){
@@ -1594,31 +1871,111 @@ async function initApp(){
     }catch(e){}
 
     try{
-      const cfg=await window.cimegaAPI.getAppConfig();
-      const lv='v'+(cfg.appVersion||'1.0.0');
+      const cfg=await window.cimegaAPI?.getAppConfig();
+      const lv='v'+(cfg?.appVersion||'1.0.0');
       ['localVersion','settingVersion2','settingVersion4'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lv;});
     }catch(e){}
 
-    // Inisialisasi Supabase
+    // ── Inisialisasi Supabase ──────────────────────────────
     try {
-      const sbCfg = await window.cimegaAPI.getSupabaseConfig();
-      if(sbCfg && sbCfg.url) {
+      const sbCfg = window.cimegaConfig?.supabase || await window.cimegaAPI?.getSupabaseConfig();
+      if(sbCfg?.url && typeof supabase !== 'undefined') {
         window._supabase = supabase.createClient(sbCfg.url, sbCfg.key);
-        console.log("Supabase Client Ready.");
+        console.log('✅ Supabase Client Ready');
       }
-    } catch(e) { console.error("Supabase init failed:", e); }
+    } catch(e) { console.warn('Supabase init failed:', e.message); }
 
+    // ── AUTO-SEED KATEGORI (jika kosong) ────────────────────
+    try {
+      const katSnap = await getDocs(collection(db, 'kategori'));
+      if (katSnap.empty) {
+        console.log('⚠️ Kategori Firestore kosong — auto-seed 8 kategori...');
+        const defaultKat = [
+          { id:'adm_guru',   nama:'Administrasi Guru & Pembelajaran', icon:'📚', urutan:1, visibleTo:['guru','kepsek'] },
+          { id:'adm_kepsek', nama:'Administrasi Kepala Sekolah',       icon:'🏦', urutan:2, visibleTo:['kepsek'] },
+          { id:'kosp',       nama:'Kurikulum Operasional (KOSP)',       icon:'📖', urutan:3, visibleTo:['guru','kepsek','ops'] },
+          { id:'adm_umum',   nama:'Administrasi Umum Sekolah',          icon:'🏢', urutan:4, visibleTo:['kepsek','ops'] },
+          { id:'keuangan',   nama:'Keuangan & BOS',                     icon:'💰', urutan:5, visibleTo:['bendahara','kepsek'] },
+          { id:'evaluasi',   nama:'Evaluasi & Pelaporan',               icon:'📊', urutan:6, visibleTo:['guru','kepsek'] },
+          { id:'perpus',     nama:'Administrasi Perpustakaan',          icon:'📕', urutan:7, visibleTo:['guru','ops'] },
+          { id:'tata_usaha', nama:'Tata Usaha & Surat Menyurat',        icon:'✉️', urutan:8, visibleTo:['ops','kepsek'] },
+        ];
+        await Promise.all(defaultKat.map(k =>
+          setDoc(doc(db,'kategori',k.id), { nama:k.nama, icon:k.icon, urutan:k.urutan, visibleTo:k.visibleTo, deskripsi:'', createdAt:serverTimestamp() })
+        ));
+        console.log('✅ Auto-Seed: 8 kategori berhasil ditanam');
+        showToast('success', 'Kategori Diseed', '8 kategori Kurikulum Merdeka ditambahkan');
+      }
+    } catch(e) { console.warn('Auto-seed skip:', e.message); }
+
+    // ── Muat data utama ────────────────────────────────────
     loadDashboard();
     loadSekolahDropdown();
     loadKategoriList();
     loadLog();
     loadUpdateHistory();
 
-    CimegaMusic.init('../../../assets_music/');
+    // ── Musik: Init widget sidebar ───────────────────────────
+    // music.js v4.0 akan handle IPC music state
+    CimegaMusic.init();
+
+    // Ambil daftar file lokal → update halaman Kelola Musik + widget judul
+    try {
+      const getMusicFn = window.cimegaConfig?.getMusicList || window.cimegaAPI?.getMusicList;
+      if (typeof getMusicFn === 'function') {
+        const localFiles = await getMusicFn();
+        if (localFiles && localFiles.length > 0) {
+          // Update halaman Kelola Musik: tampilkan daftar lokal
+          const musikListEl = document.getElementById('musikList');
+          if (musikListEl) {
+            musikListEl.innerHTML = localFiles.map((f, i) => {
+              // f sekarang adalah objek {id, title, url}
+              // Gunakan CimegaMusic.getTitle() agar konsisten dengan widget
+              const cleanTitle = (typeof CimegaMusic !== 'undefined' && CimegaMusic.getTitle)
+                ? CimegaMusic.getTitle(f)
+                : (f && f.title ? f.title : String(f))
+                    .replace(/^Kang Prabu\s*-\s*/i, '')
+                    .replace(/\.mp3$/i, '')
+                    .trim();
+              const fileName = f && f.id ? f.id : String(f);
+              return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+                <span style="font-size:18px">🎵</span>
+                <div style="flex:1">
+                  <div style="font-size:12px;color:#fff;font-weight:600">${cleanTitle}</div>
+                  <div style="font-size:10px;color:var(--muted)">${fileName}</div>
+                </div>
+                <span style="font-size:10px;color:var(--cyan);font-family:'Orbitron',sans-serif">#${i+1}</span>
+              </div>`;
+            }).join('');
+          }
+
+          // Update widget musik di sidebar: ambil judul dari objek pertama
+          const firstItem = localFiles[0];
+          const firstTitle = (typeof CimegaMusic !== 'undefined' && CimegaMusic.getTitle)
+            ? CimegaMusic.getTitle(firstItem)
+            : (firstItem && firstItem.title ? firstItem.title : String(firstItem))
+                .replace(/^Kang Prabu\s*-\s*/i, '')
+                .replace(/\.mp3$/i, '')
+                .trim();
+          const musicTitleEl = document.getElementById('musicTitle');
+          const musicTrackEl = document.getElementById('musicTrackInfo');
+          if (musicTitleEl && musicTitleEl.textContent === 'Memuat...') {
+            musicTitleEl.textContent = firstTitle;
+          }
+          if (musicTrackEl && musicTrackEl.textContent === '—') {
+            musicTrackEl.textContent = `1 / ${localFiles.length}`;
+          }
+
+          console.log(`✅ Admin Musik: ${localFiles.length} lagu lokal dimuat`);
+        }
+      }
+    } catch(mErr) { console.warn('getMusicList admin (non-fatal):', mErr.message); }
+
+    // ── Updater ─────────────────────────────────────────────
     try{await CimegaUpdater.init({owner:'prabu26dev',repo:'Cimega_Smart_Office'});CimegaUpdater.startChecking(db);}catch(e){}
 
-    showToast('success','Sistem Siap','Admin panel berhasil dimuat');
-  }catch(e){showToast('error','Error','Gagal memuat: '+e.message);}
+    showToast('success','Sistem Siap','🚀 Admin panel berhasil dimuat');
+  }catch(e){showToast('error','Error','Gagal memuat: '+e.message);console.error('Admin initApp:', e);}
 }
 
 initApp();

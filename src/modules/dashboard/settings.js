@@ -866,12 +866,34 @@ async function sendChat() {
 
 async function initApp() {
   try {
-    const firebaseConfig = await window.cimegaAPI.getFirebaseConfig();
-    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-    const { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    const fbApp = initializeApp(firebaseConfig);
+    // ── Ambil config dari bridge (primary: cimegaConfig, fallback: cimegaAPI) ──
+    const firebaseConfig = window.cimegaConfig?.firebase
+      || await window.cimegaAPI?.getFirebaseConfig();
+
+    if (!firebaseConfig?.apiKey) throw new Error('Firebase config kosong — periksa preload.js & .env');
+
+    // ── Load Firebase SDK dari CDN ────────────────────────────
+    const { initializeApp, getApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const fbFs = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const { getFirestore, collection, doc, getDoc, getDocs, addDoc,
+      updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp } = fbFs;
+
+    // ── Safe init Firebase app ────────────────────────────────
+    let fbApp;
+    try { fbApp = getApp(); } catch (_) { fbApp = initializeApp(firebaseConfig); }
     db = getFirestore(fbApp);
-    window._fb = { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp };
+
+    // ── CRITICAL: expose db + helpers ke window._fb ──────────
+    // dashboard_ui.js fetchTemplates() butuh window._fb.db & window._fb.collection dll
+    window._fb = {
+      db,
+      collection, doc, getDoc, getDocs, addDoc,
+      updateDoc, deleteDoc, query, where, orderBy,
+      serverTimestamp, Timestamp
+    };
+
+    console.log('✅ Settings: Firebase ready →', firebaseConfig.projectId);
+
     await loadKontenDynamic();
     setupUser(); buildSidebar(); loadBeranda(); loadNotifications(); checkUpdate();
     try {

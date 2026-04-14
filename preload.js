@@ -1,41 +1,144 @@
-// ============================================
-// CIMEGA SMART OFFICE - preload.js
-// ============================================
+// ============================================================
+// CIMEGA SMART OFFICE — preload.js (v4.1 STABLE)
+// sandbox: false di main.js → require() bekerja di preload
+//
+// ARSITEKTUR:
+//   preload.js  → expose CONFIG (plain objects, tidak ada Firebase class)
+//                 + IPC wrappers (arrow functions) termasuk getMusicList()
+//   renderer    → load Firebase SDK dari CDN (gstatic.com diizinkan)
+//
+// WHY NOT EXPOSE SDK VIA BRIDGE:
+//   contextBridge memakai structured-clone. Firebase SDK functions
+//   mengandung Symbol & circular refs → "An object could not be cloned"
+// ============================================================
+const path = require('path');
+const fs   = require('fs');
+
+// ── 0. dotenv sebagai mekanisme PERTAMA (paling cepat) ─────────
+try {
+  // dotenv tersedia di node_modules (sudah terpasang bersama firebase-admin)
+  require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+  console.log('✅ PRELOAD v4.1: dotenv.config() berhasil');
+} catch (_) {
+  // dotenv tidak tersedia — fallback ke parsing manual di bawah
+  console.warn('⚠️ PRELOAD v4.1: dotenv tidak tersedia, pakai parser manual');
+}
+
+// ── 1. Baca .env dengan fallback manual (jika dotenv tidak lengkap) ────
+let envLoaded = false;
+const envPaths = [
+  path.join(__dirname, '.env'),
+  path.join(process.cwd(), '.env'),
+];
+for (const ep of envPaths) {
+  if (fs.existsSync(ep)) {
+    // Baca manual agar tidak bergantung pada dotenv di dist
+    const lines = fs.readFileSync(ep, 'utf-8').split(/\r?\n/);
+    lines.forEach(line => {
+      line = line.trim();
+      if (!line || line.startsWith('#')) return;
+      const idx = line.indexOf('=');
+      if (idx > 0) {
+        const key = line.slice(0, idx).trim();
+        const val = line.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+        if (!process.env[key]) process.env[key] = val; // Tidak timpa yang sudah ada
+      }
+    });
+    console.log(`✅ PRELOAD v4.1: .env (manual fallback) → ${ep}`);
+    envLoaded = true;
+    break;
+  }
+}
+if (!envLoaded) {
+  console.error('❌ PRELOAD: .env tidak ditemukan! (dicari di:', envPaths.join(', ') + ')');
+}
+
+// ── Fallback: coba dotenv jika tersedia (package.json dep) ────────
+try {
+  require('dotenv').config();
+} catch(_) { /* dotenv tidak diinstall, tidak masalah — sudah baca manual */ }
+
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('cimegaAPI', {
-  // Firebase
-  getFirebaseConfig:  () => ipcRenderer.invoke('get-firebase-config'),
-  getSupabaseConfig:  () => ipcRenderer.invoke('get-supabase-config'),
-  getAppConfig:       () => ipcRenderer.invoke('get-app-config'),
+// ── 2. Bangun Firebase Config dari process.env ───────────────
+const firebaseConfig = {
+  apiKey:            process.env.FIREBASE_API_KEY            || '',
+  authDomain:        process.env.FIREBASE_AUTH_DOMAIN        || '',
+  projectId:         process.env.FIREBASE_PROJECT_ID         || '',
+  storageBucket:     process.env.FIREBASE_STORAGE_BUCKET     || '',
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+  appId:             process.env.FIREBASE_APP_ID             || '',
+  measurementId:     process.env.FIREBASE_MEASUREMENT_ID     || '',
+};
 
-  // Musik
-  musicInit:       () => ipcRenderer.invoke('music-init'),
-  musicGetState:   () => ipcRenderer.invoke('music-get-state'),
-  musicToggleMute: () => ipcRenderer.invoke('music-toggle-mute'),
-  musicNext:       () => ipcRenderer.invoke('music-next'),
-  musicPrev:       () => ipcRenderer.invoke('music-prev'),
-  onMusicStateChanged: (cb) => {
-    ipcRenderer.on('music-state-changed', (e, data) => cb(data));
-  },
-  removeMusicStateListener: () => {
-    ipcRenderer.removeAllListeners('music-state-changed');
-  },
+if (!firebaseConfig.apiKey) {
+  console.error('❌ PRELOAD FATAL: FIREBASE_API_KEY kosong! Cek .env');
+} else {
+  console.log(`✅ PRELOAD v4.1: Config OK → [${firebaseConfig.projectId}]`);
+}
 
-  // Auto Updater
-  checkGithubUpdate:  (opts) => ipcRenderer.invoke('check-github-update', opts),
-  downloadUpdate:     (opts) => ipcRenderer.invoke('download-update', opts),
-  installUpdate:      (opts) => ipcRenderer.invoke('install-update', opts),
-  openExternal:       (url)  => ipcRenderer.invoke('open-external', url),
+// ── 3. Expose window.cimegaConfig ────────────────────────────
+// HANYA plain objects & arrow function wrappers — NO Firebase classes
+try {
+  contextBridge.exposeInMainWorld('cimegaConfig', {
+    // Static config objects (serializable)
+    firebase: Object.freeze({ ...firebaseConfig }),
+    supabase: Object.freeze({
+      url: process.env.SUPABASE_URL      || '',
+      key: process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || '',
+    }),
+    gemini: Object.freeze({
+      key: process.env.GEMINI_API_KEY || '',
+    }),
 
-  // Gemini AI
-  geminiAsk: (opts) => ipcRenderer.invoke('gemini-ask', opts),
+    // IPC wrappers
+    // onSyncComplete: menggunakan once untuk menghindari listener duplikat
+    onSyncComplete: (cb) => {
+      ipcRenderer.once('sync-complete', (_e, s) => cb(s));
+    },
+    getBootStatus:       ()   => ipcRenderer.invoke('get-boot-status'),
+    openExternal:        (u)  => ipcRenderer.invoke('open-external', u),
 
-  // Listener progress download (dari main ke renderer)
-  onDownloadProgress: (cb) => {
-    ipcRenderer.on('update-download-progress', (e, data) => cb(data));
-  },
-  removeDownloadListener: () => {
-    ipcRenderer.removeAllListeners('update-download-progress');
-  },
-});
+    // Musik via IPC
+    musicInit:           ()   => ipcRenderer.invoke('music-init'),
+    musicGetState:       ()   => ipcRenderer.invoke('music-get-state'),
+    musicNext:           ()   => ipcRenderer.invoke('music-next'),
+    musicPrev:           ()   => ipcRenderer.invoke('music-prev'),
+    musicToggleMute:     ()   => ipcRenderer.invoke('music-toggle-mute'),
+    onMusicStateChanged: (cb) => ipcRenderer.on('music-state-changed', (_e, d) => cb(d)),
+
+    // Daftar file musik lokal dari folder assets_music (via IPC)
+    getMusicList:        ()   => ipcRenderer.invoke('get-music-list'),
+  });
+  console.log('✅ PRELOAD v4.1: window.cimegaConfig exposed');
+} catch (e) {
+  console.error('❌ PRELOAD: window.cimegaConfig GAGAL expose:', e.message);
+}
+
+// ── 4. Legacy: window.cimegaAPI (backward compat) ───────────
+try {
+  contextBridge.exposeInMainWorld('cimegaAPI', {
+    getFirebaseConfig: () => Promise.resolve({ ...firebaseConfig }),
+    getSupabaseConfig: () => Promise.resolve({
+      url: process.env.SUPABASE_URL      || '',
+      key: process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || '',
+    }),
+    getAppConfig:      () => Promise.resolve({
+      appVersion: process.env.APP_VERSION || '1.0.0',
+    }),
+    openExternal:      (u) => ipcRenderer.invoke('open-external', u),
+    getMusicList:      ()  => ipcRenderer.invoke('get-music-list'),
+
+    // Musik wrapper (backward compat dengan music.js v4.0)
+    musicInit:           ()   => ipcRenderer.invoke('music-init'),
+    musicNext:           ()   => ipcRenderer.invoke('music-next'),
+    musicPrev:           ()   => ipcRenderer.invoke('music-prev'),
+    musicToggleMute:     ()   => ipcRenderer.invoke('music-toggle-mute'),
+    onMusicStateChanged: (cb) => ipcRenderer.on('music-state-changed', (_e, d) => cb(d)),
+  });
+  console.log('✅ PRELOAD v4.1: window.cimegaAPI exposed');
+} catch (e) {
+  console.error('❌ PRELOAD: window.cimegaAPI GAGAL expose:', e.message);
+}
+
+console.log('🚀 PRELOAD v4.1: Bridge siap. Firebase SDK → load via CDN di renderer.');
