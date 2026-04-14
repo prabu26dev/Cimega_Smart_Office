@@ -1,474 +1,136 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bendahara Workstation - Cimega Smart Office</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';">
+  <title>Cimega Smart Office - PUSAT KOMANDO BENDAHARA SEKOLAH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../pages/dashboard/dashboard.css">
   <style>
-    /* ═══════════════════════════════════════════════
-       DESIGN TOKENS (PREMIUM TREASURY THEME)
-    ═══════════════════════════════════════════════ */
+    /* Styling khusus Bendahara (Neon Green / Finance Glow) */
     :root {
-      --gold:    #ffd700;
-      --cyan:    #00e5ff;
-      --purple:  #aa55ff;
-      --green:   #00ff88;
-      --pink:    #ff4477;
-      --dark:    #030a16;
-      --dark2:   #061122;
-      --card:    rgba(6, 17, 34, 0.95);
-      --border:  rgba(255, 215, 0, 0.15);
-      --text:    #e0f0ff;
-      --muted:   #7a8fa1;
-      --sidebar: 260px;
+      --money-green: #00ff88;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Exo 2', sans-serif;
-      background: var(--dark);
-      color: var(--text);
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Grid Overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(255, 215, 0, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 215, 0, 0.02) 1px, transparent 1px);
-      background-size: 50px 50px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ═══════════════════════════════
-       SIDEBAR
-    ═══════════════════════════════ */
-    .sidebar {
-      width: var(--sidebar);
-      background: var(--dark2);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      z-index: 10;
-    }
-
-    .sidebar-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-      text-align: center;
-    }
-
-    .sidebar-logo {
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 900;
-      font-size: 14px;
-      color: #fff;
-    }
-    .sidebar-logo span { color: var(--gold); }
-
-    .user-card {
-      margin: 15px;
-      padding: 12px;
-      background: rgba(255, 215, 0, 0.05);
-      border: 1px solid rgba(255, 215, 0, 0.1);
-      border-radius: 12px;
-    }
-    .user-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
-    .user-role { font-size: 10px; color: var(--gold); font-family: 'Orbitron'; letter-spacing: 1px; }
-
-    .sidebar-nav {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
-
-    .nav-section {
-      font-family: 'Orbitron';
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 1.5px;
-      padding: 15px 10px 5px;
-      text-transform: uppercase;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      color: var(--muted);
-      transition: all 0.3s;
-    }
-    .nav-item:hover { background: rgba(255, 215, 0, 0.05); color: #fff; }
-    .nav-item.active { background: rgba(255, 215, 0, 0.1); color: var(--gold); border: 1px solid rgba(255, 215, 0, 0.2); }
-
-    .sidebar-footer { padding: 15px; border-top: 1px solid var(--border); }
-    .btn-logout {
-      width: 100%;
-      padding: 10px;
-      background: rgba(255, 68, 119, 0.1);
-      border: 1px solid rgba(255, 68, 119, 0.2);
-      color: var(--pink);
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 11px;
-      font-family: 'Orbitron';
-      transition: all 0.3s;
-    }
-    .btn-logout:hover { background: var(--pink); color: #fff; }
-
-    /* ═══════════════════════════════
-       MAIN VIEW
-    ═══════════════════════════════ */
-    .main { flex: 1; display: flex; flex-direction: column; z-index: 1; }
-
-    .topbar {
-      padding: 15px 25px;
-      background: var(--dark2);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .topbar-title { font-family: 'Orbitron'; font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 1px; }
-
-    .content { flex: 1; overflow-y: auto; padding: 25px; }
-
-    /* ═══════════════════════════════
-       MODULAR PAGE SYSTEM
-    ═══════════════════════════════ */
-    .bendahara-page { display: none; }
-    .bendahara-page.active { display: block; animation: pageFade 0.4s ease; }
-    @keyframes pageFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Placeholder Card Styles */
-    .module-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      text-align: center;
-      gap: 20px;
-    }
-    .ph-icon { font-size: 60px; opacity: 0.3; }
-    .ph-title { font-family: 'Orbitron'; font-size: 18px; color: var(--gold); }
-    .ph-desc { font-size: 13px; color: var(--muted); max-width: 500px; line-height: 1.6; }
-
-    .schema-info {
-      width: 100%;
-      max-width: 700px;
-      background: rgba(255, 215, 0, 0.03);
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      padding: 20px;
-      text-align: left;
-    }
-    .schema-header { font-family: 'Orbitron'; font-size: 10px; color: var(--gold); margin-bottom: 15px; letter-spacing: 2px; }
-    .schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .schema-item { display: flex; flex-direction: column; padding: 8px; border-bottom: 1px solid rgba(255,215,0,0.05); }
-    .s-key { color: var(--cyan); font-weight: 700; font-size: 11px; }
-    .s-type { color: var(--purple); font-size: 9px; margin-top: 2px; }
-    .s-desc { color: var(--muted); font-size: 11px; margin-top: 4px; }
-
-    /* Music Box */
-    .music-box { background: rgba(255,215,0,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 15px; }
-    .mb-title { font-size: 10px; font-weight: 700; color: #fff; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .mb-artist { font-size: 9px; color: var(--muted); margin-bottom: 10px; }
-    .mb-controls { display: flex; justify-content: space-around; font-size: 16px; color: var(--gold); }
-    .mb-btn { cursor: pointer; transition: 0.2s; }
-    .mb-btn:hover { transform: scale(1.2); }
-
-    .spinner { border: 3px solid rgba(255, 215, 0, 0.1); border-top: 3px solid var(--gold); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .finance-dashboard { border-left: 4px solid var(--money-green) !important; }
+    .green-glow { text-shadow: 0 0 10px rgba(0, 255, 136, 0.6); color: var(--money-green); }
   </style>
 </head>
 <body>
+  <!-- Drag Region -->
+  <div class="drag-region"></div>
+  <div class="window-controls">
+    <button class="btn-ctrl btn-min" onclick="window.cimegaAPI.minimize()">_</button>
+    <button class="btn-ctrl btn-max" onclick="window.cimegaAPI.maximize()">□</button>
+    <button class="btn-ctrl btn-close" onclick="window.cimegaAPI.close()">✕</button>
+  </div>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">CIMEGA <span>OFFICE</span></div>
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">💰</div>
+        <div>CIMEGA<br><span style="font-size:10px;color:var(--money-green)">FINANCE CONTROLLER MODE</span></div>
+      </div>
+
+      <div class="menu-section">
+        <div class="menu-item active" onclick="showPage('home')">
+          <div class="icon">🏠</div><div>Beranda</div>
+        </div>
+      </div>
+
+      <div class="menu-section" id="financeMenu">
+        <!-- Generatif dari window.BendaharaModules -->
+        <div style="padding:20px;color:var(--muted);text-align:center;font-size:12px;">Memuat subsistem ledger...</div>
+      </div>
+
+      <div class="menu-section" style="margin-top:auto">
+        <div class="menu-item" onclick="logout()" style="color:#ff4444">
+          <div class="icon">🚪</div><div>Keluar</div>
+        </div>
+      </div>
     </div>
-    
-    <div class="user-card">
-      <div class="user-name" id="userName">Bendahara Sekolah</div>
-      <div class="user-role">💰 FINANCIAL TREASURY</div>
+
+    <!-- MAIN AREA -->
+    <div class="main-content">
+      <div class="topbar">
+        <div class="breadcrumb" id="breadcrumb">Pusat Komando <span style="margin:0 8px">/</span> <span class="green-glow">Bendahara BOS Sekolah</span></div>
+        <div class="user-block">
+          <div style="text-align:right">
+            <div style="font-family:'Orbitron';font-size:12px;color:var(--money-green)" id="financeNama">Memuat...</div>
+            <div style="font-size:10px;color:var(--muted)" id="financeSekolah">Memuat...</div>
+          </div>
+          <div class="avatar" style="box-shadow:0 0 10px rgba(0, 255, 136, 0.4)">💼</div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <!-- PAGE HOME -->
+        <div class="page active" id="page-home">
+          <div class="hero" style="border-left: 4px solid var(--money-green)">
+            <h1>Selamat Bertugas Sang Penjaga <span class="green-glow">Kas Negara</span></h1>
+            <p style="color:#99ffcc">Sistem Akuntansi Independen untuk mengotentikasi BKU, Manajemen Perpajakan, Validasi Kwitansi, dan Verifikasi ARKAS.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:15px">
+                <div style="font-size:48px">🔐</div>
+                <div>
+                  <h3 style="margin-bottom:5px">Proteksi Audit (BAPK)</h3>
+                  <p style="color:var(--muted);font-size:13px">Modul ini bertindak sebagai alat validasi silang (cross-check) mutlak untuk memastikan Saldo Tunai dan Bank bernilai nol selisih dengan BKU bulanan sebelum inspeksi dari eksternal.</p>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:15px">
+                <div style="font-size:48px">🤖</div>
+                <div>
+                  <h3 style="margin-bottom:5px">AI Financial Compliance</h3>
+                  <p style="color:var(--muted);font-size:13px">Gemini diposisikan sebagai CPA (Certified Public Accountant). Gunakan AI prompt untuk memperbaiki redaksi pengeluaran kwitansi Anda agar sesuai ejaan akuntansi pemerintah baku.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE DOC LIST -->
+        <div class="page" id="page-doclist">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+            <div class="section-title" style="margin:0" id="doclistTitle">📚 Kategori Finansial</div>
+            <button class="btn btn-primary btn-sm" onclick="showPage('home')" style="background:var(--money-green);border-color:var(--money-green);color:black">⬅ Kembali</button>
+          </div>
+          <div id="doclistGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:15px;">
+          </div>
+        </div>
+
+        <!-- PAGE EDITOR -->
+        <div class="page" id="page-editor">
+          <div class="card" style="height:100%;display:flex;flex-direction:column">
+            <div class="card-header" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="showPage('doclist')">⬅ Kembali</button>
+              <input class="form-control" id="editorTitle" placeholder="Nama Dokumen" style="flex:1;background:rgba(0,0,0,0.5);min-width:200px;border-color:var(--money-green)">
+              <button class="btn btn-primary btn-sm" onclick="saveDoc()" style="background:var(--money-green);color:black">💾 Simpan Arsip Kas</button>
+              <button class="btn btn-gold btn-sm" onclick="generateAI()" style="box-shadow:0 0 10px rgba(255,215,0,0.4)">✨ Verifikasi AI CPA</button>
+            </div>
+            <div class="card-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px" id="editorForm">
+              <!-- Form rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
+  </div>
 
-    <nav class="sidebar-nav" id="sidebarNav">
-      <!-- Nav items injected by dashboard_ui.js -->
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="music-box">
-        <div class="mb-title" id="musicTitle">Radio Keuangan...</div>
-        <div class="mb-artist">Cimega Sound System</div>
-        <div class="mb-controls">
-          <span class="mb-btn" onclick="CimegaMusic.prev()">⏮</span>
-          <span class="mb-btn" onclick="CimegaMusic.toggleMute()">⏯</span>
-          <span class="mb-btn" onclick="CimegaMusic.next()">⏭</span>
-        </div>
-      </div>
-      <button class="btn-logout" onclick="logout()">LOGOUT SYSTEM</button>
-    </div>
-  </aside>
-
-  <!-- MAIN AREA -->
-  <main class="main">
-    <header class="topbar">
-      <div class="topbar-title" id="topTitle">MANAJEMEN KEUANGAN SEKOLAH</div>
-      <div id="topDate" style="font-size: 11px; color: var(--gold); font-family: 'Orbitron';">BOSP 2024</div>
-    </header>
-
-    <div class="content" id="mainContent">
-      
-      <!-- PAGE: HOME -->
-      <div id="page-home" class="bendahara-page active"></div>
-
-      <!-- PAGE: e-RKAS -->
-      <div id="page-rkas-bendahara" class="bendahara-page">
-        <div class="module-placeholder">
-          <div class="ph-icon">📑</div>
-          <div class="ph-title">Penyusunan e-RKAS</div>
-          <div class="ph-desc">Perencanaan anggaran tahunan berdasarkan standar Juknis BOSP. Hubungkan rencana kegiatan sekolah dengan sumber dana yang tersedia.</div>
-          <div class="schema-info">
-            <div class="schema-header">DATA SCHEMA: SKEMARKAS</div>
-            <div class="schema-grid">
-              <div class="schema-item"><span class="s-key">kode_program</span><span class="s-type">String</span><span class="s-desc">Kode standar ARKAS</span></div>
-              <div class="schema-item"><span class="s-key">total_anggaran</span><span class="s-type">Number</span><span class="s-desc">Volume * Harga Satuan</span></div>
-              <div class="schema-item"><span class="s-key">terkait_p5</span><span class="s-type">Boolean</span><span class="s-desc">Flag anggaran Proyek P5</span></div>
-              <div class="schema-item"><span class="s-key">status_pengajuan</span><span class="s-type">String</span><span class="s-desc">Draft / Diajukan / Disetujui</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE: BKU UTAMA -->
-      <div id="page-bku-utama" class="bendahara-page">
-        <div class="module-placeholder">
-          <div class="ph-icon">📖</div>
-          <div class="ph-title">Buku Kas Umum (BKU)</div>
-          <div class="ph-desc">Buku induk pencatatan seluruh transaksi keuangan sekolah baik tunai maupun transfer bank secara kronologis.</div>
-          <div class="schema-info">
-            <div class="schema-header">DATA SCHEMA: SKEMABKU</div>
-            <div class="schema-grid">
-              <div class="schema-item"><span class="s-key">uang_masuk / keluar</span><span class="s-type">Number</span><span class="s-desc">Debit dan Kredit (Rp)</span></div>
-              <div class="schema-item"><span class="s-key">sisa_saldo</span><span class="s-type">Number</span><span class="s-desc">Running balance saldo</span></div>
-              <div class="schema-item"><span class="s-key">no_bukti</span><span class="s-type">String</span><span class="s-desc">Ref Nota/Kwitansi SPJ</span></div>
-              <div class="schema-item"><span class="s-key">metode_pembayaran</span><span class="s-type">String</span><span class="s-desc">Tunai / Transfer (Bank)</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE: KAS TUNAI -->
-      <div id="page-kas-tunai" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">💵</div><div class="ph-title">Buku Kas Tunai</div><div class="ph-desc">Catatan khusus uang fisik yang ada di brankas Bendahara.</div></div>
-      </div>
-
-      <!-- PAGE: KAS BANK -->
-      <div id="page-kas-bank" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">🏦</div><div class="ph-title">Buku Kas Bank</div><div class="ph-desc">Sinkronisasi data transaksi harian dengan Rekening Koran sekolah.</div></div>
-      </div>
-
-      <!-- PAGE: PAJAK -->
-      <div id="page-bantu-pajak" class="bendahara-page">
-        <div class="module-placeholder">
-          <div class="ph-icon">⚖️</div>
-          <div class="ph-title">Buku Pembantu Pajak</div>
-          <div class="ph-desc">Rekapitulasi pemotongan dan penyetoran pajak (PPN, PPh 21, 22, 23) ke Kas Negara.</div>
-          <div class="schema-info">
-            <div class="schema-header">DATA SCHEMA: SKEMABUKUPAJAK</div>
-            <div class="schema-grid">
-              <div class="schema-item"><span class="s-key">nominal_potongan</span><span class="s-type">Number</span><span class="s-desc">Pajak yang dipungut</span></div>
-              <div class="schema-item"><span class="s-key">status_lapor</span><span class="s-type">Boolean</span><span class="s-desc">Sudah lapor DJP Online?</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE: ARSIP SSP -->
-      <div id="page-arsip-ssp" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">📁</div><div class="ph-title">Arsip SSP / Billing</div><div class="ph-desc">Penyimpanan riwayat kode billing dan bukti setor pajak digital.</div></div>
-      </div>
-
-      <!-- PAGE: KWITANSI -->
-      <div id="page-kwitansi-ops" class="bendahara-page">
-        <div class="module-placeholder">
-          <div class="ph-icon">🎟️</div>
-          <div class="ph-title">Kwitansi & Nota SPJ</div>
-          <div class="ph-desc">Input rincian belanja dan unggah bukti fisik nota sebagai lampiran pertanggungjawaban.</div>
-          <div class="schema-info">
-            <div class="schema-header">DATA SCHEMA: SKEMAKWITANSI</div>
-            <div class="schema-grid">
-              <div class="schema-item"><span class="s-key">daftar_barang</span><span class="s-type">Array</span><span class="s-desc">List item belanja & harga</span></div>
-              <div class="schema-item"><span class="s-key">file_nota</span><span class="s-type">String (URL)</span><span class="s-desc">Scan nota/kwitansi fisik</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE: HONOR P5 -->
-      <div id="page-honor-p5" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">👥</div><div class="ph-title">Daftar Honor & Transport</div><div class="ph-desc">Manajemen pembayaran insentif Guru, Staf, dan Panitia Proyek P5.</div></div>
-      </div>
-
-      <!-- PAGE: BAST -->
-      <div id="page-bast-asset" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">🤝</div><div class="ph-title">Berita Acara (BAST)</div><div class="ph-desc">Dokumentasi serah terima barang dari penyedia ke sekolah.</div></div>
-      </div>
-
-      <!-- PAGE: LRA -->
-      <div id="page-lra-realisasi" class="bendahara-page">
-        <div class="module-placeholder">
-          <div class="ph-icon">📊</div>
-          <div class="ph-title">Laporan Realisasi (LRA)</div>
-          <div class="ph-desc">Analisis persentase serapan dana per triwulan dan per standar program sekolah.</div>
-          <div class="schema-info">
-            <div class="schema-header">DATA SCHEMA: SKEMALRA</div>
-            <div class="schema-grid">
-              <div class="schema-item"><span class="s-key">persen_serap</span><span class="s-type">Number</span><span class="s-desc">Realisasi / Anggaran%</span></div>
-              <div class="schema-item"><span class="s-key">sisa_anggaran</span><span class="s-type">Number</span><span class="s-desc">Sisa dana per program</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE: OPNAME KAS -->
-      <div id="page-opname-kas" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">🔍</div><div class="ph-title">Opname Kas</div><div class="ph-desc">Pemeriksaan fisik saldo brankas secara periodik oleh Kepala Sekolah.</div></div>
-      </div>
-
-      <!-- PAGE: TUTUP KAS -->
-      <div id="page-tutup-kas" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">🔒</div><div class="ph-title">Penutupan Kas</div><div class="ph-desc">Penguncian transaksi bulanan untuk pelaporan final ke dinas terkait.</div></div>
-      </div>
-
-      <!-- PAGE: ASSET MODAL -->
-      <div id="page-aset-modal" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">🏗️</div><div class="ph-title">Inventaris Belanja Modal</div><div class="ph-desc">Sinkronisasi belanja barang modal ke dalam sistem inventaris sekolah.</div></div>
-      </div>
-
-      <!-- PAGE: KAS KECIL -->
-      <div id="page-kas-kecil" class="bendahara-page">
-        <div class="module-placeholder"><div class="ph-icon">💳</div><div class="ph-title">Peminjaman Kas Kecil</div><div class="ph-desc">Manajemen dana panjar / pinjaman sementara untuk kegiatan operasional sekolah.</div></div>
-      </div>
-
-      <!-- COMMON PAGES -->
-      <div id="page-chat" class="bendahara-page"><div id="chatContent"></div></div>
-      <div id="page-ai" class="bendahara-page"><div id="aiContent"></div></div>
-      <div id="page-sharing" class="bendahara-page"><div id="sharingContent"></div></div>
-
-    </div>
-  </main>
-
-  <!-- SCRIPTS -->
-  <script src="../../shared/crypto_helper.js"></script>
-  <script src="../../shared/ai_helper.js"></script>
-  <script src="../../shared/chat.js"></script>
-  <script src="../../shared/music.js"></script>
-  <script src="../../shared/printer.js"></script>
-  <script src="../../shared/sharing.js"></script>
-  <script src="../../shared/ai_chatbot.js"></script>
-  <script src="../../shared/dashboard_ui.js"></script>
-
-  <!-- BENDHARA SCHEMA MODULES -->
-  <script type="module">
-    import * as Perencanaan from '../../modules/bendahara/perencanaan_anggaran.js';
-    import * as BukuKas     from '../../modules/bendahara/buku_kas.js';
-    import * as Pajak       from '../../modules/bendahara/pajak.js';
-    import * as SPJ         from '../../modules/bendahara/spj.js';
-    import * as Pelaporan   from '../../modules/bendahara/pelaporan_evaluasi.js';
-    import * as Pendukung   from '../../modules/bendahara/pendukung_bendahara.js';
-
-    window.BendaharaSchema = { Perencanaan, BukuKas, Pajak, SPJ, Pelaporan, Pendukung };
-    console.log("✅ Cimega Bendahara: All modules loaded.", window.BendaharaSchema);
-  </script>
-
-  <script>
-    window.BendaharaUI = {
-      nav: function(pageId) {
-        const titles = {
-          'home': '🏠 DASHBOARD UTAMA BENDAHARA',
-          'rkas-bendahara': '📑 PENYUSUNAN e-RKAS',
-          'rapbs': '📊 ESTIMASI RAPBS',
-          'bku-utama': '📖 BUKU KAS UMUM (BKU)',
-          'kas-tunai': '💵 BUKU KAS TUNAI',
-          'kas-bank': '🏦 BUKU KAS BANK',
-          'bantu-pajak': '📜 BUKU PEMBANTU PAJAK',
-          'arsip-ssp': '📁 ARSIP SSP / BILLING',
-          'kwitansi-ops': '🎟️ KWITANSI & NOTA SPJ',
-          'honor-p5': '👥 DAFTAR HONOR & TRANSPORT P5',
-          'bast-asset': '🤝 BERITA ACARA SERAH TERIMA',
-          'lra-realisasi': '📈 REALISASI ANGGARAN (LRA)',
-          'opname-kas': '🔍 OPNAME KAS FISIK',
-          'tutup-kas': '🔒 PENUTUPAN KAS BULANAN',
-          'aset-modal': '🏗️ BELANJA MODAL & ASET',
-          'kas-kecil': '💳 PINJAMAN KAS KECIL',
-          'chat': '💬 CHAT SEKOLAH',
-          'ai': '🤖 CIMEGA AI ASISTEN',
-          'sharing': '📩 KOLABORASI DOKUMEN'
-        };
-
-        const title = titles[pageId] || 'CIMEGA BENDHARA OFFICE';
-        document.getElementById('topTitle').innerText = title;
-
-        // Lazy load modules
-        if(pageId === 'chat' && window.CimegaChat) window.CimegaChat.init(db, 'chatContent');
-        if(pageId === 'ai' && window.CimegaAIChatbot) window.CimegaAIChatbot.renderTo('aiContent');
-        if(pageId === 'sharing' && window.CimegaSharing) window.CimegaSharing.renderInbox('sharingContent');
-      }
-    };
-
-    // Initialize Identity
-    const userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
-    if (!userData.roles || !userData.roles.includes('bendahara')) {
-      window.location.href = '../login/login.html';
-    }
-    document.getElementById('userName').innerText = userData.nama || 'Bendahara';
-
-    function logout() {
-      localStorage.removeItem('cimega_user');
-      window.location.href = '../login/login.html';
-    }
-
-    // Initialize Dashboard
-    window.addEventListener('load', () => {
-      if(window.CimegaDashboard) {
-        window.CimegaDashboard.init((pid) => window.BendaharaUI.nav(pid));
-      }
-      if(window.CimegaMusic) window.CimegaMusic.init();
-    });
-
-    let db;
-    async function initEnv() {
-      try {
-        const config = await window.cimegaAPI.getFirebaseConfig();
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-        const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        const app = initializeApp(config);
-        db = getFirestore(app);
-      } catch(e) { console.error("Firebase init error", e); }
-    }
-    initEnv();
-  </script>
+  <!-- FIREBASE BRIDGE -->
+  <script src="../../shared/utils.js"></script>
+  
+  <!-- MODULAR BENDAHARA SYSTEM -->
+  <script src="../../modules/bendahara/perencanaan_anggaran.js"></script>
+  <script src="../../modules/bendahara/pembukuan_kas.js"></script>
+  <script src="../../modules/bendahara/pengadaan_spj.js"></script>
+  <script src="../../modules/bendahara/manajemen_perpajakan.js"></script>
+  <script src="../../modules/bendahara/pelaporan_closing.js"></script>
+  <script src="../../modules/bendahara/bendahara_main.js"></script>
 </body>
 </html>

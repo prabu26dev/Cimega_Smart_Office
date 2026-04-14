@@ -377,10 +377,7 @@
         // 6. Navigation Handover
         setTimeout(() => {
           if (roles.includes('admin')) window.location.href = '../admin/admin.html';
-          else if (roles.includes('kepsek')) window.location.href = '../kepsek/kepsek.html';
-          else if (roles.includes('bendahara')) window.location.href = '../bendahara/bendahara.html';
-          else if (roles.includes('ops')) window.location.href = '../ops/ops.html';
-          else window.location.href = '../guru/guru.html';
+          else window.location.href = '../dashboard/dashboard.html';
         }, 800);
 
       } catch (err) {

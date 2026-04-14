@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';">
+  <title>Cimega Smart Office - PUSAT KOMANDO PEMBINA EKSTRAKURIKULER</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../pages/dashboard/dashboard.css">
+  <style>
+    /* Styling khusus Pembina Ekskul (Energetic Crimson/Red Glow) */
+    :root {
+      --red: #ff4757;
+    }
+    .ekskul-dashboard { border-left: 4px solid var(--red) !important; }
+    .red-glow { text-shadow: 0 0 10px rgba(255, 71, 87, 0.6); color: var(--red); }
+  </style>
+</head>
+<body>
+  <!-- Drag Region -->
+  <div class="drag-region"></div>
+  <div class="window-controls">
+    <button class="btn-ctrl btn-min" onclick="window.cimegaAPI.minimize()">_</button>
+    <button class="btn-ctrl btn-max" onclick="window.cimegaAPI.maximize()">□</button>
+    <button class="btn-ctrl btn-close" onclick="window.cimegaAPI.close()">✕</button>
+  </div>
+
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">🏅</div>
+        <div>CIMEGA<br><span style="font-size:10px;color:var(--red)">X-CURRICULAR / TALENT MODE</span></div>
+      </div>
+
+      <div class="menu-section">
+        <div class="menu-item active" onclick="showPage('home')">
+          <div class="icon">🏠</div><div>Beranda</div>
+        </div>
+      </div>
+
+      <div class="menu-section" id="ekskulMenu">
+        <!-- Generatif dari window.EkskulModules -->
+        <div style="padding:20px;color:var(--muted);text-align:center;font-size:12px;">Memuat Talent Pool...</div>
+      </div>
+
+      <div class="menu-section" style="margin-top:auto">
+        <div class="menu-item" onclick="logout()" style="color:#ff4444">
+          <div class="icon">🚪</div><div>Keluar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div class="main-content">
+      <div class="topbar">
+        <div class="breadcrumb" id="breadcrumb">Pusat Komando <span style="margin:0 8px">/</span> <span class="red-glow">Pembina Ekstrakurikuler</span></div>
+        <div class="user-block">
+          <div style="text-align:right">
+            <div style="font-family:'Orbitron';font-size:12px;color:var(--red)" id="ekskulNama">Memuat...</div>
+            <div style="font-size:10px;color:var(--muted)" id="ekskulSekolah">Memuat...</div>
+          </div>
+          <div class="avatar" style="box-shadow:0 0 10px rgba(255, 71, 87, 0.4)">🏟️</div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <!-- PAGE HOME -->
+        <div class="page active" id="page-home">
+          <div class="hero" style="border-left: 4px solid var(--red)">
+            <h1>Selamat Memantau <span class="red-glow">Mental Juara</span></h1>
+            <p style="color:#ffccd5">Pangkalan Data Pembinaan Olahraga, Seni & Ekstrakurikuler. Cetak Prestasi, Pantau Kehadiran Anggota, dan Lindungi Keselamatan Latihan.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:15px">
+                <div style="font-size:48px">🏆</div>
+                <div>
+                  <h3 style="margin-bottom:5px">Arsip Pencetak Medali (FLS2N/O2SN)</h3>
+                  <p style="color:var(--muted);font-size:13px">Buang buku catatan fisik Anda! Kelola *Talent Mapping* siswa berbakat, evaluasi riwayat pertandingannya, lalu laporkan dengan format Rapor yang langsung disetorkan ke Walas.</p>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:15px">
+                <div style="font-size:48px">🤖</div>
+                <div>
+                  <h3 style="margin-bottom:5px">AI Analis Proposal</h3>
+                  <p style="color:var(--muted);font-size:13px">Hanya menyumbang ide "Mau Kemah", AI Cimega akan mengubahnya menjadi Proposal Lengkap plus Rencana Anggaran Biaya (RAB) yang bisa langsung dicetak untuk meminta dana ke Bendahara BOS.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE DOC LIST -->
+        <div class="page" id="page-doclist">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+            <div class="section-title" style="margin:0" id="doclistTitle">📚 Kategori Pelatihan</div>
+            <button class="btn btn-primary btn-sm" onclick="showPage('home')" style="background:var(--red);border-color:var(--red);color:white">⬅ Kembali</button>
+          </div>
+          <div id="doclistGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:15px;">
+          </div>
+        </div>
+
+        <!-- PAGE EDITOR -->
+        <div class="page" id="page-editor">
+          <div class="card" style="height:100%;display:flex;flex-direction:column">
+            <div class="card-header" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="showPage('doclist')">⬅ Kembali</button>
+              <input class="form-control" id="editorTitle" placeholder="Judul Dokumen Pelatihan" style="flex:1;background:rgba(0,0,0,0.5);min-width:200px;border-color:var(--red)">
+              <button class="btn btn-primary btn-sm" onclick="saveDoc()" style="background:var(--red);color:white;border:none">💾 Simpan Arsip Ekskul</button>
+              <button class="btn btn-gold btn-sm" onclick="generateAI()" style="box-shadow:0 0 10px rgba(255,215,0,0.4)">✨ Format AI Pelatih</button>
+            </div>
+            <div class="card-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px" id="editorForm">
+              <!-- Form rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FIREBASE BRIDGE -->
+  <script src="../../shared/utils.js"></script>
+  
+  <!-- MODULAR EKSTRAKURIKULER SYSTEM -->
+  <script src="../../modules/ekskul/perencanaan_program.js"></script>
+  <script src="../../modules/ekskul/manajemen_keanggotaan.js"></script>
+  <script src="../../modules/ekskul/operasional_lapangan.js"></script>
+  <script src="../../modules/ekskul/bank_prestasi.js"></script>
+  <script src="../../modules/ekskul/pelaporan_event.js"></script>
+  <script src="../../modules/ekskul/ekskul_main.js"></script>
+</body>
+</html>

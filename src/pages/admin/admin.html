@@ -250,7 +250,7 @@
     <div class="nav-item" onclick="showPage('cloud',this)"><span class="nav-icon">☁️</span>Cimega Cloud Drive</div>
     <div class="nav-item" onclick="showPage('oversight',this)"><span class="nav-icon">🛡️</span>Pengawasan Dokumen</div>
     <div class="nav-section">Sistem</div>
-    <div class="nav-item" onclick="showPage('templates',this)"><span class="nav-icon">🛠️</span>Kelola Template AI</div>
+    <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📁</span>Kelola Administrasi</div>
     <div class="nav-item" onclick="showPage('musik',this)"><span class="nav-icon">🎵</span>Kelola Musik</div>
     <div class="nav-item" onclick="showPage('update',this)"><span class="nav-icon">🔄</span>Update Aplikasi</div>
     <div class="nav-item" onclick="showPage('notifikasi',this)"><span class="nav-icon">🔔</span>Notifikasi<span class="nav-badge" id="notifBadge" style="display:none">!</span></div>
@@ -311,13 +311,68 @@
       </div>
     </div>
 
-    <!-- PAGE: KELOLA TEMPLATE AI -->
-    <div class="page" id="page-templates">
-      <div class="module-header">
-        <h2 class="module-title">Pusat Kontrol Template AI</h2>
-        <button class="btn btn-primary" onclick="openModalTemplate()">+ Buat Template Baru</button>
+    <!-- PAGE: KELOLA ADMINISTRASI (TERPADU) -->
+    <div class="page" id="page-konten">
+      <div class="section-header">
+        <div class="section-title">Pusat Kontrol <span>Administrasi & Template AI</span></div>
+        <div style="display:flex;gap:8px" id="admActionBtns">
+          <button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
+          <button class="btn btn-primary" onclick="openModalKonten()">📄 + Administrasi</button>
+        </div>
       </div>
-      <div id="templateList"></div>
+
+      <!-- TABS -->
+      <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:10px">
+        <button class="rf-btn active" id="tabBtnAdm" onclick="switchAdmTab('adm')">📁 Administrasi & Kategori</button>
+        <button class="rf-btn" id="tabBtnTmp" onclick="switchAdmTab('tmp')">🤖 Template AI</button>
+      </div>
+
+      <!-- TAB 1: ADMINISTRASI -->
+      <div id="tabContentAdm">
+        <div class="konten-layout" style="margin-bottom:30px">
+          <div class="kat-list" id="kategoriList">
+            <div class="kat-header">
+              <span class="kat-header-label">Kategori</span>
+            </div>
+            <div id="katItemsContainer">
+              <div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Memuat...</div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:12px;color:var(--muted)" id="kontenListLabel"></div>
+              <button class="btn btn-ghost btn-sm" onclick="openModalKonten()" id="btnTambahKontenKat" style="display:none">📄 + Tambah Dokumen</button>
+            </div>
+            <div class="content-list" id="kontenList">
+              <div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Komponen Global -->
+        <div class="card" style="border-color:var(--cyan); background:rgba(0,229,255,0.02); border-radius:13px; border:1px solid var(--border); overflow:hidden">
+          <div class="card-header" style="background:rgba(0,229,255,0.05); padding:15px 20px; border-bottom:1px solid var(--border)">
+            <div class="card-title" style="font-family:'Orbitron',sans-serif; font-size:12px; color:#fff">⚙️ ADMINISTRASI GLOBAL & SISTEM</div>
+          </div>
+          <div class="card-body" style="padding:20px">
+            <p style="font-size:12px;color:var(--muted);margin-bottom:16px; max-width:600px">
+              Pusat kendali konfigurasi konten untuk seluruh institusi. Pengaturan di bawah ini akan berdampak pada ketersediaan kategori dan dokumen di setiap sekolah.
+            </p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <button class="btn btn-ghost" onclick="seedKategoriDefault()">↩ Pulihkan Kategori Default</button>
+              <button class="btn btn-gold" onclick="confirmImportDefault()">📥 Import Semua Dokumen Default</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: TEMPLATES -->
+      <div id="tabContentTmp" style="display:none">
+        <div class="module-header" style="margin-bottom:15px">
+            <h2 class="module-title" style="font-size:12px; color:var(--muted)">Konfigurasi AI Assistant untuk Administrasi</h2>
+        </div>
+        <div id="templateList" class="content-list"></div>
+      </div>
     </div>
 
     <!-- PAGE: KELOLA MUSIK -->
@@ -325,72 +380,24 @@
       <div class="module-header">
         <h2 class="module-title">Manajemen Cloud Music SDN CIMEGA</h2>
       </div>
-      <div class="module-card">
+      <div class="module-card" style="background:var(--card); border:1px solid var(--border); border-radius:13px; padding:20px; margin-bottom:20px">
          <div class="form-group">
            <label class="form-label">Judul Lagu</label>
            <input type="text" id="musikTitleInput" class="form-control" placeholder="Contoh: Mars Cimega 2026">
          </div>
          <div class="form-group">
            <label class="form-label">Pilih File (.mp3)</label>
-           <input type="file" id="musikFile" class="form-control" accept="audio/mpeg">
+           <input type="file" id="musikFile" class="form-control" accept="audio/mpeg" style="padding:7px">
          </div>
-         <button class="btn btn-gold" onclick="uploadMusik()">🚀 Upload ke Cloud</button>
+         <button class="btn btn-gold" style="width:100%" onclick="uploadMusik()">🚀 Upload ke Cloud</button>
       </div>
       <div id="musikList" style="margin-top:20px"></div>
     </div>
 
     <!-- PAGE: DATA MASTER (COMBINED) -->
-    <div class="page active" id="page-master">
+    <div class="page" id="page-master">
       <div id="masterApp"></div>
     </div>
-
-    <!-- PAGE: KONTEN -->
-    <div class="page" id="page-konten">
-      <div class="section-header">
-        <div class="section-title">Kelola <span>Konten Dokumen</span></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
-          <button class="btn btn-primary" onclick="openModalKonten()">📄 + Konten</button>
-        </div>
-      </div>
-      <div class="konten-layout" style="margin-bottom:30px">
-        <div class="kat-list" id="kategoriList">
-          <div class="kat-header">
-            <span class="kat-header-label">Kategori</span>
-          </div>
-          <div id="katItemsContainer">
-            <div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Memuat...</div>
-          </div>
-        </div>
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:12px;color:var(--muted)" id="kontenListLabel"></div>
-            <button class="btn btn-ghost btn-sm" onclick="openModalKonten()" id="btnTambahKontenKat" style="display:none">📄 + Tambah Dokumen</button>
-          </div>
-          <div class="content-list" id="kontenList">
-            <div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section: Komponen Global (Migrated to Konten) -->
-      <div class="card" style="border-color:var(--cyan); background:rgba(0,229,255,0.02)">
-        <div class="card-header" style="background:rgba(0,229,255,0.05); padding:15px 20px; border-bottom:1px solid var(--border)">
-          <div class="card-title" style="font-family:'Orbitron',sans-serif; font-size:12px; color:#fff">⚙️ ADMINISTRASI GLOBAL & SISTEM</div>
-        </div>
-        <div class="card-body" style="padding:20px">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:16px; max-width:600px">
-            Pusat kendali konfigurasi konten untuk seluruh institusi. Pengaturan di bawah ini akan berdampak pada ketersediaan kategori dan dokumen di setiap sekolah.
-          </p>
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <button class="btn btn-ghost" onclick="seedKategoriDefault()">↩ Pulihkan Kategori Default</button>
-            <button class="btn btn-gold" onclick="confirmImportDefault()">📥 Import Semua Dokumen Default</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PAGE: UPDATE -->
     <div class="page" id="page-update">
       <div class="section-header"><div class="section-title">Update <span>Aplikasi</span></div></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
@@ -626,13 +633,16 @@
     <div class="form-group"><label class="form-label">Password</label><input class="form-control" type="password" id="userPassword" placeholder="Kosongkan jika tidak diubah"/></div>
     <div class="form-group">
       <label class="form-label">Jabatan <span style="color:var(--muted);font-weight:400">(boleh lebih dari satu)</span></label>
-      <!-- FIX: onclick meneruskan event untuk mencegah double-fire -->
       <div class="roles-checkboxes" id="rolesCheckboxes">
         <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
         <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>   🏛️ Kepala Sekolah</label>
         <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
         <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>      💻 Operator</label>
       </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <div class="form-group" style="flex:1"><label class="form-label">Wali Kelas <span style="font-weight:400;color:var(--muted)">(Opsional)</span></label><input class="form-control" id="userWaliKelas" placeholder="Misal: Kelas 1A"/></div>
+      <div class="form-group" style="flex:1"><label class="form-label">Guru Mapel <span style="font-weight:400;color:var(--muted)">(Opsional)</span></label><input class="form-control" id="userMapel" placeholder="Misal: PAI"/></div>
     </div>
     <!-- Sekolah readonly, terisi otomatis dari konteks sekolah yang dipilih -->
     <div class="form-group">
@@ -861,10 +871,31 @@ function showPage(page,navEl){
   if(page==='master')     if(window.AdminMaster) window.AdminMaster.init();
   if(page==='oversight')  if(window.ModulOversight) window.ModulOversight.init();
   if(page==='cloud')      if(window.ModulCloudDrive) window.ModulCloudDrive.init();
-  if(page==='konten')     loadKategoriList();
+  if(page==='konten'){
+    loadKategoriList();
+    loadTemplates();
+  }
   if(page==='log')        loadLog();
   if(page==='pengaturan') loadPengaturan();
   if(page==='update')     loadUpdateHistory();
+}
+
+// ── Admin Tabs ─────────────────────────────
+function switchAdmTab(tab) {
+  const isAdm = tab === 'adm';
+  document.getElementById('tabContentAdm').style.display = isAdm ? 'block' : 'none';
+  document.getElementById('tabContentTmp').style.display = isAdm ? 'none' : 'block';
+  document.getElementById('tabBtnAdm').classList.toggle('active', isAdm);
+  document.getElementById('tabBtnTmp').classList.toggle('active', !isAdm);
+  
+  // Update buttons
+  const acts = document.getElementById('admActionBtns');
+  if (isAdm) {
+    acts.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
+                      <button class="btn btn-primary" onclick="openModalKonten()">📄 + Administrasi</button>`;
+  } else {
+    acts.innerHTML = `<button class="btn btn-primary" onclick="openModalTemplate()">🤖 + Buat Template AI</button>`;
+  }
 }
 
 // ════════════════════════════════════════════
@@ -911,6 +942,8 @@ function openModalUser(){
   document.getElementById('userPassword').value='';
   document.getElementById('userStatus').value='aktif';
   document.getElementById('userExpired').value='';
+  document.getElementById('userWaliKelas').value='';
+  document.getElementById('userMapel').value='';
   document.getElementById('userSekolah').value=_activeSchoolName;
   document.getElementById('userSchoolId').value=npsn;
   
@@ -923,8 +956,24 @@ function openModalUser(){
   openModal('modalUser');
 }
 function editUser(id){
-  const d=_allUsers.find(u=>u.id===id);
-  if(!d) return;
+  // Cari dari semua sumber cache: lokal, window._allUsers (dari data_master.js), window.AdminMaster.users
+  const allSources = [
+    ...(_allUsers || []),
+    ...(window._allUsers || []),
+    ...(window.AdminMaster?.users || []),
+  ];
+  // Deduplicate by id dan cari
+  const seen = new Set();
+  const merged = allSources.filter(u => { if(seen.has(u.id)) return false; seen.add(u.id); return true; });
+  const d = merged.find(u => u.id === id);
+
+  // Sync balik ke _allUsers agar sesi berikutnya tidak perlu merge lagi
+  if (merged.length > _allUsers.length) _allUsers = merged;
+
+  if(!d) {
+    showToast('error','Gagal','Data pengguna tidak ditemukan. Klik tombol 🔄 Refresh terlebih dahulu.');
+    return;
+  }
   window._isGlobalModal = false;
   document.getElementById('userId').value=id;
   document.getElementById('userNama').value=d.nama||'';
@@ -932,6 +981,8 @@ function editUser(id){
   document.getElementById('userPassword').value='';
   document.getElementById('userStatus').value=d.status||'aktif';
   document.getElementById('userExpired').value=d.expired?fmtDateInput(d.expired):'';
+  document.getElementById('userWaliKelas').value=d.wali_kelas||'';
+  document.getElementById('userMapel').value=d.guru_mapel||'';
   document.getElementById('userSekolah').value=d.sekolah||_activeSchoolName;
   document.getElementById('userSchoolId').value=d.school_id||'';
 
@@ -944,8 +995,9 @@ function editUser(id){
   openModal('modalUser');
 }
 async function saveUser(){
-  const { collection, doc, addDoc, updateDoc, serverTimestamp, Timestamp } = window._fb;
-  const id = document.getElementById('userId').value;
+  const { doc, setDoc, serverTimestamp, Timestamp } = window._fb;
+  const editId = document.getElementById('userId').value;
+  const id = editId || `user_${Date.now()}`;
   const nama = document.getElementById('userNama').value.trim();
   const username = document.getElementById('userUsername').value.trim();
   const password = document.getElementById('userPassword').value;
@@ -953,38 +1005,33 @@ async function saveUser(){
   const school_id = document.getElementById('userSchoolId').value;
   const status = document.getElementById('userStatus').value;
   const expiredStr = document.getElementById('userExpired').value;
+  const wali_kelas = document.getElementById('userWaliKelas').value.trim();
+  const guru_mapel = document.getElementById('userMapel').value.trim();
   const roles = getCheckedRoles('rolesCheckboxes');
 
   if(!nama || !username){showToast('warn','Peringatan','Nama dan username wajib diisi!');return;}
   if(roles.length===0){showToast('warn','Peringatan','Pilih minimal satu jabatan!');return;}
   if(!id && !password){showToast('warn','Peringatan','Password wajib untuk pengguna baru!');return;}
-  if(!sekolah){showToast('warn','Peringatan','Sekolah tidak diketahui. Kembali dan pilih sekolah.');return;}
 
   try{
     const role = roles[0];
     const payload = { 
-      nama, username, roles, role, sekolah, school_id, status, 
+      id, nama, username, roles, role, sekolah, school_id, status, 
+      wali_kelas, guru_mapel,
       updatedAt: serverTimestamp() 
     };
     if(password) payload.password = password;
     payload.expired = expiredStr ? Timestamp.fromDate(new Date(expiredStr)) : null;
 
-    if(id){
-      await updateDoc(doc(db,'users',id), payload);
-      const idx = _allUsers.findIndex(u => u.id === id);
-      if(idx > -1) _allUsers[idx] = { ..._allUsers[idx], ...payload, id };
-    } else {
-      const ref = await addDoc(collection(db,'users'), { ...payload, createdAt: serverTimestamp() });
-      _allUsers.push({ id: ref.id, ...payload });
-    }
+    // Firestore Upsert
+    await setDoc(doc(db, 'users', id), payload, { merge: true });
+    // Supabase Sync
+    await syncToSupabase('users', payload);
     
     closeModal('modalUser');
-    // Refresh Data Master
     if (window.AdminMaster) await window.AdminMaster.init();
-
-    loadDashboard();
-    addLog('Pengguna', `${id?'Edit':'Tambah'} pengguna: ${nama} (${roles.join('+')}) @ ${sekolah}`);
-    showToast('success','Berhasil',`Pengguna ${nama} ${id?'diperbarui':'ditambahkan'}`);
+    addLog('Pengguna', `Sync user: ${nama} @ ${sekolah}`);
+    showToast('success','Berhasil',`User ${nama} disinkronkan`);
   }catch(e){showToast('error','Error',e.message);}
 }
 async function toggleUserStatus(id,currentStatus){
@@ -1032,8 +1079,9 @@ function openModalSekolah(schoolId){
   openModal('modalSekolah');
 }
 async function saveSekolah(){
-  const { collection, doc, setDoc, addDoc, serverTimestamp } = window._fb;
-  const id = document.getElementById('sekolahId').value;
+  const { doc, setDoc, serverTimestamp } = window._fb;
+  const editId = document.getElementById('sekolahId').value;
+  const id = editId || `school_${Date.now()}`;
   const nama = document.getElementById('sekolahNama').value.trim();
   const npsn = document.getElementById('sekolahNPSN').value.trim();
   const alamat = document.getElementById('sekolahAlamat').value.trim();
@@ -1043,18 +1091,16 @@ async function saveSekolah(){
   if(!nama || !npsn){showToast('warn','Peringatan','Nama dan NPSN wajib diisi!');return;}
   
   try{
-    // Generate AES Key for new schools
-    let schoolKey = '';
-    let backupKey = '';
-    if(!id) {
+    let schoolKey = '', backupKey = '';
+    if(!editId) {
        const keyArray = new Uint8Array(32);
        window.crypto.getRandomValues(keyArray);
        schoolKey = btoa(String.fromCharCode(...keyArray));
-       backupKey = 'BACKUP_' + schoolKey.slice(0, 8); // Simple backup logic
+       backupKey = 'BACKUP_' + schoolKey.slice(0, 8);
     }
 
     const payload = { 
-      nama, npsn, alamat, kepsek, status, 
+      id, nama, npsn, alamat, kepsek, status, 
       updatedAt: serverTimestamp() 
     };
     if(schoolKey) {
@@ -1062,21 +1108,17 @@ async function saveSekolah(){
       payload.emergency_backup_key = backupKey;
     }
 
-    if(id) await setDoc(doc(db,'sekolah',id), payload, { merge: true });
-    else   await addDoc(collection(db,'sekolah'), { ...payload, createdAt: serverTimestamp() });
+    // Firestore Upsert
+    await setDoc(doc(db, 'sekolah', id), payload, { merge: true });
+    // Supabase Sync
+    await syncToSupabase('sekolah', payload);
     
     closeModal('modalSekolah');
-    // Refresh Data Master
     if (window.AdminMaster) await window.AdminMaster.init();
 
-    addLog('Sekolah',`${id?'Edit':'Tambah'} sekolah: ${nama} (${npsn})`);
-    showToast('success','Berhasil',`Institusi ${nama} ${id?'diperbarui':'ditambahkan'}`);
+    addLog('Sekolah', `Sync sekolah: ${nama} (${npsn})`);
+    showToast('success','Berhasil',`Institusi ${nama} disinkronkan ke cloud`);
     
-    if(id&&_activeSchoolId===id){
-      _activeSchoolName=nama;
-      document.getElementById('activeSchoolName').textContent=nama;
-      document.getElementById('activeSchoolSub').textContent=alamat+' · NPSN: '+npsn;
-    }
     await loadSekolahDropdown();
     loadDashboard();
   }catch(e){showToast('error','Error',e.message);}
@@ -1137,10 +1179,10 @@ async function editTemplate(id){
 
 async function saveTemplate() {
   const { doc, setDoc, serverTimestamp } = window._fb;
-  const db = window._fb.db;
   const id = document.getElementById('tmpId').value || `${document.getElementById('tmpRole').value}_${Date.now()}`;
   
   const payload = {
+    id, // Ensure ID is in data for SB sync
     nama: document.getElementById('tmpNama').value,
     role: document.getElementById('tmpRole').value,
     kategori: document.getElementById('tmpKategori').value,
@@ -1152,99 +1194,163 @@ async function saveTemplate() {
   };
 
   await setDoc(doc(db, 'admin_templates', id), payload, { merge: true });
+  await syncToSupabase('admin_templates', payload); // Dynamic sync to Supabase table
   closeModal('modalTemplate');
-  loadTemplates();
   showToast('success', 'Berhasil', 'Template AI diperbarui.');
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Hapus template ini?')) return;
+  const { doc, deleteDoc } = window._fb;
+  try {
+    await deleteDoc(doc(db, 'admin_templates', id));
+    await syncToSupabase('admin_templates', { id }, true);
+    showToast('success','Dihapus','Template AI telah dihapus.');
+  } catch(e) { showToast('error','Error',e.message); }
 }
 
 // ════════════════════════════════════════════
 // KELOLA MUSIK (Cloud Storage)
 // ════════════════════════════════════════════
 
-async function loadMusik(){
-  const { collection, getDocs, query, orderBy } = window._fb;
-  const db = window._fb.db;
-  const container = document.getElementById('musikList');
-  container.innerHTML = 'Memuat...';
+// ════════════════════════════════════════════
+// KELOLA MUSIK (Supabase Storage with Cleanup)
+// ════════════════════════════════════════════
 
-  const snap = await getDocs(query(collection(db, 'app_music'), orderBy('createdAt', 'desc')));
-  let html = '';
-  snap.forEach(doc => {
-    const data = doc.data();
-    html += `
-      <div class="content-item">
-        <div class="content-item-icon">🎵</div>
-        <div class="content-item-body">
-          <div class="content-item-name">${data.title}</div>
-          <div class="content-item-cat">${data.status}</div>
+let _musicUnsub = null;
+function loadMusik(){
+  const { collection, query, orderBy, onSnapshot } = window._fb;
+  const container = document.getElementById('musikList');
+  if(!container) return;
+  if(_musicUnsub) _musicUnsub();
+  
+  _musicUnsub = onSnapshot(query(collection(db, 'app_music'), orderBy('createdAt', 'desc')), snap => {
+    let html = '';
+    snap.forEach(doc => {
+      const data = doc.data();
+      html += `
+        <div class="content-item">
+          <div class="content-item-icon">🎵</div>
+          <div class="content-item-body">
+            <div class="content-item-name">${data.title}</div>
+            <div class="content-item-cat">${data.status || 'Active'}</div>
+          </div>
+          <div class="content-item-actions">
+            <button class="btn btn-danger btn-sm" onclick="deleteMusik('${doc.id}', '${data.audioUrl}')">🗑 Hapus</button>
+          </div>
         </div>
-        <div class="content-item-actions">
-          <button class="btn btn-danger btn-sm" onclick="deleteMusik('${doc.id}', '${data.audioUrl}')">🗑 Hapus</button>
-        </div>
-      </div>
-    `;
+      `;
+    });
+    container.innerHTML = html || 'Playlist kosong.';
   });
-  container.innerHTML = html || 'Playlist kosong.';
 }
 
 async function uploadMusik() {
   const file = document.getElementById('musikFile').files[0];
-  const title = document.getElementById('musikTitleInput').value;
+  const title = document.getElementById('musikTitleInput').value.trim();
   if(!file || !title) return showToast('error', 'Error', 'Isi judul dan pilih file!');
 
-  showToast('info', 'Sedang Upload...', 'Mohon tunggu sebentar.');
-  const { ref, uploadBytes, getDownloadURL } = window._fb.storage;
-  const { collection, addDoc, serverTimestamp } = window._fb;
-  const storage = window._fb.storageService;
-  const db = window._fb.db;
+  if (!window._supabase) return showToast('error', 'Error', 'Supabase not connected');
+
+  showToast('info', 'Processing...', 'Mengecek duplikasi & mengunggah musik...');
+  const { collection, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp } = window._fb;
 
   try {
-    const storageRef = ref(storage, `music/${Date.now()}_${file.name}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    const audioUrl = await getDownloadURL(snapshot.ref);
+    // 1. Check existing record with same title (Cleanup Strategy)
+    const q = query(collection(db, 'app_music'), where('title', '==', title));
+    const snap = await getDocs(q);
+    
+    if (!snap.empty) {
+      if (!confirm(`Musik dengan judul "${title}" sudah ada. Ganti dengan yang baru?`)) return;
+      // Delete old file from SB Storage
+      for (const d of snap.docs) {
+        const oldUrl = d.data().audioUrl;
+        if (oldUrl && oldUrl.includes('supabase')) {
+           const oldPath = oldUrl.split('/').pop();
+           await window._supabase.storage.from('app-music').remove([`music/${oldPath}`]);
+        }
+        await deleteDoc(doc(db, 'app_music', d.id));
+      }
+    }
 
-    await addDoc(collection(db, 'app_music'), {
-      title, audioUrl, status: 'active', createdAt: serverTimestamp()
-    });
+    // 2. Upload to Supabase Storage
+    const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    const filePath = `music/${fileName}`;
+    
+    const { data, error } = await window._supabase.storage
+      .from('app-music')
+      .upload(filePath, file, { upsert: true });
 
-    loadMusik();
-    showToast('success', 'Berhasil', 'Musik diunggah ke cloud.');
+    if (error) throw error;
+
+    const { data: { publicUrl } } = window._supabase.storage.from('app-music').getPublicUrl(filePath);
+
+    // 3. Save to Firestore
+    const musicId = `music_${Date.now()}`;
+    const payload = {
+      id: musicId,
+      title,
+      audioUrl: publicUrl,
+      status: 'active',
+      createdAt: serverTimestamp()
+    };
+    
+    await setDoc(doc(db, 'app_music', musicId), payload);
+    
+    // Sync table backup
+    await syncToSupabase('app_music', payload);
+
+    document.getElementById('musikTitleInput').value = '';
+    document.getElementById('musikFile').value = '';
+    showToast('success', 'Berhasil', 'Musik diperbarui dan disinkronkan.');
   } catch (e) {
     showToast('error', 'Gagal', e.message);
   }
 }
 
 async function deleteMusik(id, url) {
-  if(!confirm('Hapus lagu ini?')) return;
+  if(!confirm('Hapus lagu ini dari database dan storage?')) return;
   const { doc, deleteDoc } = window._fb;
-  const db = window._fb.db;
-  await deleteDoc(doc(db, 'app_music', id));
-  loadMusik();
+  try {
+    // Delete from Firestore
+    await deleteDoc(doc(db, 'app_music', id));
+    // Delete from Supabase Storage
+    if (url && url.includes('supabase')) {
+      const path = url.split('/').pop();
+      await window._supabase.storage.from('app-music').remove([`music/${path}`]);
+    }
+    // Delete from Supabase Table
+    await syncToSupabase('app_music', { id }, true);
+    
+    showToast('success','Dihapus','Musik telah dihapus bersih.');
+  } catch(e) { showToast('error','Error',e.message); }
 }
 
 // ════════════════════════════════════════════
 // HAPUS UNIVERSAL
 // ════════════════════════════════════════════
-function konfirmasiHapus(tipe,id,nama){
-  document.getElementById('konfirmasiText').textContent=`Hapus "${nama}"? Tindakan ini tidak bisa dibatalkan.`;
+async function konfirmasiHapus(tipe,id,nama){
+  document.getElementById('konfirmasiText').textContent=`Hapus "${nama}"? Data akan dihapus dari Firestore dan Supabase secara permanen.`;
   document.getElementById('konfirmasiBtn').onclick=async()=>{
     const{doc,deleteDoc}=window._fb;
     try{
-      await deleteDoc(doc(db,tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten',id));
+      const fsCollection = tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten';
+      const sbTable = tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten';
+      
+      // 1. Delete from Firestore
+      await deleteDoc(doc(db, fsCollection, id));
+      
+      // 2. Delete from Supabase Table
+      await syncToSupabase(sbTable, { id }, true);
+      
       closeModal('modalKonfirmasi');
       
-      // Refresh Data Master jika yang dihapus adalah user atau sekolah
       if (tipe === 'user' || tipe === 'sekolah') {
         if (window.AdminMaster) await window.AdminMaster.init();
       }
 
-      if(tipe==='konten'){
-        document.getElementById(`konten-item-${id}`)?.remove();
-      }
-      
-      loadDashboard();
-      addLog('Hapus',`Hapus ${tipe}: ${nama}`);
-      showToast('success','Dihapus',`${nama} berhasil dihapus`);
+      addLog('Hapus', `Permanent delete ${tipe}: ${nama}`);
+      showToast('success','Bersih',`${nama} dihapus dari semua platform`);
     }catch(e){showToast('error','Error',e.message);}
   };
   openModal('modalKonfirmasi');
@@ -1573,92 +1679,143 @@ async function importDefaultDokumen(){
 // KELOLA KONTEN — KATEGORI
 // ════════════════════════════════════════════
 
-async function loadKategoriList() {
-  const { collection, getDocs, query, orderBy } = window._fb;
-  const container = document.getElementById('katItemsContainer');
-  if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Memuat...</div>';
-
-  try {
-    const snap = await getDocs(query(collection(db, 'kategori'), orderBy('urutan', 'asc')));
+// ════════════════════════════════════════════
+// KONTEN / ADMINISTRASI (Real-time with Cleanup Sync)
+// ════════════════════════════════════════════
+let _katUnsub = null;
+function loadKategoriList(){
+  const { collection, query, orderBy, onSnapshot } = window._fb;
+  const list = document.getElementById('katItemsContainer');
+  if(!list) return;
+  if(_katUnsub) _katUnsub();
+  
+  _katUnsub = onSnapshot(query(collection(db,'kategori'), orderBy('urutan','asc')), snap => {
+    list.innerHTML = '';
     kontenKategoriMeta = {};
     kontenKategori = {};
-
-    if (snap.empty) {
-      // Tampilkan tombol seed jika kosong
-      container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Belum ada kategori.<br><button class="btn btn-ghost btn-sm" onclick="seedKategoriDefault()" style="margin-top:8px">↩ Seed Default</button></div>';
-      return;
-    }
-
-    let html = '';
+    
     snap.forEach(d => {
-      const data = d.data();
-      kontenKategori[d.id] = data.nama;
-      kontenKategoriMeta[d.id] = { nama: data.nama, icon: data.icon || '📄', urutan: data.urutan || 0, visibleTo: data.visibleTo || [], deskripsi: data.deskripsi || '' };
-      const isActive = _currentKat === d.id;
-      html += `<div class="kat-item${isActive ? ' active' : ''}" id="kat-${d.id}">
+      const k = d.data();
+      kontenKategori[d.id] = k.nama;
+      kontenKategoriMeta[d.id] = { ...k, id: d.id };
+      const div = document.createElement('div');
+      div.className = `kat-item ${d.id === _currentKat ? 'active' : ''}`;
+      div.id = `kat-item-${d.id}`;
+      div.innerHTML = `
         <button class="kat-item-btn" onclick="selectKat('${d.id}')">
-          <span class="kat-item-icon">${data.icon || '📄'}</span>
-          <span class="kat-item-name">${data.nama}</span>
+          <span class="kat-item-icon">${k.icon || '📁'}</span>
+          <span class="kat-item-name">${k.nama}</span>
         </button>
         <div class="kat-item-actions">
-          <button class="kat-act-btn" onclick="openModalKategori('${d.id}')" title="Edit">✏</button>
-          <button class="kat-act-btn del" onclick="deleteKategori('${d.id}', '${data.nama}')" title="Hapus">🗑</button>
-        </div>
-      </div>`;
+           <button class="kat-act-btn" onclick="openModalKategori('${d.id}')">✏️</button>
+           <button class="kat-act-btn del" onclick="deleteKategori('${d.id}','${k.nama}')">🗑</button>
+        </div>`;
+      list.appendChild(div);
     });
-    container.innerHTML = html;
+    
     rebuildKategoriSelect();
-    if (_currentKat) loadKontenByKat(_currentKat);
-  } catch(e) {
-    container.innerHTML = `<div style="color:var(--danger);padding:12px;font-size:11px">Gagal: ${e.message}</div>`;
-    console.error('loadKategoriList:', e);
-  }
-}
-
-function selectKat(katId) {
-  _currentKat = katId;
-  document.querySelectorAll('#katItemsContainer .kat-item').forEach(el => el.classList.remove('active'));
-  const target = document.getElementById('kat-' + katId);
-  if (target) target.classList.add('active');
-  document.getElementById('btnTambahKontenKat').style.display = 'block';
-  const meta = kontenKategoriMeta[katId];
-  document.getElementById('kontenListLabel').textContent = meta ? `📁 ${meta.nama}` : '';
-  loadKontenByKat(katId);
-}
-
-async function loadKontenByKat(katId) {
-  const { collection, getDocs, query, where, orderBy } = window._fb;
-  const listEl = document.getElementById('kontenList');
-  if (!listEl) return;
-  listEl.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>Memuat...</p></div>';
-  try {
-    const snap = await getDocs(query(collection(db, 'konten'), where('kategori', '==', katId), orderBy('createdAt', 'asc')));
     if (snap.empty) {
-      listEl.innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>Belum ada dokumen di kategori ini</p></div>';
-      return;
+       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Belum ada kategori.<br><button class="btn btn-ghost btn-sm" onclick="seedKategoriDefault()" style="margin-top:8px">↩ Seed Default</button></div>';
+    } else if (_currentKat && !kontenKategoriMeta[_currentKat]) {
+       _currentKat = '';
+       document.getElementById('kontenList').innerHTML = '<div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>';
+    } else if (_currentKat) {
+       loadKontenByKat(_currentKat);
     }
-    let html = '';
+  });
+}
+
+function selectKat(id) {
+  _currentKat = id;
+  document.querySelectorAll('.kat-item').forEach(x => x.classList.remove('active'));
+  const target = document.getElementById('kat-' + id);
+  if(target) target.classList.add('active');
+  document.getElementById('btnTambahKontenKat').style.display = 'block';
+  const meta = kontenKategoriMeta[id];
+  document.getElementById('kontenListLabel').textContent = meta ? `📁 ${meta.nama}` : '';
+  loadKontenByKat(id);
+}
+
+let _konUnsub = null;
+function loadKontenByKat(katId) {
+  const { collection, query, where, orderBy, onSnapshot } = window._fb;
+  const list = document.getElementById('kontenList');
+  if(!list) return;
+  if(_konUnsub) _konUnsub();
+  
+  _konUnsub = onSnapshot(query(collection(db, 'konten'), where('kategori', '==', katId), orderBy('createdAt', 'asc')), snap => {
+    list.innerHTML = '';
     snap.forEach(d => {
-      const data = d.data();
-      const roles = (data.visibleTo || []).map(r => `<span class="badge badge-${r}">${r}</span>`).join('');
-      html += `<div class="content-item" id="konten-item-${d.id}">
+      const k = d.data();
+      const roles = (k.visibleTo || []).map(r => `<span class="badge badge-${r}">${r.toUpperCase()}</span>`).join(' ');
+      const item = document.createElement('div');
+      item.className = 'content-item';
+      item.id = `konten-item-${d.id}`;
+      item.innerHTML = `
         <div class="content-item-icon">📄</div>
         <div class="content-item-body">
-          <div class="content-item-name">${data.nama}</div>
-          <div class="content-item-cat">${kontenKategori[data.kategori] || data.kategori}</div>
+          <div class="content-item-name">${k.nama}</div>
+          <div class="content-item-cat">${k.deskripsi || 'Tidak ada deskripsi'}</div>
           <div class="content-item-roles">${roles}</div>
         </div>
         <div class="content-item-actions">
-          <button class="btn btn-ghost btn-sm" onclick="editKonten('${d.id}')">✏️ Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${data.nama.replace(/'/g,"\\'")}')">🗑</button>
-        </div>
-      </div>`;
+           <button class="btn btn-ghost btn-sm" onclick="editKonten('${d.id}')">✏️ Edit</button>
+           <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${k.nama.replace(/'/g,"\\'")}')">🗑</button>
+        </div>`;
+      list.appendChild(item);
     });
-    listEl.innerHTML = html;
-  } catch(e) {
-    listEl.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>${e.message}</p></div>`;
-  }
+    
+    if (snap.empty) list.innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>Belum ada dokumen di kategori ini</p></div>';
+    loadDashboard();
+  });
+}
+
+// ── Supabase Sync Helper ───────────────────
+async function syncToSupabase(table, data, isDelete = false, idKey = 'id') {
+  if (!window._supabase) return;
+  try {
+    const recordId = data[idKey] || data.id;
+    if (isDelete) {
+      await window._supabase.from(table).delete().eq('id', recordId);
+    } else {
+      // Create clean object for SB (remove FS symbols if any)
+      const cleanData = { ...data };
+      if (cleanData.createdAt && cleanData.createdAt.toDate) cleanData.createdAt = cleanData.createdAt.toDate();
+      if (cleanData.updatedAt && cleanData.updatedAt.toDate) cleanData.updatedAt = cleanData.updatedAt.toDate();
+      
+      const { error } = await window._supabase.from(table).upsert({ id: recordId, ...cleanData }, { onConflict: 'id' });
+      if (error) throw error;
+    }
+  } catch(e) { console.warn(`Supabase Sync (${table}) failed:`, e.message); }
+}
+
+// ── KELOLA TEMPLATE AI (Real-time) ───────────
+let _tmpUnsub = null;
+function loadTemplates(){
+  const { collection, query, orderBy, onSnapshot } = window._fb;
+  const container = document.getElementById('templateList');
+  if(!container) return;
+  if(_tmpUnsub) _tmpUnsub();
+  
+  _tmpUnsub = onSnapshot(query(collection(db,'admin_templates'), orderBy('updatedAt','desc')), snap => {
+    let html = '';
+    snap.forEach(doc => {
+      const data = doc.data();
+      html += `
+        <div class="content-item">
+          <div class="content-item-icon">${data.icon || '🤖'}</div>
+          <div class="content-item-body">
+            <div class="content-item-name">${data.nama} <span class="badge badge-guru">${data.role.toUpperCase()}</span></div>
+            <div class="content-item-cat">${data.kategori} · ${data.components?.length || 0} fields</div>
+          </div>
+          <div class="content-item-actions">
+            <button class="btn btn-ghost btn-sm" onclick="editTemplate('${doc.id}')">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${doc.id}')">🗑</button>
+          </div>
+        </div>`;
+    });
+    container.innerHTML = html || '<div class="empty-state">Belum ada template AI. AI tidak akan aktif untuk kategori tanpa template.</div>';
+  });
 }
 
 function rebuildKategoriSelect() {
@@ -1696,23 +1853,33 @@ async function saveKategori() {
 
   if (!slug || !nama) { showToast('warn','Peringatan','ID dan Nama kategori wajib diisi!'); return; }
   try {
-    await setDoc(doc(db, 'kategori', slug), { nama, icon, urutan, visibleTo, deskripsi, updatedAt: serverTimestamp() }, { merge: true });
+    const payload = { id: slug, nama, icon, urutan, visibleTo, deskripsi, updatedAt: serverTimestamp() };
+    
+    // Firestore sync
+    await setDoc(doc(db, 'kategori', slug), payload, { merge: true });
+    // Supabase sync
+    await syncToSupabase('kategori', payload);
+
     closeModal('modalKategori');
-    await loadKategoriList();
     addLog('Kategori', `${editId ? 'Edit' : 'Tambah'} kategori: ${nama}`);
-    showToast('success','Tersimpan', `Kategori "${nama}" berhasil disimpan`);
+    showToast('success','Tersimpan', `Kategori "${nama}" berhasil disinkronkan`);
   } catch(e) { showToast('error','Error',e.message); }
 }
 
 async function deleteKategori(id, nama) {
-  if (!confirm(`Hapus kategori "${nama}"?`)) return;
+  if (!confirm(`Hapus kategori "${nama}"? Data di Supabase juga akan dihapus.`)) return;
   const { doc, deleteDoc } = window._fb;
   try {
     await deleteDoc(doc(db, 'kategori', id));
-    if (_currentKat === id) { _currentKat = ''; document.getElementById('kontenList').innerHTML = '<div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>'; }
-    await loadKategoriList();
+    await syncToSupabase('kategori', { id }, true);
+    
+    if (_currentKat === id) { 
+       _currentKat = ''; 
+       document.getElementById('kontenList').innerHTML = '<div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>'; 
+    }
+    
     addLog('Kategori', `Hapus kategori: ${nama}`);
-    showToast('success','Dihapus',`Kategori "${nama}" dihapus`);
+    showToast('success','Dihapus',`Kategori "${nama}" dihapus bersih`);
   } catch(e) { showToast('error','Error',e.message); }
 }
 
@@ -1768,8 +1935,9 @@ async function editKonten(id) {
 }
 
 async function saveKonten() {
-  const { doc, addDoc, updateDoc, collection, serverTimestamp } = window._fb;
-  const id = document.getElementById('kontenId').value;
+  const { doc, setDoc, serverTimestamp } = window._fb;
+  const editId = document.getElementById('kontenId').value;
+  const id = editId || `konten_${Date.now()}`;
   const nama = document.getElementById('kontenNama').value.trim();
   const kategori = document.getElementById('kontenKategori').value;
   const deskripsi = document.getElementById('kontenDeskripsi').value.trim();
@@ -1778,17 +1946,16 @@ async function saveKonten() {
 
   if (!nama || !kategori) { showToast('warn','Peringatan','Nama dan Kategori wajib diisi!'); return; }
   try {
-    const payload = { nama, kategori, deskripsi, template, visibleTo, updatedAt: serverTimestamp() };
-    if (id) {
-      await updateDoc(doc(db, 'konten', id), payload);
-    } else {
-      await addDoc(collection(db, 'konten'), { ...payload, createdAt: serverTimestamp() });
-    }
+    const payload = { id, nama, kategori, deskripsi, template, visibleTo, updatedAt: serverTimestamp() };
+    
+    // Firestore Upsert
+    await setDoc(doc(db, 'konten', id), payload, { merge: true });
+    // Supabase Sync
+    await syncToSupabase('konten', payload);
+
     closeModal('modalKonten');
-    if (_currentKat === kategori) loadKontenByKat(kategori);
-    loadDashboard();
-    addLog('Konten', `${id ? 'Edit' : 'Tambah'} konten: ${nama}`);
-    showToast('success','Berhasil',`Konten "${nama}" ${id ? 'diperbarui' : 'ditambahkan'}`);
+    addLog('Konten', `${editId ? 'Edit' : 'Tambah'} konten: ${nama}`);
+    showToast('success','Berhasil',`Konten "${nama}" disimpan & disinkronkan`);
   } catch(e) { showToast('error','Error',e.message); }
 }
 
@@ -1798,8 +1965,7 @@ async function saveKonten() {
 async function loadSchoolCards() {
   const { collection, getDocs } = window._fb;
   try {
-    const masterApp = document.getElementById('masterApp');
-    if (masterApp && window.AdminMaster) { window.AdminMaster.init(); return; }
+    // Selalu populate _allUsers dan _allSekolah agar editUser() bisa menemukan data
     const [skolSnap, usrSnap] = await Promise.all([
       getDocs(collection(db,'sekolah')),
       getDocs(collection(db,'users')),
@@ -1808,6 +1974,12 @@ async function loadSchoolCards() {
     skolSnap.forEach(d => _allSekolah.push({id:d.id,...d.data()}));
     _allUsers = [];
     usrSnap.forEach(d => _allUsers.push({id:d.id,...d.data()}));
+
+    // Setelah cache terisi, baru panggil AdminMaster
+    const masterApp = document.getElementById('masterApp');
+    if (masterApp && window.AdminMaster) {
+      await window.AdminMaster.init();
+    }
   } catch(e) { console.warn('loadSchoolCards:', e.message); }
 }
 
@@ -1845,7 +2017,7 @@ async function initApp(){
     // ── Load Firebase SDK dari CDN ─────────────────────────────
     const{initializeApp,getApp}=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
     const fbFs=await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    const{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp}=fbFs;
+    const{getFirestore,collection,doc,getDoc,getDocs,onSnapshot,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp}=fbFs;
 
     // ── Safe init Firebase ───────────────────────────────────
     let fbApp;
@@ -1853,7 +2025,7 @@ async function initApp(){
     db=getFirestore(fbApp);
 
     // ── Inject db ke window._fb ──────────────────────────────
-    window._fb={db,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp};
+    window._fb={db,collection,doc,getDoc,getDocs,onSnapshot,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,Timestamp};
     console.log('✅ Admin: Firebase ready →', firebaseConfig.projectId);
 
     // ── Data admin ──────────────────────────────────────────

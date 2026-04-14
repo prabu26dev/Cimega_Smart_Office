@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';">
+  <title>Cimega Smart Office - PUSAT KOMANDO PUSTAKAWAN SEKOLAH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../pages/dashboard/dashboard.css">
+  <style>
+    /* Styling khusus Pustakawan (Elegant Turquoise / Teal Glow) */
+    :root {
+      --teal: #00cec9;
+    }
+    .pustakawan-dashboard { border-left: 4px solid var(--teal) !important; }
+    .teal-glow { text-shadow: 0 0 10px rgba(0, 206, 201, 0.6); color: var(--teal); }
+  </style>
+</head>
+<body>
+  <!-- Drag Region -->
+  <div class="drag-region"></div>
+  <div class="window-controls">
+    <button class="btn-ctrl btn-min" onclick="window.cimegaAPI.minimize()">_</button>
+    <button class="btn-ctrl btn-max" onclick="window.cimegaAPI.maximize()">□</button>
+    <button class="btn-ctrl btn-close" onclick="window.cimegaAPI.close()">✕</button>
+  </div>
+
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">📚</div>
+        <div>CIMEGA<br><span style="font-size:10px;color:var(--teal)">LIBRARY / KNOWLEDGE MODE</span></div>
+      </div>
+
+      <div class="menu-section">
+        <div class="menu-item active" onclick="showPage('home')">
+          <div class="icon">🏠</div><div>Beranda</div>
+        </div>
+      </div>
+
+      <div class="menu-section" id="pustakawanMenu">
+        <!-- Generatif dari window.PustakawanModules -->
+        <div style="padding:20px;color:var(--muted);text-align:center;font-size:12px;">Memuat Katalog Dewey...</div>
+      </div>
+
+      <div class="menu-section" style="margin-top:auto">
+        <div class="menu-item" onclick="logout()" style="color:#ff4444">
+          <div class="icon">🚪</div><div>Keluar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div class="main-content">
+      <div class="topbar">
+        <div class="breadcrumb" id="breadcrumb">Pusat Komando <span style="margin:0 8px">/</span> <span class="teal-glow">Kepala Perpustakaan</span></div>
+        <div class="user-block">
+          <div style="text-align:right">
+            <div style="font-family:'Orbitron';font-size:12px;color:var(--teal)" id="pustakawanNama">Memuat...</div>
+            <div style="font-size:10px;color:var(--muted)" id="pustakawanSekolah">Memuat...</div>
+          </div>
+          <div class="avatar" style="box-shadow:0 0 10px rgba(0, 206, 201, 0.4)">🎫</div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <!-- PAGE HOME -->
+        <div class="page active" id="page-home">
+          <div class="hero" style="border-left: 4px solid var(--teal)">
+            <h1>Selamat Mengelola <span class="teal-glow">Gerbang Ilmu</span></h1>
+            <p style="color:#b2fafa">Bukan sekadar gudang buku! Ini adalah pusat riset siswa (Deep Learning), Katalogisasi DDC Dewey Klasik, Pengarsipan Sirkulasi, dan Penyiangan (Weeding) Buku Usang.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:15px">
+                <div style="font-size:48px">🗂️</div>
+                <div>
+                  <h3 style="margin-bottom:5px">Otomasi Katalog & Sirkulasi</h3>
+                  <p style="color:var(--muted);font-size:13px">Hapus pencatatan buku induk kuno! Daftarkan koleksi baru, format Call Number Barcode di layar, serta catat transaksi denda peminjaman buku rapi ke dalam Cloud.</p>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="display:flex;align-items:center;gap:15px">
+                <div style="font-size:48px">🤖</div>
+                <div>
+                  <h3 style="margin-bottom:5px">AI Dewey Decimal Classification</h3>
+                  <p style="color:var(--muted);font-size:13px">Gunakan AI System Pakar untuk mengkategorikan buku asing hanya dengan mengetikkan abstraksinya. AI akan otomatis menebak kode penomoran punggung buku (DDC) secara akurat.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE DOC LIST -->
+        <div class="page" id="page-doclist">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+            <div class="section-title" style="margin:0" id="doclistTitle">📚 Kategori Literasi</div>
+            <button class="btn btn-primary btn-sm" onclick="showPage('home')" style="background:var(--teal);border-color:var(--teal);color:black">⬅ Kembali</button>
+          </div>
+          <div id="doclistGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:15px;">
+          </div>
+        </div>
+
+        <!-- PAGE EDITOR -->
+        <div class="page" id="page-editor">
+          <div class="card" style="height:100%;display:flex;flex-direction:column">
+            <div class="card-header" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="showPage('doclist')">⬅ Kembali</button>
+              <input class="form-control" id="editorTitle" placeholder="Judul Register / Barcode Buku" style="flex:1;background:rgba(0,0,0,0.5);min-width:200px;border-color:var(--teal)">
+              <button class="btn btn-primary btn-sm" onclick="saveDoc()" style="background:var(--teal);color:black;border:none">💾 Simpan Arsip Pustaka</button>
+              <button class="btn btn-gold btn-sm" onclick="generateAI()" style="box-shadow:0 0 10px rgba(255,215,0,0.4)">✨ Rapikan Format dengan AI</button>
+            </div>
+            <div class="card-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:15px" id="editorForm">
+              <!-- Form rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FIREBASE BRIDGE -->
+  <script src="../../shared/utils.js"></script>
+  
+  <!-- MODULAR PUSTAKAWAN SYSTEM -->
+  <script src="../../modules/pustakawan/manajemen_ekosistem.js"></script>
+  <script src="../../modules/pustakawan/katalogisasi_pustaka.js"></script>
+  <script src="../../modules/pustakawan/sirkulasi_layanan.js"></script>
+  <script src="../../modules/pustakawan/program_literasi.js"></script>
+  <script src="../../modules/pustakawan/pelaporan_penyiangan.js"></script>
+  <script src="../../modules/pustakawan/pustakawan_main.js"></script>
+</body>
+</html>

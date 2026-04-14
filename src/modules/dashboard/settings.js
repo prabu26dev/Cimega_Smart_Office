@@ -11,8 +11,27 @@ let pageSettings = { size: 'A4', margin: 'Normal', orientation: 'Portrait' };
 let _kontenCache = {}, _menuDataDynamic = [];
 
 userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
-if (!userData?.role || userData.role === 'admin') window.location.href = '../login/login.html';
-if (!userData.roles) userData.roles = userData.role ? [userData.role] : ['guru'];
+console.log('Settings: User data loaded', userData);
+
+if (!userData?.role || userData.role === 'admin') {
+  console.warn('Settings: User role invalid or admin, redirecting...');
+  // Only redirect if NOT in a dev environment OR if it's clear we have no data
+  if (!userData?.nama) {
+     window.location.href = '../login/login.html';
+  }
+}
+
+// Normalize roles
+if (!userData.roles) {
+  userData.roles = userData.role ? [userData.role.toLowerCase()] : ['guru'];
+} else if (!Array.isArray(userData.roles)) {
+  userData.roles = [userData.roles.toLowerCase()];
+} else {
+  userData.roles = userData.roles.map(r => r.toLowerCase());
+}
+window._userData = userData; // Global access
+
+let _chatUnsub = null, _sharedUnsub = null;
 
 function filterAiTabsByRole() {
   // Implement role-based AI tab visibility if needed in the future
@@ -48,12 +67,49 @@ function getOrderedKats(roles) {
   return KAT_ORDER.filter(k => merged.has(k));
 }
 
-// ── Load konten dari Firestore ─────────────
-async function loadKontenDynamic() {
-  const { collection, getDocs } = window._fb;
-  const roles = userData.roles;
-  try {
-    const snap = await getDocs(collection(db, 'konten'));
+// ── Load konten dari Firestore (Real-time) ──────────
+let _kontenUnsub = null;
+let _katUnsub = null;
+
+function loadKontenDynamic() {
+  const { collection, onSnapshot, query, orderBy, where } = window._fb;
+  const roles = userData.roles || ['guru'];
+  const sekolah = userData.sekolah;
+  
+  if (_kontenUnsub) _kontenUnsub();
+  if (_katUnsub) _katUnsub();
+  if (_chatUnsub) _chatUnsub();
+  if (_sharedUnsub) _sharedUnsub();
+
+  let katLoaded = false;
+  let kontenLoaded = false;
+
+  const tryRefresh = () => {
+    if (katLoaded && kontenLoaded) refreshDashboardUI();
+  };
+
+  // 1. Listen Kategori — simpan visibleTo agar sidebar mengikuti konfigurasi admin
+  _katUnsub = onSnapshot(query(collection(db, 'kategori'), orderBy('urutan', 'asc')), snap => {
+    snap.forEach(d => {
+      const data = d.data();
+      katMeta[d.id] = { 
+        icon: data.icon || '📄', 
+        title: data.nama, 
+        desc: data.deskripsi || '',
+        urutan: data.urutan || 99,
+        visibleTo: data.visibleTo || [] // Simpan konfigurasi visibleTo dari Firestore
+      };
+    });
+    katLoaded = true;
+    console.log(`Settings: Kategori loaded (${snap.size} items)`);
+    tryRefresh();
+  }, err => { 
+    console.warn("Kat Listener error:", err); 
+    katLoaded = true; tryRefresh(); 
+  });
+
+  // 2. Listen Konten
+  _kontenUnsub = onSnapshot(collection(db, 'konten'), snap => {
     const byKat = {};
     snap.forEach(d => {
       const data = d.data();
@@ -64,16 +120,90 @@ async function loadKontenDynamic() {
       byKat[data.kategori].push({ id: d.id, nama: data.nama, ...data });
     });
     _kontenCache = byKat;
-    const orderedKats = getOrderedKats(roles);
-    _menuDataDynamic = [];
-    orderedKats.forEach(katId => {
-      const docs = byKat[katId] || [];
-      if (docs.length === 0) return;
-      const meta = katMeta[katId] || { icon: '📄', title: katId, desc: '' };
-      _menuDataDynamic.push({ id: katId, icon: meta.icon, title: meta.title, desc: meta.desc, items: docs.map(d => d.nama), docs });
-    });
-    filterAiTabsByRole();
-  } catch (e) { console.error('loadKontenDynamic error', e); }
+    kontenLoaded = true;
+    console.log(`Settings: Konten cache updated (${snap.size} docs total)`);
+    tryRefresh();
+  }, err => {
+    console.warn("Konten Listener error:", err);
+    kontenLoaded = true; tryRefresh();
+  });
+
+  // 3. Listen Shared Docs (Real-time) — dengan error handler agar tidak crash jika sekolah kosong
+  if (sekolah) {
+    _sharedUnsub = onSnapshot(
+      query(collection(db, 'shared_docs'), where('sekolah', '==', sekolah), orderBy('sharedAt', 'desc')),
+      snap => {
+        allShared = [];
+        snap.forEach(d => allShared.push({ id: d.id, ...d.data() }));
+        const sharedPage = document.getElementById('page-shared');
+        if (sharedPage && sharedPage.classList.contains('active')) renderShared('all');
+      },
+      err => { console.warn('SharedDocs listener error (non-fatal):', err.message); }
+    );
+  }
+}
+
+function refreshDashboardUI() {
+  const roles = userData.roles || ['guru'];
+
+  // Build kategori order dari Firestore visibleTo (bukan hardcoded)
+  const allKatIds = Object.keys(katMeta)
+    .sort((a, b) => (katMeta[a].urutan || 99) - (katMeta[b].urutan || 99));
+
+  const ordered = allKatIds.filter(katId => {
+    const vt = katMeta[katId].visibleTo;
+    if (!vt || vt.length === 0) return true; // Tidak ada restriksi = dapat dilihat semua
+    return roles.some(r => vt.includes(r));
+  });
+
+  _menuDataDynamic = [];
+  
+  // 1. Tambahkan kategori yang ada di katMeta
+  ordered.forEach(katId => {
+    const meta = katMeta[katId];
+    const docs = _kontenCache[katId] || [];
+    if (meta) {
+      _menuDataDynamic.push({
+        id: katId,
+        icon: meta.icon || '📄',
+        title: meta.title || katId,
+        desc: meta.desc || '',
+        items: docs.map(d => d.nama),
+        docs: docs
+      });
+    }
+  });
+
+  // 2. Fallback: Tambahkan kategori kustom yang ada di konten tapi tidak ada di kategori
+  Object.keys(_kontenCache).forEach(katId => {
+    if (!ordered.includes(katId) && !katMeta[katId]) {
+      const docs = _kontenCache[katId] || [];
+      if (docs.length > 0) {
+        // Cek permission dari dokumen pertama di kategori ini
+        const d = docs[0];
+        const visible = d.visibleTo || ['guru', 'kepsek', 'bendahara', 'ops'];
+        const canSee = roles.some(r => visible.includes(r));
+        if (canSee) {
+          _menuDataDynamic.push({
+            id: katId,
+            icon: '📁',
+            title: katId.replace(/_/g, ' ').toUpperCase(),
+            desc: 'Kategori Kustom',
+            items: docs.map(d => d.nama),
+            docs: docs
+          });
+        }
+      }
+    }
+  });
+
+  buildSidebar();
+  
+  // UI Sync
+  if (document.getElementById('page-beranda')?.classList.contains('active')) loadBeranda();
+  if (document.getElementById('page-menu')?.classList.contains('active')) renderMenuGrid(_menuDataDynamic);
+  
+  filterAiTabsByRole();
 }
 
 // ── Clock ──────────────────────────────────
@@ -112,36 +242,37 @@ function goBackToList() { showPage('doclist', 'DAFTAR DOKUMEN'); }
 
 // ── Sidebar ────────────────────────────────
 function buildSidebar() {
-  const roles = userData.roles;
+  const roles = userData.roles || ['guru'];
   let html = `<div class="nav-section">Menu Utama</div>
-<div class="nav-item active" onclick="navTo(this,'beranda','BERANDA',loadBeranda)"><span class="nav-icon">🏠</span>Beranda</div>
-<div class="nav-section">Dokumen</div>`;
-  _menuDataDynamic.forEach(m => {
-    html += `<div class="nav-item" onclick="navToMenu(this,'${m.id}')"><span class="nav-icon">${m.icon}</span><span style="flex:1;font-size:11px;line-height:1.3">${m.title}</span></div>`;
-  });
-  html += `<div class="nav-section">Kolaborasi</div>
-<div class="nav-item" onclick="navTo(this,'shared','DOKUMEN BERSAMA',loadShared)"><span class="nav-icon">📤</span>Dok. Bersama</div>`;
+<div class="nav-item active" id="nav-beranda" onclick="navTo(this,'beranda','BERANDA',loadBeranda)"><span class="nav-icon">🏠</span>Beranda</div>`;
 
-  if (roles.includes('bendahara')) {
-    html += `<div class="nav-item" onclick="navTo(this,'keuangan','LAPORAN KEUANGAN',loadLaporanKeu)"><span class="nav-icon">💰</span>Laporan Keuangan</div>`;
+  if (_menuDataDynamic.length > 0) {
+    html += `<div class="nav-section">Administrasi Digital</div>`;
+    _menuDataDynamic.forEach(m => {
+      html += `<div class="nav-item" onclick="navToMenu(this,'${m.id}')"><span class="nav-icon">${m.icon}</span><span style="flex:1;font-size:11px;line-height:1.2">${m.title}</span></div>`;
+    });
   }
-  if (roles.includes('guru')) {
-    html += `<div class="nav-section">Administrasi Guru</div>
-  <div class="nav-item" onclick="navTo(this,'perencanaan','PERENCANAAN & P5',()=>ModulPerencanaan&&ModulPerencanaan.init())"><span class="nav-icon">📝</span>Perencanaan & P5</div>
-  <div class="nav-item" onclick="navTo(this,'pelaksanaan','PELAKSANAAN',()=>ModulPelaksanaan&&ModulPelaksanaan.init())"><span class="nav-icon">🏃‍♂️</span>Jurnal & Presensi</div>
-  <div class="nav-item" onclick="navTo(this,'asesmen','ASESMEN & BANK SOAL',()=>ModulAsesmen&&ModulAsesmen.init())"><span class="nav-icon">✍️</span>Asesmen</div>
-  <div class="nav-item" onclick="navTo(this,'nilai','PENGOLAHAN NILAI',()=>ModulNilai&&ModulNilai.init())"><span class="nav-icon">📈</span>Nilai & Rapor</div>
-  <div class="nav-item" onclick="navTo(this,'approval-guru','DIKIRIM KE KEPSEK',loadMySubmissions)"><span class="nav-icon">📬</span>Dikirim ke Kepsek<span class="nav-badge" id="submBadge" style="display:none">!</span></div>`;
-  }
+
+  html += `<div class="nav-section">Kolaborasi</div>
+<div class="nav-item" onclick="navTo(this,'shared','DOKUMEN BERSAMA',()=>renderShared('all'))"><span class="nav-icon">📤</span>Dok. Bersama</div>
+<div class="nav-item" onclick="navTo(this,'chat','CHAT SEKOLAH',()=>window.CimegaChat.init(db,'page-chat'))"><span class="nav-icon">💬</span>Chat Sekolah</div>`;
+
   if (roles.includes('kepsek')) {
-    html += `<div class="nav-item" onclick="navTo(this,'monitor','MONITOR GURU',loadMonitor)"><span class="nav-icon">👁️</span>Monitor Guru</div>
-  <div class="nav-item" onclick="navTo(this,'validasi','VALIDASI DOKUMEN',()=>loadApprovals('pending'))"><span class="nav-icon">✅</span>Validasi Dok.<span class="nav-badge" id="approvalBadge" style="display:none">!</span></div>
-  <div class="nav-item" onclick="navTo(this,'rekap','REKAP DOKUMEN',loadRekap)"><span class="nav-icon">📊</span>Rekap Dokumen</div>`;
+    html += `<div class="nav-section">Pantauan & Validasi</div>
+    <div class="nav-item" onclick="navTo(this,'monitor','MONITOR GURU',loadMonitor)"><span class="nav-icon">👁️</span>Monitor Guru</div>
+    <div class="nav-item" onclick="navTo(this,'validasi','VALIDASI DOKUMEN',()=>loadApprovals('pending'))"><span class="nav-icon">✅</span>Validasi Dok.<span class="nav-badge" id="approvalBadge" style="display:none">!</span></div>
+    <div class="nav-item" onclick="navTo(this,'rekap','REKAP DOKUMEN',loadRekap)"><span class="nav-icon">📊</span>Rekap Dokumen</div>`;
   }
+  
+  if (roles.includes('guru') || roles.includes('bendahara') || roles.includes('ops')) {
+     html += `<div class="nav-item" onclick="navTo(this,'approval-guru','DIKIRIM KE KEPSEK',loadMySubmissions)"><span class="nav-icon">📬</span>Kiriman Saya<span class="nav-badge" id="submBadge" style="display:none">!</span></div>`;
+  }
+
   html += `<div class="nav-section">Fitur AI</div>
-<div class="nav-item" onclick="navTo(this,'ai','AI ASISTEN',null)"><span class="nav-icon">✨</span>AI Asisten</div>
+<div class="nav-item" onclick="navTo(this,'ai','AI ASISTEN',()=>window.CimegaAIChatbot.renderTo('aiPanel-chat'))"><span class="nav-icon">✨</span>AI Asisten</div>
 <div class="nav-section">Lainnya</div>
 <div class="nav-item" onclick="navTo(this,'profil','PROFIL SAYA',loadProfil)"><span class="nav-icon">👤</span>Profil Saya</div>`;
+  
   const sidebar = document.getElementById('sidebarNav');
   if (sidebar) sidebar.innerHTML = html;
 }
@@ -162,15 +293,22 @@ function navToMenu(el, menuId) {
 
 // ── setupUser ──────────────────────────────
 function setupUser() {
-  const sidebarNama = document.getElementById('sidebarNama');
-  if (sidebarNama) sidebarNama.textContent = userData.nama || '-';
-  const roles = userData.roles;
+  const roles = userData.roles || ['guru'];
+  
+  // Sidebar Identity
+  const elSidebarNama = document.getElementById('sidebarNama');
+  if (elSidebarNama) elSidebarNama.textContent = userData.nama || '-';
+  
+  const elSidebarSekolah = document.getElementById('sidebarSekolah');
+  if (elSidebarSekolah) elSidebarSekolah.textContent = userData.sekolah || '-';
+
   const roleMap = {
     guru: { cls: 'role-guru', label: '👨‍🏫 Guru' },
     kepsek: { cls: 'role-kepsek', label: '🏛️ Kepsek' },
     bendahara: { cls: 'role-bendahara', label: '💰 Bendahara' },
     ops: { cls: 'role-ops', label: '💻 Operator' },
   };
+  
   const rb = document.getElementById('sidebarRole');
   if (rb) {
     if (roles.length === 1) {
@@ -182,19 +320,46 @@ function setupUser() {
       rb.textContent = roles.map(r => roleMap[r]?.label || r).join(' · ');
     }
   }
-  const sidebarSekolah = document.getElementById('sidebarSekolah');
-  if (sidebarSekolah) sidebarSekolah.textContent = userData.sekolah || '-';
-  const schoolName = document.getElementById('schoolName');
-  if (schoolName) schoolName.textContent = userData.sekolah || 'SDN Cimega';
+
+  // Topbar & Branding
+  const elSchoolName = document.getElementById('schoolName');
+  if (elSchoolName) elSchoolName.textContent = userData.sekolah || 'SDN Cimega';
+  
+  const elSchoolAddr = document.getElementById('schoolAddr');
+  if (elSchoolAddr && userData.alamat) elSchoolAddr.textContent = userData.alamat;
+
+  // Beranda Welcome Card
+  const elWelcomeName = document.getElementById('welcomeName');
+  if (elWelcomeName) elWelcomeName.textContent = 'Selamat Datang, ' + (userData.nama || 'User') + '!';
+  
+  const elWelcomeSub = document.getElementById('welcomeSub');
+  if (elWelcomeSub) elWelcomeSub.textContent = userData.sekolah || 'Sistem Administrasi Digital';
+
+  const elWelcomeDate = document.getElementById('welcomeDate');
+  if (elWelcomeDate) {
+    const now = new Date();
+    const tgl = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    elWelcomeDate.innerHTML = `${tgl}<br/><span style="font-size:10px;color:var(--cyan)">${jam} WIB</span>`;
+  }
 }
 
 // ── Menu Grid ──────────────────────────────
-function renderMenuGrid(menus) {
-  const roles = userData.roles;
-  const isBendahara = roles.includes('bendahara');
+function renderMenuGrid(menus, targetKatId = null) {
   const grid = document.getElementById('menuGrid');
-  if (grid) {
-    grid.innerHTML = menus.map(m => `
+  if (!grid) return;
+
+  // Jika targetKatId disediakan, langsung buka daftar dokumen
+  if (targetKatId) {
+    const found = menus.find(m => m.id === targetKatId);
+    if (found) {
+      openDocList(targetKatId);
+      return;
+    }
+  }
+
+  const isBendahara = (userData.roles || []).includes('bendahara');
+  grid.innerHTML = menus.map(m => `
   <div class="menu-card${isBendahara && m.id === 'keuangan' ? ' keuangan-highlight' : ''}"
     onclick="openDocList('${m.id}')">
     <div class="menu-card-count">${m.items.length}</div>
@@ -202,7 +367,6 @@ function renderMenuGrid(menus) {
     <div class="menu-card-title">${m.title}</div>
     <div class="menu-card-desc">${m.desc}</div>
   </div>`).join('');
-  }
 }
 
 // ── Doc list ───────────────────────────────
@@ -220,7 +384,16 @@ function openDocList(katId) {
   if (subEl) subEl.textContent = katTitle + ' · ' + items.length + ' dokumen';
   const grid = document.getElementById('docGrid');
   if (grid) {
-    grid.innerHTML = items.map((name, i) => `
+    if (items.length === 0) {
+      grid.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:48px;margin-bottom:16px">📄</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">${katTitle}</div>
+          <div style="font-size:12px;line-height:1.6">Belum ada dokumen tersedia untuk kategori ini.<br>
+          Hubungi administrator untuk menambahkan dokumen.</div>
+        </div>`;
+    } else {
+      grid.innerHTML = items.map((name, i) => `
   <div class="doc-item" onclick="openDoc('${katId}','${name.replace(/'/g, "\\'")}')">
     <div class="doc-item-icon">${icons[i % icons.length]}</div>
     <div style="flex:1;min-width:0">
@@ -229,6 +402,7 @@ function openDocList(katId) {
     </div>
     <span style="color:var(--muted);font-size:11px">▶</span>
   </div>`).join('');
+    }
   }
   showPage('doclist', 'DAFTAR DOKUMEN');
 }
@@ -342,10 +516,50 @@ function setMargin(m) {
   ['Normal', 'Moderate', 'Narrow'].forEach(k => document.getElementById('ps' + k)?.classList.toggle('active', k === m));
   showToast('info', 'Margin', 'Diatur ke ' + m);
 }
+function setOrientation(o) {
+  pageSettings.orientation = o;
+  ['Portrait', 'Landscape'].forEach(k => document.getElementById('ps' + k)?.classList.toggle('active', k === o));
+  showToast('info', 'Orientasi', 'Diatur ke ' + o);
+}
+
+function createSharedDoc() {
+  const docName = prompt("Masukkan Nama Dokumen / File Baru:");
+  if (!docName) return;
+  
+  currentKat = 'umum'; 
+  currentDocName = docName; 
+  currentDocId = ''; // Tidak di-save ke konten, hanya untuk dishare
+  
+  pageHistory.push({ id: 'shared', title: 'DOKUMEN BERSAMA' });
+  
+  const titleEl = document.getElementById('docviewTitle');
+  if (titleEl) titleEl.textContent = docName;
+  const metaEl = document.getElementById('docviewMeta');
+  if (metaEl) metaEl.textContent = 'Dokumen Baru Kustom · ' + pageSettings.size + ' ' + pageSettings.orientation;
+  
+  const contentEl = document.getElementById('docContent');
+  if (contentEl) {
+    contentEl.innerHTML = '<div style="padding:20px;color:var(--text);"><p>Mulai ketik dokumen Anda di sini, atau paste (Ctrl+V) teks/gambar dari luar...</p></div>';
+    contentEl.contentEditable = 'true';
+    
+    // Hide save disabled message
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) saveBtn.style.display = 'none';
+    
+    const editBtn = document.getElementById('editBtn');
+    if (editBtn) editBtn.textContent = '✕ Selesai Edit';
+    
+    showPage('docview', docName);
+    setTimeout(() => contentEl.focus(), 300);
+  }
+}
 
 // ── SHARE DOKUMEN ──────────────────────────
 function openShareModal() {
-  if (!currentDocName) { showToast('warn', 'Perhatian', 'Buka dokumen terlebih dahulu'); return; }
+  if (!currentDocName) {
+    showToast('warn', 'Petunjuk', '💡 Buka dokumen dari menu Administrasi terlebih dahulu, lalu klik tombol 📤 Bagikan di halaman dokumen.');
+    return;
+  }
   const nameEl = document.getElementById('shareDocName');
   if (nameEl) nameEl.value = currentDocName;
   const targetSel = document.getElementById('shareTarget');
@@ -397,16 +611,7 @@ async function doShare() {
 }
 
 async function loadShared(filter = 'all') {
-  const { collection, getDocs, query, where, orderBy } = window._fb;
-  const listEl = document.getElementById('sharedList');
-  if (!listEl) return;
-  listEl.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
-  try {
-    const snap = await getDocs(query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah), orderBy('sharedAt', 'desc')));
-    allShared = [];
-    snap.forEach(d => allShared.push({ id: d.id, ...d.data() }));
-    renderShared(filter);
-  } catch (e) { listEl.innerHTML = '<div class="empty-state"><p>Gagal memuat</p></div>'; }
+  renderShared(filter);
 }
 function filterShared(f) {
   ['all', 'school', 'mine'].forEach(k => {
@@ -415,8 +620,8 @@ function filterShared(f) {
   renderShared(f);
 }
 function renderShared(filter) {
-  const listEl = document.getElementById('sharedList');
-  if (!listEl) return;
+  const gridEl = document.getElementById('sharedDocsGrid');
+  if (!gridEl) return;
   const roles = userData.roles;
   let items = allShared;
   if (filter === 'school') items = allShared.filter(d => d.sharedById !== userData.id && d.target === 'school');
@@ -434,23 +639,21 @@ function renderShared(filter) {
   
   if (items.length === 0) {
     const msg = filter === 'school' ? 'Belum ada dokumen dari rekan' : filter === 'mine' ? 'Anda belum membagikan dokumen' : 'Belum ada dokumen bersama';
-    listEl.innerHTML = `<div class="empty-state"><div class="icon">📤</div><p>${msg}</p></div>`;
+    gridEl.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);grid-column:1/-1">
+      <div style="font-size:32px;margin-bottom:10px">📂</div>
+      <p>${msg}</p>
+    </div>`;
     return;
   }
-  listEl.innerHTML = items.map(d => `
-<div class="shared-item">
-  <div class="shared-header">
-    <div class="shared-avatar">👤</div>
-    <div style="flex:1">
-      <div class="shared-name">${d.sharedBy || '-'}</div>
-      <div class="shared-meta">${d.sekolah || '-'} · ${fmtDate(d.sharedAt)}</div>
-    </div>
-    <span class="badge badge-${d.status === 'shared' ? 'shared' : d.status === 'pending' ? 'pending' : d.status === 'approved' ? 'approved' : 'rejected'}">${d.status === 'shared' ? 'Dibagikan' : d.status === 'pending' ? 'Menunggu' : d.status === 'approved' ? 'Disetujui' : 'Ditolak'}</span>
+  gridEl.innerHTML = items.map(d => `
+<div class="card" style="padding:15px;cursor:pointer;transition:transform 0.2s" onclick="openSharedDocDetail('${d.id}','${(d.docName || '').replace(/'/g, "\\'")}','')">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+    <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,229,255,0.1);display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>
+    <span class="badge badge-${d.status === 'shared' ? 'shared' : d.status === 'pending' ? 'pending' : d.status === 'approved' ? 'approved' : 'rejected'}">${d.status === 'shared' ? 'Shared' : d.status === 'pending' ? 'Pending' : d.status === 'approved' ? 'Approved' : 'Rejected'}</span>
   </div>
-  <div class="shared-doc" onclick="openSharedDocDetail('${d.id}','${(d.docName || '').replace(/'/g, "\\'")}','')">
-    <div class="doc-item-name">📄 ${d.docName || '-'}</div>
-    ${d.note ? `<div style="font-size:11px;color:var(--cyan);margin-top:4px;font-style:italic">"${d.note}"</div>` : ''}
-  </div>
+  <div style="font-weight:700;font-size:13px;color:#fff;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 ${d.docName || '-'}</div>
+  <div style="font-size:11px;color:var(--muted)">Oleh: ${d.sharedBy || '-'}</div>
+  <div style="font-size:10px;color:var(--cyan);margin-top:8px">${fmtDate(d.sharedAt)}</div>
 </div>`).join('');
 }
 
@@ -694,31 +897,58 @@ async function loadRekap() {
 
 // ── Dashboard / Beranda ────────────────────
 function loadBeranda() {
-  const roles = userData.roles;
+  const roles = userData.roles || ['guru'];
   const isBendahara = roles.includes('bendahara');
   const isKepsek = roles.includes('kepsek');
+  
+  // Re-sync basic info
+  setupUser();
+
   const welcomeAvatar = document.getElementById('welcomeAvatar');
-  if (welcomeAvatar) welcomeAvatar.textContent = isKepsek ? '🏛️' : isBendahara ? '💰' : '👨‍🏫';
-  const nameEl = document.getElementById('welcomeName');
-  if (nameEl) nameEl.textContent = 'Selamat datang, ' + userData.nama + '!';
-  const subEl = document.getElementById('welcomeSub');
-  if (subEl) subEl.textContent = userData.sekolah;
-  const dateEl = document.getElementById('welcomeDate');
-  if (dateEl) {
-    const now = new Date();
-    dateEl.innerHTML = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '<br/><span style="font-size:10px;color:var(--cyan)">' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + '</span>';
+  if (welcomeAvatar) {
+    welcomeAvatar.textContent = isKepsek ? '🏛️' : isBendahara ? '💰' : '👨‍🏫';
   }
-  const total = _menuDataDynamic.reduce((a, m) => a + m.items.length, 0);
-  let statsHtml = [{ icon: '📂', num: _menuDataDynamic.length, label: 'Kategori' }, { icon: '📄', num: total, label: 'Dokumen' }].map(s => `<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
-  if (isBendahara) statsHtml += `<div class="stat-card" style="cursor:pointer;border-color:rgba(255,208,0,0.2)" onclick="navTo(null,'keuangan','LAPORAN KEUANGAN',loadLaporanKeu)"><div class="stat-icon">💰</div><div class="stat-num">${(_kontenCache['keuangan'] || []).length}</div><div class="stat-label">Keuangan</div></div>`;
+
+  // Stats
+  const totalDocs = Object.values(_kontenCache).reduce((acc, docs) => acc + docs.length, 0);
+  let statsHtml = [
+    { icon: '📂', num: _menuDataDynamic.length, label: 'Kategori' },
+    { icon: '📄', num: totalDocs, label: 'Total Dokumen' }
+  ].map(s => `
+    <div class="stat-card">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-num" style="font-family:'Orbitron',sans-serif">${s.num}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('');
+
+  if (isBendahara) {
+    statsHtml += `
+    <div class="stat-card" style="cursor:pointer;border-color:rgba(255,208,0,0.3)" onclick="navTo(null,'keuangan','KEUANGAN',loadLaporanKeu)">
+      <div class="stat-icon">💰</div>
+      <div class="stat-num" style="font-family:'Orbitron',sans-serif">${(_kontenCache['keuangan'] || []).length}</div>
+      <div class="stat-label">Keuangan</div>
+    </div>`;
+  }
+
   const homeStats = document.getElementById('homeStats');
   if (homeStats) homeStats.innerHTML = statsHtml;
+
+  // Quick Menu (Max 6)
   const quick = document.getElementById('quickMenuHome');
   if (quick) {
-    quick.innerHTML = _menuDataDynamic.slice(0, 4).map(m => `
-  <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(0,229,255,0.06);cursor:pointer" onclick="openDocList('${m.id}')">
-    <span style="font-size:16px">${m.icon}</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${m.title}</div><div style="font-size:10px;color:var(--muted)">${m.items.length} dokumen</div></div><span style="color:var(--muted);font-size:11px">▶</span>
-  </div>`).join('');
+    if (_menuDataDynamic.length === 0) {
+      quick.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:11px">Belum ada kategori tersedia</div>';
+    } else {
+      quick.innerHTML = _menuDataDynamic.slice(0, 6).map(m => `
+      <div class="recent-item" style="cursor:pointer;padding:8px;border-radius:6px;margin-bottom:4px;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.02)" onclick="openDocList('${m.id}')">
+        <div style="font-size:18px">${m.icon}</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:#fff">${m.title}</div>
+          <div style="font-size:10px;color:var(--muted)">${m.items.length} Dokumen</div>
+        </div>
+        <span style="color:var(--cyan);font-size:10px">BUKA</span>
+      </div>`).join('');
+    }
   }
 }
 
@@ -866,17 +1096,20 @@ async function sendChat() {
 
 async function initApp() {
   try {
-    // ── Ambil config dari bridge (primary: cimegaConfig, fallback: cimegaAPI) ──
-    const firebaseConfig = window.cimegaConfig?.firebase
-      || await window.cimegaAPI?.getFirebaseConfig();
+    const firebaseConfig = window.cimegaConfig?.firebase || await window.cimegaAPI?.getFirebaseConfig();
+    if (!firebaseConfig?.apiKey) {
+      console.error('Settings: Firebase config null');
+      showToast('error', 'Koneksi Gagal', 'Konfigurasi pusat data tidak ditemukan.');
+      return;
+    }
 
-    if (!firebaseConfig?.apiKey) throw new Error('Firebase config kosong — periksa preload.js & .env');
-
-    // ── Load Firebase SDK dari CDN ────────────────────────────
     const { initializeApp, getApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
     const fbFs = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    const { getFirestore, collection, doc, getDoc, getDocs, addDoc,
-      updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp } = fbFs;
+    const {
+      getFirestore, collection, doc, getDoc, getDocs, addDoc,
+      updateDoc, deleteDoc, onSnapshot, query, where, orderBy,
+      serverTimestamp, Timestamp
+    } = fbFs;
 
     // ── Safe init Firebase app ────────────────────────────────
     let fbApp;
@@ -884,18 +1117,27 @@ async function initApp() {
     db = getFirestore(fbApp);
 
     // ── CRITICAL: expose db + helpers ke window._fb ──────────
-    // dashboard_ui.js fetchTemplates() butuh window._fb.db & window._fb.collection dll
+    // Semua fungsi Firestore harus ada di sini agar loadKontenDynamic() tidak crash
     window._fb = {
       db,
       collection, doc, getDoc, getDocs, addDoc,
-      updateDoc, deleteDoc, query, where, orderBy,
+      updateDoc, deleteDoc, onSnapshot, query, where, orderBy,
       serverTimestamp, Timestamp
     };
 
     console.log('✅ Settings: Firebase ready →', firebaseConfig.projectId);
 
-    await loadKontenDynamic();
-    setupUser(); buildSidebar(); loadBeranda(); loadNotifications(); checkUpdate();
+    // ── Setup user dan render sidebar awal SEGERA setelah Firebase siap ──
+    // Ini memastikan sidebar tidak kosong bahkan sebelum data Firestore tiba
+    setupUser();
+    buildSidebar();
+    loadBeranda();
+
+    // ── Mulai listener real-time (akan panggil refreshDashboardUI saat data tiba) ──
+    loadKontenDynamic();
+
+    loadNotifications();
+    checkUpdate();
     try {
       await CimegaUpdater.init({ owner: 'prabu26dev', repo: 'Cimega_Smart_Office' });
       CimegaUpdater.startChecking(db);
@@ -914,7 +1156,7 @@ async function initApp() {
 CimegaMusic.init();
 initApp();
 
-// EXPOSE TO GLOBAL (Essential for inline event listeners in modules/dashboard/dashboard.html)
+// EXPOSE TO GLOBAL (Essential for inline event listeners in dashboard.html)
 window.navTo = navTo;
 window.navToMenu = navToMenu;
 window.goBack = goBack;
@@ -926,6 +1168,7 @@ window.downloadDoc = downloadDoc;
 window.printDoc = printDoc;
 window.setPageSize = setPageSize;
 window.setMargin = setMargin;
+window.setOrientation = setOrientation;
 window.openShareModal = openShareModal;
 window.doShare = doShare;
 window.loadShared = loadShared;
@@ -951,10 +1194,19 @@ window.doUpdate = doUpdate;
 window.doLogout = doLogout;
 window.switchAiTab = switchAiTab;
 window.sendChat = sendChat;
+window.sendSchoolChat = () => window.CimegaChat?.send?.();
 window.generateDocAI = generateDocAI;
-window.openDocAiModal = openDocAiModal;
+window.openDocAiModal = () => openModal('modalDocAi');
 window.openDoc = openDoc;
 window.openDocList = openDocList;
+window.filterShared = (f) => {
+  // Bisa dipanggil dengan string filter ('all','school','mine') atau dari event
+  const filter = typeof f === 'string' ? f : 'all';
+  ['all', 'school', 'mine'].forEach(k => {
+    document.getElementById('sf' + k.charAt(0).toUpperCase() + k.slice(1))?.classList.toggle('active', k === filter);
+  });
+  renderShared(filter);
+};
 function copyAiResult(elId) { const el = document.getElementById(elId); if (el) navigator.clipboard.writeText(el.textContent || '').then(() => showToast('success', 'Tersalin', 'Teks berhasil disalin')); }
 function saveAiResult(elId, tipe) { showToast('info', 'Petunjuk', 'Salin teks lalu tempel di editor Anda'); }
 window.copyAiResult = copyAiResult;

@@ -66,6 +66,7 @@ const musicState = {
 let _shuffleQueue = []; // Antrian index acak
 
 function buildShuffleQueue() {
+  if (musicFiles.length === 0) return;
   // Buat array index [0, 1, 2, ..., n-1]
   const indices = Array.from({ length: musicFiles.length }, (_, i) => i);
   // Fisher-Yates shuffle
@@ -73,19 +74,22 @@ function buildShuffleQueue() {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-  // Pastikan lagu pertama berbeda dengan lagu terakhir yang tadi diputar
-  if (indices.length > 1 && indices[0] === musicState.index) {
-    const swapIdx = Math.floor(Math.random() * (indices.length - 1)) + 1;
-    [indices[0], indices[swapIdx]] = [indices[swapIdx], indices[0]];
-  }
   _shuffleQueue = indices;
-  console.log(`🔀 Shuffle cycle baru: ${musicFiles.length} lagu diacak (infinite loop aktif)`);
+  console.log(`🔀 Shuffle queue rebuilt: ${musicFiles.length} songs. Infinite loop ready.`);
 }
 
 function getNextShuffleIndex() {
+  if (musicFiles.length === 0) return 0;
   // Jika queue habis → auto rebuild shuffle baru (infinite loop)
   if (_shuffleQueue.length === 0) buildShuffleQueue();
-  return _shuffleQueue.shift();
+  
+  // Jika masih kosong setelah rebuild (misal musicFiles kosong), return 0
+  if (_shuffleQueue.length === 0) return 0;
+  
+  const nextIdx = _shuffleQueue.shift();
+  // Update global index agar UI sinkron
+  musicState.index = nextIdx;
+  return nextIdx;
 }
 
 // ── 1. Baca file lokal terlebih dahulu (sinkron, pasti tersedia) ──
@@ -129,12 +133,13 @@ function syncMusicFromFirestore() {
       if (cloudFiles.length > 0) {
         // Sort cloud musik secara alfabetis — konsisten dengan lokal
         musicFiles = sortMusicFiles(cloudFiles);
-        // Reset index ke 0 saat cloud data masuk pertama kali (hindari out-of-bounds)
+        // Force rebuild shuffle queue because playlist changed
+        buildShuffleQueue();
         if (musicState.index >= musicFiles.length) musicState.index = 0;
-        console.log(`☁️ Sync Musik Cloud: ${musicFiles.length} lagu aktif (sorted).`);
+        console.log(`☁️ Sync Musik Cloud: ${musicFiles.length} lagu aktif (sorted). Shuffle queue updated.`);
       } else {
-        // Firestore kosong → tetap pakai lokal
         loadLocalMusicFiles();
+        buildShuffleQueue();
         console.log('ℹ️ Cloud music kosong, tetap pakai lokal.');
       }
       broadcastMusicState();
@@ -166,8 +171,8 @@ function createBgMusicWindow() {
   
   bgMusicWindow.on('page-title-updated', (e, title) => {
     if (title.startsWith('BGM_ENDED')) {
-      // Ambil lagu berikutnya dari shuffle queue (acak, tidak berulang)
-      if (musicFiles.length > 0) musicState.index = getNextShuffleIndex();
+      // Ambil lagu berikutnya dari shuffle queue (acak & infinite)
+      getNextShuffleIndex();
       playMusicOnBgWindow();
     }
   });
@@ -352,15 +357,17 @@ ipcMain.handle('music-toggle-mute', () => {
 
 ipcMain.handle('music-next', () => {
   // Ambil lagu berikutnya secara acak dari shuffle queue
-  if (musicFiles.length > 0) musicState.index = getNextShuffleIndex();
+  getNextShuffleIndex();
   playMusicOnBgWindow();
-  return { index: musicState.index, title: musicFiles[musicState.index] };
+  return { index: musicState.index, title: musicFiles[musicState.index]?.title || 'Unknown' };
 });
 
 ipcMain.handle('music-prev', () => {
-  musicState.index = (musicState.index - 1 + musicFiles.length) % musicFiles.length;
+  // Untuk user experience, prev sebaiknya tetap acak jika di mode shuffle, 
+  // atau kita ambil dari queue history. Di sini kita buat acak lagi saja agar sesuai request "acak/random".
+  getNextShuffleIndex(); 
   playMusicOnBgWindow();
-  return { index: musicState.index, title: musicFiles[musicState.index] };
+  return { index: musicState.index, title: musicFiles[musicState.index]?.title || 'Unknown' };
 });
 
 // ══════════════════════════════════════════

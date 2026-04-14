@@ -36,6 +36,10 @@ window.AdminMaster = {
             skolSnap.forEach(doc => this.schools.push({ id: doc.id, ...doc.data() }));
             usrSnap.forEach(doc => this.users.push({ id: doc.id, ...doc.data() }));
 
+            // Sync with global variables in admin.html
+            window._allUsers = this.users;
+            window._allSekolah = this.schools;
+
         } catch (e) {
             console.error("Gagal memuat Data Master:", e);
         }

@@ -2,101 +2,113 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper Functions
+    
+    // ── HELPER FUNCTIONS ──────────────────────────────────
+    
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    function getUserRole() {
-      // Assuming users collection stores the custom claims equivalents if custom auth is not used
-      // For tight ops/admin security
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-    
-    function isOpsOrAdmin() {
-      let role = getUserRole();
-      return role == 'ops' || role == 'admin';
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
+    function isAdmin() {
+      return isAuthenticated() && (getUserData().role == 'admin' || getUserData().roles.hasAny(['admin']));
+    }
+
+    function isRole(roleName) {
+      return isAuthenticated() && (getUserData().role == roleName || getUserData().roles.hasAny([roleName]));
+    }
+
+    function isOpsOrAdmin() {
+      return isAdmin() || isRole('ops');
+    }
+
+    // ── COLLECTIONS ───────────────────────────────────────
+
+    // USERS: Admin can manage all; Users can read all (to see names/schools) but only edit self (limited).
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isOpsOrAdmin() || request.auth.uid == userId;
+      allow write: if isAdmin() || request.auth.uid == userId;
     }
 
-    // DAPODIK-Grade Module Rules
+    // SEKOLAH: Admin can manage; All authenticated can read.
+    match /sekolah/{sekolahId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // KATEGORI & KONTEN (Administrasi)
+    // Admin can manage everything.
+    // Users can read if the category/content is visible to their role.
+    match /kategori/{katId} {
+      allow read: if isAuthenticated() && (isAdmin() || getUserData().roles.hasAny(resource.data.visibleTo));
+      allow write: if isAdmin();
+    }
+
+    match /konten/{kontenId} {
+      allow read: if isAuthenticated() && (isAdmin() || getUserData().roles.hasAny(resource.data.visibleTo));
+      allow write: if isAdmin();
+    }
+
+    // ADMIN TEMPLATES (AI)
+    match /admin_templates/{tmpId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // MUSIC (BGM)
+    match /app_music/{musicId} {
+      allow read: if true; // Publicly readable for BGM
+      allow write: if isAdmin();
+    }
+
+    // CONFIG & UPDATES
+    match /appConfig/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     
-    // STUDENTS:
-    // Only OPS and Admin can write (create, update, delete)
-    // Teachers (guru) and Principals (kepsek) can read
-    match /students/{studentId} {
-      allow read: if isAuthenticated(); // Restrict further based on schoolId if necessary
-      allow write: if isAuthenticated() && isOpsOrAdmin();
-      
-      // Sub-collection parents
-      match /parents/{parentId} {
-        allow read: if isAuthenticated();
-        allow write: if isAuthenticated() && isOpsOrAdmin();
-      }
+    match /updateHistory/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
-    // PTK (Pendidik dan Tenaga Kependidikan):
+    // NOTIFICATIONS
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && (resource.data.target == 'all' || isRole(resource.data.target) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // LOGS
+    match /adminLog/{logId} {
+      allow create: if isAuthenticated(); // Allow logging from app
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── MODULE BASED RULES (Legacy/Extensions) ───────────
+    
+    match /students/{studentId} {
+      allow read: if isAuthenticated();
+      allow write: if isOpsOrAdmin();
+    }
+
     match /ptk/{ptkId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOpsOrAdmin();
+      allow write: if isOpsOrAdmin();
     }
 
-    // SARPRAS:
-    match /ruangan/{ruangId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOpsOrAdmin();
-    }
-    
-    match /inventaris/{itemId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOpsOrAdmin();
-    }
-    
-    // E-OFFICE:
-    match /surat_masuk/{suratId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOpsOrAdmin();
-    }
-    match /surat_keluar/{suratId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOpsOrAdmin();
+    match /keuangan/{docId} {
+      allow read, write: if isAdmin() || isRole('bendahara') || isRole('kepsek');
     }
 
-    // Existing App Collections... (Defaults)
-    match /academic_years/{id} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isOpsOrAdmin();
-    }
-    
-    // BENDAHARA (BOSP / FINANCE)
-    function isFinance() {
-      let role = getUserRole();
-      return role == 'bendahara' || role == 'kepsek' || role == 'admin';
-    }
-    match /rkas/{docId} {
-      allow read, write: if isAuthenticated() && isFinance();
-    }
-    match /bku/{docId} {
-      allow read, write: if isAuthenticated() && isFinance();
-    }
-    match /pajak_transaksi/{docId} {
-      allow read, write: if isAuthenticated() && isFinance();
-    }
-    
-    // KEPSEK / EXECUTIVE
-    match /supervisi/{docId} {
-      allow read, write: if isAuthenticated() && (getUserRole() == 'kepsek' || getUserRole() == 'admin' || getUserRole() == 'ops');
-    }
-    match /antrean_dokumen/{docId} {
-      allow read, write: if isAuthenticated() && (getUserRole() == 'kepsek' || getUserRole() == 'bendahara' || getUserRole() == 'ops' || getUserRole() == 'admin');
-    }
-
+    // GLOBAL CATCH-ALL (DISABLED IN PRODUCTION)
+    // Currently set to allow read if authenticated for stability, but write is strictly for Admin.
     match /{document=**} {
-      allow read, write: if isAuthenticated(); // Should be locked down in production
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
   }
 }
+
