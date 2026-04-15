@@ -489,6 +489,54 @@ ipcMain.handle('open-external', (e, url) => {
   shell.openExternal(url);
 });
 
+// ── Simpan file musik ke assets_music LOKAL saja (tanpa Firestore/Supabase) ──
+// Dipakai oleh tombol "Upload Musik" di Admin Panel
+ipcMain.handle('music-save-local', async (e, { fileName, fileBuffer }) => {
+  try {
+    const musicDir = path.join(__dirname, 'assets_music');
+    if (!fs.existsSync(musicDir)) fs.mkdirSync(musicDir, { recursive: true });
+
+    // Sanitize nama file (hapus karakter berbahaya)
+    const safeName = fileName.replace(/[^a-zA-Z0-9._\- ]/g, '_');
+    const destPath  = path.join(musicDir, safeName);
+
+    // Tulis buffer ke file
+    const buf = Buffer.from(fileBuffer);
+    fs.writeFileSync(destPath, buf);
+
+    // Reload daftar musik lokal agar BGM player bisa langsung main
+    loadLocalMusicFiles();
+    buildShuffleQueue();
+    broadcastMusicState();
+
+    console.log(`✅ music-save-local: "${safeName}" disimpan (${Math.round(buf.length/1024)} KB)`);
+    return { success: true, fileName: safeName, path: destPath };
+  } catch (err) {
+    console.error('❌ music-save-local error:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+// ── Hapus file musik dari assets_music LOKAL saja ──────────────────────────
+ipcMain.handle('music-delete-local', async (e, { fileName }) => {
+  try {
+    const musicDir = path.join(__dirname, 'assets_music');
+    const filePath  = path.join(musicDir, fileName);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`🗑️ music-delete-local: "${fileName}" dihapus dari assets_music`);
+    }
+    // Reload list
+    loadLocalMusicFiles();
+    buildShuffleQueue();
+    broadcastMusicState();
+    return { success: true };
+  } catch (err) {
+    console.error('❌ music-delete-local error:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
 // ── Daftar musik lokal dari folder assets_music ──────────────
 // Mengembalikan array objek {id, title, url} — KONSISTEN dengan musicFiles
 ipcMain.handle('get-music-list', () => {

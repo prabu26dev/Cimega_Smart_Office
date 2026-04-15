@@ -68,6 +68,7 @@
     .topbar-status{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--success)}
     .topbar-status::before{content:'';width:6px;height:6px;background:var(--success);border-radius:50%;animation:blink 2s ease-in-out infinite}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
     .content{flex:1;overflow-y:auto;padding:20px}
     .content::-webkit-scrollbar{width:5px}
     .content::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.3);border-radius:3px}
@@ -349,27 +350,39 @@
           </div>
         </div>
 
-        <!-- Section: Komponen Global -->
-        <div class="card" style="border-color:var(--cyan); background:rgba(0,229,255,0.02); border-radius:13px; border:1px solid var(--border); overflow:hidden">
-          <div class="card-header" style="background:rgba(0,229,255,0.05); padding:15px 20px; border-bottom:1px solid var(--border)">
-            <div class="card-title" style="font-family:'Orbitron',sans-serif; font-size:12px; color:#fff">⚙️ ADMINISTRASI GLOBAL & SISTEM</div>
+        <!-- Section: Sinkronisasi Master -->
+        <div class="card" style="border-color:var(--cyan); background:rgba(0,229,255,0.02); border-radius:13px; border:1px solid rgba(0,229,255,0.2); overflow:hidden">
+          <div class="card-header" style="background:rgba(0,229,255,0.05); padding:15px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between">
+            <div class="card-title" style="font-family:'Orbitron',sans-serif; font-size:12px; color:#fff">🔄 SINKRONISASI MASTER — Kategori & Administrasi</div>
           </div>
           <div class="card-body" style="padding:20px">
-            <p style="font-size:12px;color:var(--muted);margin-bottom:16px; max-width:600px">
-              Pusat kendali konfigurasi konten untuk seluruh institusi. Pengaturan di bawah ini akan berdampak pada ketersediaan kategori dan dokumen di setiap sekolah.
+            <p style="font-size:12px;color:var(--muted);margin-bottom:14px; max-width:700px; line-height:1.7">
+              Klik <strong style="color:var(--cyan)">Sinkron Sekarang</strong> untuk menimpa seluruh Kategori dan Konten Administrasi di Firestore & Supabase dengan data master terbaru.
+              Semua akun pengguna di setiap role akan otomatis menerima kategori sesuai jabatan yang telah ditentukan.
             </p>
-            <div style="display:flex;gap:12px;flex-wrap:wrap">
-              <button class="btn btn-ghost" onclick="seedKategoriDefault()">↩ Pulihkan Kategori Default</button>
-              <button class="btn btn-gold" onclick="confirmImportDefault()">📥 Import Semua Dokumen Default</button>
+            <div style="background:rgba(255,170,0,0.06); border:1px solid rgba(255,170,0,0.2); border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:11px; color:var(--warn)">
+              ⚠️ <strong>Peringatan:</strong> Tombol ini akan <strong>MENIMPA</strong> data existing di Firestore. Pastikan sudah backup terlebih dahulu jika diperlukan.
             </div>
+            <button class="btn btn-primary" id="btnSyncAdm" onclick="masterSync('adm')" style="background:linear-gradient(135deg,#003399,#0055ff); border:1px solid rgba(0,229,255,0.4); padding:12px 28px; font-size:13px; font-family:'Orbitron',sans-serif; letter-spacing:1px; box-shadow:0 0 20px rgba(0,102,255,0.3)">
+              🔄 SINKRON SEKARANG
+            </button>
           </div>
         </div>
       </div>
 
       <!-- TAB 2: TEMPLATES -->
       <div id="tabContentTmp" style="display:none">
-        <div class="module-header" style="margin-bottom:15px">
-            <h2 class="module-title" style="font-size:12px; color:var(--muted)">Konfigurasi AI Assistant untuk Administrasi</h2>
+        <div class="module-header" style="margin-bottom:15px; display:flex; align-items:center; justify-content:space-between">
+            <h2 class="module-title" style="font-size:12px; color:var(--muted)">Konfigurasi AI Assistant — Prompt Template per Role</h2>
+            <div style="display:flex; gap:8px">
+              <button class="btn btn-primary" id="btnSyncTmp" onclick="masterSync('tmp')" style="background:linear-gradient(135deg,#003399,#0055ff); border:1px solid rgba(0,229,255,0.4); font-family:'Orbitron',sans-serif; letter-spacing:1px; font-size:11px; box-shadow:0 0 16px rgba(0,102,255,0.3)">
+                🔄 SINKRON TEMPLATE AI
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="openModalTemplate()">🤖 + Buat Template AI</button>
+            </div>
+        </div>
+        <div style="background:rgba(0,229,255,0.04); border:1px solid rgba(0,229,255,0.15); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:11px; color:var(--muted)">
+          ℹ️ Klik <strong style="color:var(--cyan)">Sinkron Template AI</strong> untuk menimpa semua prompt AI ke Firestore & Supabase dari modul master (Guru Kelas, PAI, PJOK). Template ini akan langsung tersedia di semua akun sesuai role.
         </div>
         <div id="templateList" class="content-list"></div>
       </div>
@@ -378,20 +391,31 @@
     <!-- PAGE: KELOLA MUSIK -->
     <div class="page" id="page-musik">
       <div class="module-header">
-        <h2 class="module-title">Manajemen Cloud Music SDN CIMEGA</h2>
+        <h2 class="module-title">Manajemen Musik SDN CIMEGA</h2>
+        <p style="color:var(--muted);font-size:12px;margin-top:4px">Upload lagu ke aplikasi terlebih dahulu, lalu klik Sinkron untuk mendistribusikan ke Firestore & semua akun guru.</p>
       </div>
-      <div class="module-card" style="background:var(--card); border:1px solid var(--border); border-radius:13px; padding:20px; margin-bottom:20px">
-         <div class="form-group">
-           <label class="form-label">Judul Lagu</label>
-           <input type="text" id="musikTitleInput" class="form-control" placeholder="Contoh: Mars Cimega 2026">
-         </div>
-         <div class="form-group">
-           <label class="form-label">Pilih File (.mp3)</label>
-           <input type="file" id="musikFile" class="form-control" accept="audio/mpeg" style="padding:7px">
-         </div>
-         <button class="btn btn-gold" style="width:100%" onclick="uploadMusik()">🚀 Upload ke Cloud</button>
+
+      <!-- Card Upload -->
+      <div class="module-card" style="background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;margin-bottom:16px">
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:14px;letter-spacing:1px">🎵 TAMBAH MUSIK KE APLIKASI</div>
+        <div class="form-group">
+          <label class="form-label">Judul Lagu</label>
+          <input type="text" id="musikTitleInput" class="form-control" placeholder="Contoh: Mars SDN Cimega 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pilih File Audio (.mp3 / .wav / .ogg)</label>
+          <input type="file" id="musikFile" class="form-control" accept="audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/aac" style="padding:7px">
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-gold" style="flex:1" onclick="uploadMusikLokal()">🎵 Upload Musik</button>
+          <button class="btn btn-primary" style="flex:1" onclick="sinkronMusik()" id="btnSinkronMusik">🔄 Sinkron Musik</button>
+        </div>
+        <div id="musikSyncStatus" style="margin-top:10px;font-size:11px;color:var(--muted);display:none"></div>
       </div>
-      <div id="musikList" style="margin-top:20px"></div>
+
+      <!-- Daftar Musik Lokal -->
+      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:10px;letter-spacing:1px">📂 PLAYLIST LOKAL (assets_music)</div>
+      <div id="musikList" style="margin-top:0"></div>
     </div>
 
     <!-- PAGE: DATA MASTER (COMBINED) -->
@@ -454,10 +478,18 @@
           <div class="form-group"><label class="form-label">Target Penerima</label>
             <select class="form-control" id="notifTarget">
               <option value="all">Semua Pengguna</option>
-              <option value="guru">Guru Saja</option>
-              <option value="kepsek">Kepala Sekolah Saja</option>
-              <option value="bendahara">Bendahara Saja</option>
-              <option value="ops">Operator Saja</option>
+              <option value="guru">👨‍🏫 Guru Kelas</option>
+              <option value="guru_pai">🕌 Guru PAI</option>
+              <option value="guru_pjok">🏃 Guru PJOK</option>
+              <option value="kepsek">🏛️ Kepala Sekolah</option>
+              <option value="bendahara">💰 Bendahara</option>
+              <option value="ops">💻 Operator</option>
+              <option value="tu">🗂️ Tata Usaha</option>
+              <option value="pustakawan">📚 Pustakawan</option>
+              <option value="gpk">♿ GPK Inklusif</option>
+              <option value="ekskul">🎭 Pembina Ekskul</option>
+              <option value="koordinator">🎯 Koordinator</option>
+              <option value="fasilitator">🌱 Fasilitator</option>
             </select>
           </div>
           <div class="form-group"><label class="form-label">Jenis Notifikasi</label>
@@ -634,10 +666,18 @@
     <div class="form-group">
       <label class="form-label">Jabatan <span style="color:var(--muted);font-weight:400">(boleh lebih dari satu)</span></label>
       <div class="roles-checkboxes" id="rolesCheckboxes">
-        <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
-        <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>   🏛️ Kepala Sekolah</label>
-        <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
-        <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>      💻 Operator</label>
+        <label class="role-cb" data-role="guru"          onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>         👨‍🏫 Guru Kelas</label>
+        <label class="role-cb" data-role="guru_pai"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru_pai"/>     🕌 Guru PAI</label>
+        <label class="role-cb" data-role="guru_pjok"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru_pjok"/>    🏃 Guru PJOK</label>
+        <label class="role-cb" data-role="kepsek"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>       🏛️ Kepala Sekolah</label>
+        <label class="role-cb" data-role="bendahara"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>    💰 Bendahara</label>
+        <label class="role-cb" data-role="ops"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>          💻 Operator</label>
+        <label class="role-cb" data-role="tu"            onclick="toggleRoleCb(this,event)"><input type="checkbox" value="tu"/>           🗂️ Tata Usaha</label>
+        <label class="role-cb" data-role="pustakawan"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="pustakawan"/>   📚 Pustakawan</label>
+        <label class="role-cb" data-role="gpk"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="gpk"/>          ♿ GPK (Inklusif)</label>
+        <label class="role-cb" data-role="ekskul"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ekskul"/>       🎭 Pembina Ekskul</label>
+        <label class="role-cb" data-role="koordinator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="koordinator"/>  🎯 Koordinator Kokurikuler</label>
+        <label class="role-cb" data-role="fasilitator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="fasilitator"/>  🌱 Fasilitator Kokurikuler</label>
       </div>
     </div>
     <div style="display:flex;gap:12px">
@@ -676,21 +716,36 @@
       <div class="form-group">
         <label class="form-label">Role</label>
         <select id="tmpRole" class="form-control">
-          <option value="guru">Guru</option>
-          <option value="ops">Operator</option>
-          <option value="bendahara">Bendahara</option>
-          <option value="kepsek">Kepsek</option>
+          <option value="guru">👨‍🏫 Guru Kelas</option>
+          <option value="guru_pai">🕌 Guru PAI</option>
+          <option value="guru_pjok">🏃 Guru PJOK</option>
+          <option value="kepsek">🏛️ Kepala Sekolah</option>
+          <option value="bendahara">💰 Bendahara</option>
+          <option value="ops">💻 Operator</option>
+          <option value="tu">🗂️ Tata Usaha</option>
+          <option value="pustakawan">📚 Pustakawan</option>
+          <option value="gpk">♿ GPK (Inklusif)</option>
+          <option value="ekskul">🎭 Pembina Ekskul</option>
+          <option value="koordinator">🎯 Koordinator Kokurikuler</option>
+          <option value="fasilitator">🌱 Fasilitator Kokurikuler</option>
         </select>
       </div>
       <div class="form-group">
         <label class="form-label">Kategori</label>
         <select id="tmpKategori" class="form-control">
-          <option value="perencanaan">Perencanaan</option>
-          <option value="pelaksanaan">Pelaksanaan</option>
-          <option value="penilaian">Penilaian</option>
-          <option value="tata_usaha">Tata Usaha</option>
-          <option value="keuangan">Keuangan</option>
-          <option value="kepsek_manajerial">Manajerial</option>
+          <option value="adm_guru">📚 Administrasi Guru & Pembelajaran</option>
+          <option value="naskah_soal">📝 Naskah Soal & Bank Evaluasi</option>
+          <option value="adm_kepsek">🏛️ Administrasi Kepala Sekolah</option>
+          <option value="kosp">📖 Kurikulum Operasional (KOSP)</option>
+          <option value="adm_umum">🏢 Administrasi Umum Sekolah</option>
+          <option value="keuangan">💰 Keuangan & BOS</option>
+          <option value="evaluasi">📊 Evaluasi & Pelaporan</option>
+          <option value="perpus">📕 Administrasi Perpustakaan</option>
+          <option value="tata_usaha">✉️ Tata Usaha & Surat Menyurat</option>
+          <option value="adm_gpk">♿ Program Inklusif (GPK)</option>
+          <option value="adm_ekskul">🎭 Ekstrakurikuler</option>
+          <option value="kokurikuler">🎯 Kokurikuler & P5</option>
+          <option value="adm_uks_pjok">⚽ UKS, Kesehatan & PJOK</option>
         </select>
       </div>
     </div>
@@ -700,11 +755,13 @@
     </div>
     <div class="form-group">
       <label class="form-label">AI Prompt Template</label>
-      <textarea id="tmpPrompt" class="form-control" placeholder="Gunakan {{tag}} untuk parameter dinamis..."></textarea>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Gunakan <code style="color:var(--cyan);background:rgba(0,229,255,0.08);padding:1px 5px;border-radius:3px">{{nama_field}}</code> sebagai placeholder dinamis yang akan diisi dari form.</div>
+      <textarea id="tmpPrompt" class="form-control" style="min-height:160px;font-size:11px" placeholder="Contoh: Bertindaklah sebagai Guru Profesional. Bantu saya menyusun dokumen berikut berdasarkan data: {{identitas}}, {{tujuan}}."></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">Components (JSON Array)</label>
-      <textarea id="tmpComponents" class="form-control" style="font-family:monospace; font-size:10px"></textarea>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Array berisi field-field form. Setiap item: <code style="color:var(--cyan);background:rgba(0,229,255,0.08);padding:1px 5px;border-radius:3px">{"id":"...", "label":"...", "type":"textarea"}</code></div>
+      <textarea id="tmpComponents" class="form-control" style="font-family:monospace; font-size:10px;min-height:130px" placeholder='[{"id":"identitas","label":"Identitas Dokumen","type":"textarea"},{"id":"tujuan","label":"Tujuan & Sasaran","type":"textarea"}]'></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalTemplate')">Batal</button>
@@ -743,10 +800,18 @@
     <div class="form-group">
       <label class="form-label">Akses Default <span style="color:var(--muted);font-weight:400">(siapa yang bisa lihat dokumen di kategori ini)</span></label>
       <div class="roles-checkboxes" id="kategoriVisibleTo">
-        <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
-        <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>   🏛️ Kepsek</label>
-        <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
-        <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>      💻 Operator</label>
+        <label class="role-cb" data-role="guru"          onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>         👨‍🏫 Guru Kelas</label>
+        <label class="role-cb" data-role="guru_pai"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru_pai"/>     🕌 Guru PAI</label>
+        <label class="role-cb" data-role="guru_pjok"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru_pjok"/>    🏃 Guru PJOK</label>
+        <label class="role-cb" data-role="kepsek"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>       🏛️ Kepsek</label>
+        <label class="role-cb" data-role="bendahara"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>    💰 Bendahara</label>
+        <label class="role-cb" data-role="ops"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>          💻 Operator</label>
+        <label class="role-cb" data-role="tu"            onclick="toggleRoleCb(this,event)"><input type="checkbox" value="tu"/>           🗂️ Tata Usaha</label>
+        <label class="role-cb" data-role="pustakawan"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="pustakawan"/>   📚 Pustakawan</label>
+        <label class="role-cb" data-role="gpk"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="gpk"/>          ♿ GPK (Inklusif)</label>
+        <label class="role-cb" data-role="ekskul"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ekskul"/>       🎭 Ekskul</label>
+        <label class="role-cb" data-role="koordinator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="koordinator"/>  🎯 Koordinator</label>
+        <label class="role-cb" data-role="fasilitator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="fasilitator"/>  🌱 Fasilitator</label>
       </div>
     </div>
     <div class="form-group">
@@ -774,10 +839,18 @@
     <div class="form-group">
       <label class="form-label">Terlihat Oleh <span style="color:var(--muted);font-weight:400">(boleh lebih dari satu)</span></label>
       <div class="roles-checkboxes" id="kontenVisibleTo">
-        <label class="role-cb" data-role="guru"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>     👨‍🏫 Guru</label>
-        <label class="role-cb" data-role="kepsek"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>   🏛️ Kepsek</label>
-        <label class="role-cb" data-role="bendahara" onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>💰 Bendahara</label>
-        <label class="role-cb" data-role="ops"       onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>      💻 Operator</label>
+        <label class="role-cb" data-role="guru"          onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru"/>         👨‍🏫 Guru Kelas</label>
+        <label class="role-cb" data-role="guru_pai"      onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru_pai"/>     🕌 Guru PAI</label>
+        <label class="role-cb" data-role="guru_pjok"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru_pjok"/>    🏃 Guru PJOK</label>
+        <label class="role-cb" data-role="kepsek"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>       🏛️ Kepsek</label>
+        <label class="role-cb" data-role="bendahara"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>    💰 Bendahara</label>
+        <label class="role-cb" data-role="ops"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>          💻 Operator</label>
+        <label class="role-cb" data-role="tu"            onclick="toggleRoleCb(this,event)"><input type="checkbox" value="tu"/>           🗂️ Tata Usaha</label>
+        <label class="role-cb" data-role="pustakawan"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="pustakawan"/>   📚 Pustakawan</label>
+        <label class="role-cb" data-role="gpk"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="gpk"/>          ♿ GPK (Inklusif)</label>
+        <label class="role-cb" data-role="ekskul"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ekskul"/>       🎭 Ekskul</label>
+        <label class="role-cb" data-role="koordinator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="koordinator"/>  🎯 Koordinator</label>
+        <label class="role-cb" data-role="fasilitator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="fasilitator"/>  🌱 Fasilitator</label>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Deskripsi / Panduan</label><textarea class="form-control" id="kontenDeskripsi" style="min-height:70px" placeholder="Deskripsi..."></textarea></div>
@@ -799,6 +872,8 @@
 <script src="../../shared/updater.js"></script>
 <!-- Modul Admin -->
 <script src="../../modules/admin/data_master.js"></script>
+<script src="../../modules/admin/oversight.js"></script>
+<script src="../../modules/admin/cloud_drive.js"></script>
 <script>
 'use strict';
 // ══════════════════════════════════════════
@@ -864,7 +939,7 @@ function showPage(page,navEl){
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',oversight:'PENGAWASAN DOKUMEN GLOBAL',cloud:'CIMEGA CLOUD DRIVE',konten:'KELOLA KONTEN',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',oversight:'PENGAWASAN DOKUMEN GLOBAL',cloud:'CIMEGA CLOUD DRIVE',konten:'KELOLA KONTEN',musik:'KELOLA MUSIK',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
   if(page==='guru')       loadSchoolCards();
   if(page==='institusi')  if(window.AdminInstitusi) window.AdminInstitusi.init();
@@ -878,6 +953,7 @@ function showPage(page,navEl){
   if(page==='log')        loadLog();
   if(page==='pengaturan') loadPengaturan();
   if(page==='update')     loadUpdateHistory();
+  if(page==='musik')      loadMusik();
 }
 
 // ── Admin Tabs ─────────────────────────────
@@ -1137,23 +1213,53 @@ async function loadTemplates(){
   try {
     const snap = await getDocs(query(collection(db,'admin_templates'), orderBy('updatedAt','desc')));
     let html = '';
-    snap.forEach(doc => {
-      const data = doc.data();
+    const ROLE_COLORS = {
+      guru:'#00e5ff', guru_pai:'#ff9800', guru_pjok:'#4caf50',
+      kepsek:'#9c27b0', bendahara:'#f44336', ops:'#2196f3',
+      tu:'#607d8b', pustakawan:'#795548', gpk:'#009688',
+      ekskul:'#e91e63', koordinator:'#ff5722', fasilitator:'#8bc34a'
+    };
+    const ROLE_LABELS = {
+      guru:'Guru Kelas', guru_pai:'Guru PAI', guru_pjok:'Guru PJOK',
+      kepsek:'Kepala Sekolah', bendahara:'Bendahara', ops:'Operator',
+      tu:'Tata Usaha', pustakawan:'Pustakawan', gpk:'GPK/Inklusi',
+      ekskul:'Pembina Ekskul', koordinator:'Koordinator', fasilitator:'Fasilitator'
+    };
+    snap.forEach(d => {
+      const data = d.data();
+      const rc = ROLE_COLORS[data.role] || '#aaa';
+      const rl = ROLE_LABELS[data.role] || data.role;
+      // Count items (administrasi phases) from stored JSON
+      let itemCount = 0, fieldCount = 0;
+      try {
+        const items = JSON.parse(data.items || '[]');
+        itemCount = items.length;
+        fieldCount = items.reduce((s,i) => s + (i.components?.length || 0), 0);
+      } catch(e) { fieldCount = data.components?.length || 0; }
+      const promptPreview = (data.ai_prompt || '').substring(0, 90).replace(/\n/g,' ');
+      const updatedStr = data.syncedAt ? new Date(data.syncedAt).toLocaleDateString('id-ID') : '—';
+
       html += `
-        <div class="content-item">
+        <div class="content-item" style="border-left:3px solid ${rc}">
           <div class="content-item-icon">${data.icon || '📄'}</div>
-          <div class="content-item-body">
-            <div class="content-item-name">${data.nama} <span class="badge badge-guru">${data.role.toUpperCase()}</span></div>
-            <div class="content-item-cat">${data.kategori} · ${data.components?.length || 0} fields</div>
+          <div class="content-item-body" style="flex:1;min-width:0">
+            <div class="content-item-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              ${data.nama}
+              <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:${rc}22;color:${rc};border:1px solid ${rc}55;white-space:nowrap;font-weight:600">${rl}</span>
+            </div>
+            <div class="content-item-cat" style="margin-top:3px;opacity:.7;font-size:10px">
+              📂 ${data.kategori} &nbsp;·&nbsp; 📋 ${itemCount} administrasi &nbsp;·&nbsp; 🔧 ${fieldCount} fields &nbsp;·&nbsp; 🗓 ${updatedStr}
+            </div>
+            ${promptPreview ? `<div style="font-size:9px;color:var(--muted);margin-top:3px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px">🤖 ${promptPreview}...</div>` : ''}
           </div>
           <div class="content-item-actions">
-            <button class="btn btn-ghost btn-sm" onclick="editTemplate('${doc.id}')">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${doc.id}')">🗑</button>
+            <button class="btn btn-ghost btn-sm" onclick="editTemplate('${d.id}')">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${d.id}')">🗑</button>
           </div>
         </div>
       `;
     });
-    container.innerHTML = html || '<div class="empty-state">Belum ada template.</div>';
+    container.innerHTML = html || '<div class="empty-state">Belum ada template. Klik 🔄 SINKRON TEMPLATE AI untuk memuat data master.</div>';
   } catch (e) {
     container.innerHTML = `<div class="error">Gagal memuat template: ${e.message}</div>`;
   }
@@ -1210,120 +1316,260 @@ async function deleteTemplate(id) {
 }
 
 // ════════════════════════════════════════════
-// KELOLA MUSIK (Cloud Storage)
+// KELOLA MUSIK — Local-First + Cloud Sync
+// Arsitektur:
+//   uploadMusikLokal()  → simpan ke assets_music lokal saja (via IPC)
+//   sinkronMusik()      → push semua lokal ke Supabase + Firestore + notif user
+//   deleteMusikLokal()  → hapus dari assets_music lokal
 // ════════════════════════════════════════════
 
-// ════════════════════════════════════════════
-// KELOLA MUSIK (Supabase Storage with Cleanup)
-// ════════════════════════════════════════════
+let _cloudSyncedUrls = {}; // { fileName → publicUrl } cache dari Firestore
 
-let _musicUnsub = null;
-function loadMusik(){
-  const { collection, query, orderBy, onSnapshot } = window._fb;
+// ── Muat daftar musik dari lokal + bandingkan dengan yang sudah di-cloud ──
+async function loadMusik() {
   const container = document.getElementById('musikList');
-  if(!container) return;
-  if(_musicUnsub) _musicUnsub();
-  
-  _musicUnsub = onSnapshot(query(collection(db, 'app_music'), orderBy('createdAt', 'desc')), snap => {
-    let html = '';
-    snap.forEach(doc => {
-      const data = doc.data();
-      html += `
-        <div class="content-item">
-          <div class="content-item-icon">🎵</div>
-          <div class="content-item-body">
-            <div class="content-item-name">${data.title}</div>
-            <div class="content-item-cat">${data.status || 'Active'}</div>
-          </div>
-          <div class="content-item-actions">
-            <button class="btn btn-danger btn-sm" onclick="deleteMusik('${doc.id}', '${data.audioUrl}')">🗑 Hapus</button>
-          </div>
-        </div>
-      `;
-    });
-    container.innerHTML = html || 'Playlist kosong.';
-  });
-}
+  if (!container) return;
 
-async function uploadMusik() {
-  const file = document.getElementById('musikFile').files[0];
-  const title = document.getElementById('musikTitleInput').value.trim();
-  if(!file || !title) return showToast('error', 'Error', 'Isi judul dan pilih file!');
-
-  if (!window._supabase) return showToast('error', 'Error', 'Supabase not connected');
-
-  showToast('info', 'Processing...', 'Mengecek duplikasi & mengunggah musik...');
-  const { collection, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp } = window._fb;
+  container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">⏳ Memuat playlist lokal...</div>';
 
   try {
-    // 1. Check existing record with same title (Cleanup Strategy)
-    const q = query(collection(db, 'app_music'), where('title', '==', title));
-    const snap = await getDocs(q);
-    
-    if (!snap.empty) {
-      if (!confirm(`Musik dengan judul "${title}" sudah ada. Ganti dengan yang baru?`)) return;
-      // Delete old file from SB Storage
-      for (const d of snap.docs) {
-        const oldUrl = d.data().audioUrl;
-        if (oldUrl && oldUrl.includes('supabase')) {
-           const oldPath = oldUrl.split('/').pop();
-           await window._supabase.storage.from('app-music').remove([`music/${oldPath}`]);
-        }
-        await deleteDoc(doc(db, 'app_music', d.id));
-      }
+    // 1. Ambil file lokal via IPC
+    const api = window.cimegaConfig || window.cimegaAPI;
+    const localFiles = (typeof api?.getMusicList === 'function') ? await api.getMusicList() : [];
+
+    // 2. Ambil daftar yang sudah di-cloud (Firestore)
+    const { collection, getDocs } = window._fb;
+    const cloudSnap = await getDocs(collection(db, 'app_music'));
+    _cloudSyncedUrls = {};
+    cloudSnap.forEach(d => {
+      const data = d.data();
+      if (data.localFile) _cloudSyncedUrls[data.localFile] = data.audioUrl;
+    });
+
+    if (localFiles.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">🎵</div><p>Belum ada musik lokal. Klik "Upload Musik" untuk menambah lagu.</p></div>';
+      return;
     }
 
-    // 2. Upload to Supabase Storage
-    const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-    const filePath = `music/${fileName}`;
-    
-    const { data, error } = await window._supabase.storage
-      .from('app-music')
-      .upload(filePath, file, { upsert: true });
+    let html = '';
+    localFiles.forEach((f, i) => {
+      const cleanTitle = (typeof CimegaMusic !== 'undefined' && CimegaMusic.getTitle)
+        ? CimegaMusic.getTitle(f)
+        : (f.title || f.id || String(f)).replace(/\.mp3$/i, '').trim();
+      const fileName = f.id || String(f);
+      const isSynced  = !!_cloudSyncedUrls[fileName];
 
-    if (error) throw error;
+      html += `
+        <div class="content-item" id="musikItem_${i}">
+          <div class="content-item-icon">🎵</div>
+          <div class="content-item-body">
+            <div class="content-item-name">${cleanTitle}</div>
+            <div class="content-item-cat" style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;color:var(--muted)">${fileName}</span>
+              ${isSynced
+                ? '<span style="background:rgba(0,229,100,0.12);color:#00e564;font-size:9px;padding:1px 6px;border-radius:4px">✅ Tersinkron</span>'
+                : '<span style="background:rgba(255,160,0,0.12);color:#ffa000;font-size:9px;padding:1px 6px;border-radius:4px">⚠️ Belum sinkron</span>'
+              }
+            </div>
+          </div>
+          <div class="content-item-actions">
+            <button class="btn btn-danger btn-sm" onclick="deleteMusikLokal('${fileName}', '${cleanTitle}')">🗑 Hapus</button>
+          </div>
+        </div>`;
+    });
 
-    const { data: { publicUrl } } = window._supabase.storage.from('app-music').getPublicUrl(filePath);
+    container.innerHTML = html;
 
-    // 3. Save to Firestore
-    const musicId = `music_${Date.now()}`;
-    const payload = {
-      id: musicId,
-      title,
-      audioUrl: publicUrl,
-      status: 'active',
-      createdAt: serverTimestamp()
-    };
-    
-    await setDoc(doc(db, 'app_music', musicId), payload);
-    
-    // Sync table backup
-    await syncToSupabase('app_music', payload);
+    // Update widget musik di sidebar
+    if (typeof CimegaMusic !== 'undefined') CimegaMusic.updateUI();
 
-    document.getElementById('musikTitleInput').value = '';
-    document.getElementById('musikFile').value = '';
-    showToast('success', 'Berhasil', 'Musik diperbarui dan disinkronkan.');
   } catch (e) {
-    showToast('error', 'Gagal', e.message);
+    container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>Gagal memuat: ${e.message}</p></div>`;
+    console.error('loadMusik error:', e);
   }
 }
 
-async function deleteMusik(id, url) {
-  if(!confirm('Hapus lagu ini dari database dan storage?')) return;
-  const { doc, deleteDoc } = window._fb;
+// ── Upload ke LOKAL saja (tanpa cloud) ──────────────────────────
+async function uploadMusikLokal() {
+  const file  = document.getElementById('musikFile').files[0];
+  const title = document.getElementById('musikTitleInput').value.trim();
+
+  if (!file) return showToast('error', 'Error', 'Pilih file audio terlebih dahulu!');
+  if (!title) return showToast('error', 'Error', 'Isi judul lagu terlebih dahulu!');
+
+  // Rename file sesuai judul yang dimasukkan admin
+  const ext      = file.name.split('.').pop().toLowerCase();
+  const fileName = `${title.replace(/[^a-zA-Z0-9 ._-]/g, '_')}.${ext}`;
+
+  showToast('info', 'Menyimpan...', `Menyimpan "${title}" ke aplikasi lokal...`);
+
   try {
-    // Delete from Firestore
-    await deleteDoc(doc(db, 'app_music', id));
-    // Delete from Supabase Storage
-    if (url && url.includes('supabase')) {
-      const path = url.split('/').pop();
-      await window._supabase.storage.from('app-music').remove([`music/${path}`]);
+    // Baca file sebagai ArrayBuffer → kirim via IPC ke main.js
+    const arrayBuffer = await file.arrayBuffer();
+    const api = window.cimegaConfig || window.cimegaAPI;
+    const result = await api.musicSaveLocal({ fileName, fileBuffer: Array.from(new Uint8Array(arrayBuffer)) });
+
+    if (!result.success) throw new Error(result.error || 'Gagal menyimpan');
+
+    document.getElementById('musikTitleInput').value = '';
+    document.getElementById('musikFile').value = '';
+    showToast('success', 'Tersimpan!', `"${title}" berhasil ditambahkan ke playlist lokal. Klik Sinkron untuk upload ke cloud.`);
+    await loadMusik();
+  } catch (e) {
+    showToast('error', 'Gagal Upload', e.message);
+  }
+}
+
+// ── Hapus dari LOKAL saja ─────────────────────────────────────────
+async function deleteMusikLokal(fileName, title) {
+  if (!confirm(`Hapus lagu "${title}" dari aplikasi & cloud?`)) return;
+
+  try {
+    const api = window.cimegaConfig || window.cimegaAPI;
+    const result = await api.musicDeleteLocal({ fileName });
+    if (!result.success) throw new Error(result.error);
+
+    // Jika sudah di-cloud, hapus juga dari Firestore + Supabase
+    const { collection, query, where, getDocs, doc, deleteDoc } = window._fb;
+    const q = query(collection(db, 'app_music'), where('localFile', '==', fileName));
+    const snap = await getDocs(q);
+    for (const d of snap.docs) {
+      const oldUrl = d.data().audioUrl || '';
+      if (oldUrl.includes('supabase') && window._supabase) {
+        const segments = oldUrl.split('/');
+        const filePath = `music/${segments[segments.length - 1]}`;
+        await window._supabase.storage.from('app-music').remove([filePath]);
+      }
+      await deleteDoc(doc(db, 'app_music', d.id));
     }
-    // Delete from Supabase Table
-    await syncToSupabase('app_music', { id }, true);
-    
-    showToast('success','Dihapus','Musik telah dihapus bersih.');
-  } catch(e) { showToast('error','Error',e.message); }
+
+    showToast('success', 'Dihapus', `"${title}" berhasil dihapus dari lokal & cloud.`);
+    await loadMusik();
+  } catch (e) {
+    showToast('error', 'Error', e.message);
+  }
+}
+
+// ── SINKRON MUSIK: Push semua lokal ke Supabase + Firestore + semua User ──
+async function sinkronMusik() {
+  const btn      = document.getElementById('btnSinkronMusik');
+  const statusEl = document.getElementById('musikSyncStatus');
+
+  if (!window._supabase) {
+    return showToast('error', 'Supabase', 'Koneksi Supabase belum tersedia. Cek .env SUPABASE_URL dan SUPABASE_KEY.');
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Menyinkronkan...';
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '⏳ Mengambil daftar file lokal...';
+
+  try {
+    const api = window.cimegaConfig || window.cimegaAPI;
+    const localFiles = await api.getMusicList();
+
+    if (!localFiles || localFiles.length === 0) {
+      showToast('warning', 'Playlist Kosong', 'Tidak ada file di assets_music untuk disinkronkan.');
+      return;
+    }
+
+    const { collection, doc, setDoc, serverTimestamp, getDocs, query, where } = window._fb;
+    let synced = 0;
+    let skipped = 0;
+    let failed  = 0;
+
+    for (let i = 0; i < localFiles.length; i++) {
+      const f        = localFiles[i];
+      const fileName = f.id || f.title;
+      const cleanTitle = (typeof CimegaMusic !== 'undefined' && CimegaMusic.getTitle)
+        ? CimegaMusic.getTitle(f) : (f.title || fileName);
+
+      statusEl.innerHTML = `⏳ [${i+1}/${localFiles.length}] Menyinkronkan: <strong>${cleanTitle}</strong>...`;
+
+      // Cek apakah sudah ada di Firestore dengan localFile ini
+      if (_cloudSyncedUrls[fileName]) {
+        skipped++;
+        continue; // sudah tersinkron, skip
+      }
+
+      try {
+        // 1. Baca file dari lokal via fetch (Electron file:// protocol)
+        const filePath = `../../assets_music/${encodeURIComponent(fileName)}`;
+        const resp = await fetch(filePath);
+        if (!resp.ok) throw new Error(`File tidak dapat dibaca: ${fileName}`);
+        const blob = await resp.blob();
+
+        // 2. Upload ke Supabase Storage
+        const sbPath = `music/${Date.now()}_${fileName.replace(/\s+/g, '_')}`;
+        const { error: sbErr } = await window._supabase.storage
+          .from('app-music')
+          .upload(sbPath, blob, { upsert: true, contentType: blob.type || 'audio/mpeg' });
+        if (sbErr) throw new Error('Supabase upload: ' + sbErr.message);
+
+        const { data: urlData } = window._supabase.storage.from('app-music').getPublicUrl(sbPath);
+        const publicUrl = urlData.publicUrl;
+
+        // 3. Simpan ke Firestore
+        const musicId = `music_${Date.now()}_${i}`;
+        const payload = {
+          id: musicId,
+          title: cleanTitle,
+          localFile: fileName,
+          audioUrl: publicUrl,
+          storagePath: sbPath,
+          status: 'active',
+          createdAt: serverTimestamp(),
+          syncedAt: serverTimestamp()
+        };
+        await setDoc(doc(db, 'app_music', musicId), payload);
+
+        // 4. Sync ke Supabase Table (backup)
+        if (typeof syncToSupabase === 'function') {
+          await syncToSupabase('app_music', payload);
+        }
+
+        _cloudSyncedUrls[fileName] = publicUrl;
+        synced++;
+      } catch (itemErr) {
+        console.error(`Sinkron gagal untuk "${fileName}":`, itemErr);
+        failed++;
+      }
+    }
+
+    // 5. Kirim notifikasi ke semua user
+    if (synced > 0) {
+      try {
+        const notifId = `notif_musik_${Date.now()}`;
+        const { doc: notifDoc, setDoc: notifSet } = window._fb;
+        await notifSet(notifDoc(db, 'notifications', notifId), {
+          id: notifId,
+          type: 'musik_update',
+          judul: '🎵 Playlist Diperbarui',
+          pesan: `${synced} lagu baru telah ditambahkan ke playlist BGM. Restart aplikasi jika musik belum berubah.`,
+          target: 'all',
+          createdAt: serverTimestamp(),
+          dibaca: false
+        });
+      } catch (_) { /* notifikasi non-fatal */ }
+    }
+
+    const summary = [
+      synced  > 0 ? `✅ ${synced} lagu berhasil disinkronkan` : '',
+      skipped > 0 ? `⏭️ ${skipped} lagu sudah tersinkron (skip)` : '',
+      failed  > 0 ? `❌ ${failed} lagu gagal` : ''
+    ].filter(Boolean).join(' · ');
+
+    statusEl.innerHTML = summary;
+    showToast(failed > 0 ? 'warning' : 'success', 'Sinkron Selesai', summary);
+
+    await loadMusik(); // Refresh tampilan
+  } catch (e) {
+    statusEl.innerHTML = `❌ Error: ${e.message}`;
+    showToast('error', 'Sinkron Gagal', e.message);
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '🔄 Sinkron Musik';
+  }
 }
 
 // ════════════════════════════════════════════
@@ -1791,6 +2037,12 @@ async function syncToSupabase(table, data, isDelete = false, idKey = 'id') {
 
 // ── KELOLA TEMPLATE AI (Real-time) ───────────
 let _tmpUnsub = null;
+const ROLE_BADGE_COLOR = {
+  guru:'#00aa44', guru_pai:'#8855cc', guru_pjok:'#e06000',
+  kepsek:'#0066cc', bendahara:'#cc6600', ops:'#007799',
+  tu:'#557799', pustakawan:'#aa0055', gpk:'#2288aa',
+  ekskul:'#cc3300', koordinator:'#336600', fasilitator:'#663399'
+};
 function loadTemplates(){
   const { collection, query, orderBy, onSnapshot } = window._fb;
   const container = document.getElementById('templateList');
@@ -1799,22 +2051,49 @@ function loadTemplates(){
   
   _tmpUnsub = onSnapshot(query(collection(db,'admin_templates'), orderBy('updatedAt','desc')), snap => {
     let html = '';
-    snap.forEach(doc => {
-      const data = doc.data();
+    snap.forEach(d => {
+      const data = d.data();
+      const roleColor = ROLE_BADGE_COLOR[data.role] || '#555';
+      // Parse components untuk hitung jumlah field
+      let compArr = [];
+      try { compArr = JSON.parse(data.components || '[]'); } catch(e) {}
+      const fieldCount = Array.isArray(compArr) ? compArr.length : 0;
+      // Parse items untuk hitung fase
+      let itemsArr = [];
+      try { itemsArr = JSON.parse(data.items || '[]'); } catch(e) {}
+      const faseCount = itemsArr.length || (data.ai_prompt ? 1 : 0);
+      // Preview prompt
+      const promptPreview = (data.ai_prompt || '—').substring(0, 120);
       html += `
-        <div class="content-item">
-          <div class="content-item-icon">${data.icon || '🤖'}</div>
-          <div class="content-item-body">
-            <div class="content-item-name">${data.nama} <span class="badge badge-guru">${data.role.toUpperCase()}</span></div>
-            <div class="content-item-cat">${data.kategori} · ${data.components?.length || 0} fields</div>
+        <div class="content-item" style="flex-direction:column;align-items:flex-start;gap:8px;padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="content-item-icon" style="font-size:20px">${data.icon || '🤖'}</div>
+              <div>
+                <div class="content-item-name" style="font-size:13px">${data.nama}
+                  <span style="background:${roleColor};color:#fff;font-size:9px;padding:2px 7px;border-radius:10px;margin-left:5px;letter-spacing:0.5px">${(data.role||'').toUpperCase()}</span>
+                </div>
+                <div class="content-item-cat" style="margin-top:2px">
+                  📁 ${data.kategori || '—'}
+                  &nbsp;·&nbsp; 📋 ${faseCount} fase
+                  &nbsp;·&nbsp; 🔧 ${fieldCount} field
+                  ${data.syncedAt ? `&nbsp;·&nbsp; 🕒 Sync: ${data.syncedAt.substring(0,10)}` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="content-item-actions">
+              <button class="btn btn-ghost btn-sm" onclick="editTemplate('${d.id}')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${d.id}')">🗑</button>
+            </div>
           </div>
-          <div class="content-item-actions">
-            <button class="btn btn-ghost btn-sm" onclick="editTemplate('${doc.id}')">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${doc.id}')">🗑</button>
-          </div>
+          ${data.ai_prompt ? `
+          <div style="background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:6px;padding:8px 12px;width:100%;font-size:10px;color:var(--muted)">
+            <strong style="color:var(--cyan);font-size:9px;letter-spacing:1px">AI PROMPT PREVIEW</strong><br/>
+            <span style="color:#9bb">${promptPreview}${(data.ai_prompt||'').length > 120 ? '...' : ''}</span>
+          </div>` : '<div style="font-size:10px;color:var(--danger)">⚠️ AI Prompt kosong — AI tidak akan berfungsi untuk template ini</div>'}
         </div>`;
     });
-    container.innerHTML = html || '<div class="empty-state">Belum ada template AI. AI tidak akan aktif untuk kategori tanpa template.</div>';
+    container.innerHTML = html || '<div class="empty-state"><div class="icon">🤖</div><p>Belum ada template AI. Klik <strong>Sinkron Template AI</strong> untuk mengisi.</p></div>';
   });
 }
 
@@ -1883,26 +2162,134 @@ async function deleteKategori(id, nama) {
   } catch(e) { showToast('error','Error',e.message); }
 }
 
-async function seedKategoriDefault() {
-  const { doc, setDoc, getDocs, collection, serverTimestamp } = window._fb;
-  const snap = await getDocs(collection(db, 'kategori'));
-  if (!snap.empty && !confirm('Kategori sudah ada. Timpa dengan default?')) return;
-  const defaultKat = [
-    { id:'adm_guru', nama:'Administrasi Guru & Pembelajaran', icon:'📚', urutan:1, visibleTo:['guru','kepsek'] },
-    { id:'adm_kepsek', nama:'Administrasi Kepala Sekolah', icon:'🏦', urutan:2, visibleTo:['kepsek'] },
-    { id:'kosp', nama:'Kurikulum Operasional (KOSP)', icon:'📖', urutan:3, visibleTo:['guru','kepsek','ops'] },
-    { id:'adm_umum', nama:'Administrasi Umum Sekolah', icon:'🏢', urutan:4, visibleTo:['kepsek','ops'] },
-    { id:'keuangan', nama:'Keuangan & BOS', icon:'💰', urutan:5, visibleTo:['bendahara','kepsek'] },
-    { id:'evaluasi', nama:'Evaluasi & Pelaporan', icon:'📊', urutan:6, visibleTo:['guru','kepsek'] },
-    { id:'perpus', nama:'Administrasi Perpustakaan', icon:'📕', urutan:7, visibleTo:['guru','ops'] },
-    { id:'tata_usaha', nama:'Tata Usaha & Surat Menyurat', icon:'✉️', urutan:8, visibleTo:['ops','kepsek'] },
-  ];
-  try {
-    await Promise.all(defaultKat.map(k => setDoc(doc(db,'kategori',k.id), { nama:k.nama, icon:k.icon, urutan:k.urutan, visibleTo:k.visibleTo, deskripsi:'', updatedAt:serverTimestamp() }, {merge:true})));
-    await loadKategoriList();
-    addLog('Kategori','Pulihkan kategori default: 8 kategori');
-    showToast('success','Selesai','8 kategori Kurikulum Merdeka dipulihkan');
-  } catch(e) { showToast('error','Error',e.message); }
+// ════════════════════════════════════════════
+// MASTER SYNC — Sinkronisasi Total ke Firestore & Supabase
+// Menggunakan window.CimegaMasterData sebagai sumber kebenaran.
+// Mode: 'adm' = Kategori & Konten  |  'tmp' = Template AI
+// ════════════════════════════════════════════
+async function masterSync(mode = 'adm') {
+  const { doc, setDoc, serverTimestamp } = window._fb;
+  const btnId = mode === 'adm' ? 'btnSyncAdm' : 'btnSyncTmp';
+  const btn = document.getElementById(btnId);
+  const origHTML = btn ? btn.innerHTML : '';
+
+  const setSyncState = (loading, msg = '') => {
+    if (!btn) return;
+    if (loading) {
+      btn.disabled = true;
+      btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span>${msg || 'SINKRONISASI...'}</span>`;
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = origHTML;
+    }
+  };
+
+  if (!window.CimegaMasterData) {
+    showToast('error', 'Data Master Tidak Ditemukan',
+      'File admin_master_data.js belum termuat. Restart aplikasi.');
+    return;
+  }
+
+  if (!confirm(`⚠️ PERHATIAN!\n\nSemua data ${mode === 'adm' ? 'Kategori & Administrasi' : 'Template AI'} akan DITIMPA ke Firestore & Supabase dengan data master terbaru.\n\nLanjutkan?`)) return;
+
+  // ══════════════════════════════════
+  // MODE ADM: Sinkronisasi 80 Kategori (role-spesifik)
+  // ══════════════════════════════════
+  if (mode === 'adm') {
+    setSyncState(true, 'MENYINKRONKAN KATEGORI...');
+    const MASTER_KATEGORI = window.CimegaMasterData.KATEGORI;
+    try {
+      // Push ke Firestore (timpa penuh — no merge)
+      await Promise.all(MASTER_KATEGORI.map(k =>
+        setDoc(doc(db, 'kategori', k.id), {
+          nama: k.nama, icon: k.icon, urutan: k.urutan,
+          visibleTo: k.visibleTo, deskripsi: k.deskripsi || '',
+          updatedAt: serverTimestamp()
+        })
+      ));
+      showToast('success', 'Firestore ✓', `${MASTER_KATEGORI.length} kategori berhasil ditimpa`);
+
+      // Push ke Supabase (best-effort)
+      let sbOk = 0;
+      for (const k of MASTER_KATEGORI) {
+        try { await syncToSupabase('kategori', { ...k }); sbOk++; }
+        catch(e) { console.warn('SB skip:', k.id, e.message); }
+      }
+
+      await loadKategoriList();
+      addLog('MASTER SYNC', `Kategori: ${MASTER_KATEGORI.length} → Firestore ✓  Supabase: ${sbOk}/${MASTER_KATEGORI.length} ✓`);
+      showToast('success', '✅ SINKRON SELESAI',
+        `${MASTER_KATEGORI.length} kategori terdistribusi ke ${[...new Set(MASTER_KATEGORI.flatMap(k => k.visibleTo))].length} role!`);
+    } catch(e) {
+      showToast('error', 'Sinkron Gagal', e.message);
+      console.error('masterSync adm:', e);
+    } finally { setSyncState(false); }
+    return;
+  }
+
+  // ══════════════════════════════════════════════════════
+  // MODE TMP: Sinkronisasi SEMUA Template AI dari Master
+  // Data bersumber dari CimegaMasterData.TEMPLATES
+  // ══════════════════════════════════════════════════════
+  if (mode === 'tmp') {
+    setSyncState(true, 'MENYINKRONKAN TEMPLATE...');
+    const MASTER_TEMPLATES = window.CimegaMasterData.TEMPLATES;
+
+    if (!MASTER_TEMPLATES || MASTER_TEMPLATES.length === 0) {
+      showToast('warn', 'Data Kosong', 'CimegaMasterData.TEMPLATES kosong.');
+      setSyncState(false); return;
+    }
+
+    let fsOk = 0, sbOk = 0;
+    try {
+      for (const mod of MASTER_TEMPLATES) {
+        // Bangun payload lengkap:
+        const itemsJson = JSON.stringify(mod.items?.map(item => ({
+          id:         item.id,
+          nama:       item.nama,
+          icon:       item.icon,
+          components: item.components,
+          ai_prompt:  item.ai_prompt
+        })) || []);
+
+        const componentsJson = JSON.stringify(mod.items?.[0]?.components || []);
+
+        const payload = {
+          id:          mod.id,
+          nama:        mod.nama,
+          role:        mod.role,
+          kategori:    mod.kategori,
+          icon:        mod.icon || '📝',
+          desc:        mod.desc || '',
+          // Prompt ringkas dari fase pertama
+          ai_prompt:   mod.items?.[0]?.ai_prompt || '',
+          // Semua fase/items dalam 1 JSON
+          items:       itemsJson,
+          // Components fase pertama
+          components:  componentsJson,
+          syncedAt:    new Date().toISOString(),
+          updatedAt:   serverTimestamp()
+        };
+
+        // Firestore (timpa penuh)
+        await setDoc(doc(db, 'admin_templates', mod.id), payload);
+        fsOk++;
+
+        // Supabase (best-effort)
+        try { await syncToSupabase('admin_templates', payload); sbOk++; }
+        catch(sbErr) { console.warn('SB template skip:', mod.id, sbErr.message); }
+      }
+
+      loadTemplates();
+      addLog('MASTER SYNC', `Template AI: ${fsOk} template → Firestore ✓  Supabase: ${sbOk}/${fsOk} ✓`);
+      showToast('success', '✅ SINKRON TEMPLATE SELESAI',
+        `${fsOk} template AI (12 role) → Firestore ✓  Supabase: ${sbOk}/${fsOk}`);
+    } catch(e) {
+      showToast('error', 'Sinkron Template Gagal', e.message);
+      console.error('masterSync tmp:', e);
+    } finally { setSyncState(false); }
+    return;
+  }
 }
 
 // ── Modal Konten ──────────────────────────────────────────
@@ -2061,22 +2448,27 @@ async function initApp(){
     try {
       const katSnap = await getDocs(collection(db, 'kategori'));
       if (katSnap.empty) {
-        console.log('⚠️ Kategori Firestore kosong — auto-seed 8 kategori...');
+        console.log('⚠️ Kategori Firestore kosong — auto-seed 13 kategori untuk 12 role...');
         const defaultKat = [
-          { id:'adm_guru',   nama:'Administrasi Guru & Pembelajaran', icon:'📚', urutan:1, visibleTo:['guru','kepsek'] },
-          { id:'adm_kepsek', nama:'Administrasi Kepala Sekolah',       icon:'🏦', urutan:2, visibleTo:['kepsek'] },
-          { id:'kosp',       nama:'Kurikulum Operasional (KOSP)',       icon:'📖', urutan:3, visibleTo:['guru','kepsek','ops'] },
-          { id:'adm_umum',   nama:'Administrasi Umum Sekolah',          icon:'🏢', urutan:4, visibleTo:['kepsek','ops'] },
-          { id:'keuangan',   nama:'Keuangan & BOS',                     icon:'💰', urutan:5, visibleTo:['bendahara','kepsek'] },
-          { id:'evaluasi',   nama:'Evaluasi & Pelaporan',               icon:'📊', urutan:6, visibleTo:['guru','kepsek'] },
-          { id:'perpus',     nama:'Administrasi Perpustakaan',          icon:'📕', urutan:7, visibleTo:['guru','ops'] },
-          { id:'tata_usaha', nama:'Tata Usaha & Surat Menyurat',        icon:'✉️', urutan:8, visibleTo:['ops','kepsek'] },
+          { id:'adm_guru',     nama:'Administrasi Guru & Pembelajaran',         icon:'📚', urutan:1,  visibleTo:['guru','guru_pai','guru_pjok','kepsek'] },
+          { id:'naskah_soal',  nama:'Naskah Soal & Bank Evaluasi',              icon:'📝', urutan:2,  visibleTo:['guru','guru_pai','guru_pjok','kepsek'] },
+          { id:'adm_kepsek',   nama:'Administrasi Kepala Sekolah',              icon:'🏛️', urutan:3,  visibleTo:['kepsek'] },
+          { id:'kosp',         nama:'Kurikulum Operasional (KOSP)',              icon:'📖', urutan:4,  visibleTo:['guru','guru_pai','guru_pjok','kepsek','ops'] },
+          { id:'adm_umum',     nama:'Administrasi Umum Sekolah',                icon:'🏢', urutan:5,  visibleTo:['kepsek','ops','tu'] },
+          { id:'keuangan',     nama:'Keuangan & BOS',                           icon:'💰', urutan:6,  visibleTo:['bendahara','kepsek'] },
+          { id:'evaluasi',     nama:'Evaluasi & Pelaporan',                     icon:'📊', urutan:7,  visibleTo:['guru','guru_pai','guru_pjok','kepsek'] },
+          { id:'perpus',       nama:'Administrasi Perpustakaan',                icon:'📕', urutan:8,  visibleTo:['pustakawan','guru','ops','kepsek'] },
+          { id:'tata_usaha',   nama:'Tata Usaha & Surat Menyurat',              icon:'✉️', urutan:9,  visibleTo:['tu','ops','kepsek'] },
+          { id:'adm_gpk',      nama:'Program Inklusif & Pembelajaran GPK',      icon:'♿', urutan:10, visibleTo:['gpk','kepsek'] },
+          { id:'adm_ekskul',   nama:'Ekstrakurikuler & Pembinaan Siswa',        icon:'🎭', urutan:11, visibleTo:['ekskul','kepsek'] },
+          { id:'kokurikuler',  nama:'Program Kokurikuler & P5',                 icon:'🎯', urutan:12, visibleTo:['koordinator','fasilitator','kepsek','guru'] },
+          { id:'adm_uks_pjok', nama:'UKS, Kesehatan & Kebugaran (PJOK)',        icon:'⚽', urutan:13, visibleTo:['guru_pjok','kepsek','ops'] },
         ];
         await Promise.all(defaultKat.map(k =>
           setDoc(doc(db,'kategori',k.id), { nama:k.nama, icon:k.icon, urutan:k.urutan, visibleTo:k.visibleTo, deskripsi:'', createdAt:serverTimestamp() })
         ));
-        console.log('✅ Auto-Seed: 8 kategori berhasil ditanam');
-        showToast('success', 'Kategori Diseed', '8 kategori Kurikulum Merdeka ditambahkan');
+        console.log('✅ Auto-Seed: 13 kategori untuk 12 role berhasil ditanam');
+        showToast('success', 'Kategori Diseed', '13 kategori untuk semua jabatan ditambahkan');
       }
     } catch(e) { console.warn('Auto-seed skip:', e.message); }
 
@@ -2155,5 +2547,17 @@ initApp();
 
   <script src="../../modules/admin/oversight.js"></script>
   <script src="../../modules/admin/cloud_drive.js"></script>
+
+  <!-- ██ MODUL EVALUASI NASKAH SOAL — Diperlukan untuk importDefaultTemplates() ██ -->
+  <!-- Guru Kelas -->
+  <script src="../../modules/guru/evaluasi_naskah_soal.js"></script>
+  <!-- Guru PAI -->
+  <script src="../../modules/guru_pai/evaluasi_naskah_soal_pai.js"></script>
+  <!-- Guru PJOK -->
+  <script src="../../modules/guru_pjok/evaluasi_naskah_soal_pjok.js"></script>
+
+  <!-- ██ ADMIN MASTER DATA — Sumber Kebenaran utama untuk masterSync() ██ -->
+  <!-- File ini berisi SEMUA kategori + template AI dari SEMUA 12 role      -->
+  <script src="../../modules/admin/admin_master_data.js"></script>
 </body>
 </html>

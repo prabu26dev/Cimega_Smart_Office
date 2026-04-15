@@ -42,24 +42,44 @@ function filterAiTabsByRole() {
 
 // ── Kategori meta ──────────────────────────
 const katMeta = {
-  adm_guru: { icon: '📚', title: 'Administrasi Guru & Pembelajaran', desc: 'RPP, Modul Ajar, Penilaian, Jurnal' },
-  adm_kepsek: { icon: '🏛️', title: 'Administrasi Kepala Sekolah', desc: 'Tugas Pokok, Supervisi, Manajerial, Humas' },
-  kosp: { icon: '📋', title: 'Kurikulum Operasional Satuan Pendidikan', desc: 'Karakteristik, Visi Misi, Perencanaan' },
-  adm_umum: { icon: '🏫', title: 'Administrasi Umum Sekolah', desc: 'SK, Inventaris, Jadwal, Tata Tertib' },
-  keuangan: { icon: '💰', title: 'Keuangan & BOS', desc: 'Laporan BOS, RKAS, BKU, LPJ, Nota' },
-  evaluasi: { icon: '📊', title: 'Evaluasi & Pelaporan Sekolah', desc: 'EDS, Akreditasi, Supervisi, Monev' },
-  perpus: { icon: '📖', title: 'Administrasi Perpustakaan Lengkap', desc: 'Keanggotaan, Peminjaman, Keuangan' },
+  adm_guru:     { icon: '📚', title: 'Administrasi Guru & Pembelajaran', desc: 'RPP, Modul Ajar, Penilaian, Jurnal' },
+  naskah_soal:  { icon: '📝', title: 'Naskah Soal & Bank Evaluasi',      desc: 'Kisi-Kisi, Soal HOTS, Rubrik, Analisis Butir' },
+  adm_kepsek:   { icon: '🏛️', title: 'Administrasi Kepala Sekolah',      desc: 'Tugas Pokok, Supervisi, Manajerial, Humas' },
+  kosp:         { icon: '📋', title: 'Kurikulum Operasional (KOSP)',      desc: 'Karakteristik, Visi Misi, Perencanaan' },
+  adm_umum:     { icon: '🏫', title: 'Administrasi Umum Sekolah',         desc: 'SK, Inventaris, Jadwal, Tata Tertib' },
+  keuangan:     { icon: '💰', title: 'Keuangan & BOS',                    desc: 'Laporan BOS, RKAS, BKU, LPJ, Nota' },
+  evaluasi:     { icon: '📊', title: 'Evaluasi & Pelaporan Sekolah',      desc: 'EDS, Akreditasi, Supervisi, Monev' },
+  perpus:       { icon: '📖', title: 'Administrasi Perpustakaan Lengkap', desc: 'Keanggotaan, Peminjaman, Keuangan' },
+  tata_usaha:   { icon: '✉️', title: 'Tata Usaha & Surat Menyurat',       desc: 'SK, Surat Dinas, Arsip, Agenda' },
+  adm_gpk:      { icon: '♿', title: 'Program Inklusif & Pembelajaran GPK', desc: 'PPI, Asesmen Kebutuhan, Laporan Perkembangan' },
+  adm_ekskul:   { icon: '🎭', title: 'Ekstrakurikuler & Pembinaan Siswa', desc: 'Program Ekskul, Absensi, Prestasi' },
+  kokurikuler:  { icon: '🎯', title: 'Program Kokurikuler & P5',          desc: 'Projek P5, Dokumentasi, Laporan Kokurikuler' },
+  adm_uks_pjok: { icon: '⚽', title: 'UKS, Kesehatan & Kebugaran (PJOK)',   desc: 'Data Kesehatan, Program UKS, Kebugaran Siswa' },
 };
 
 // Kategori per role — urutan standar global
+// Catatan: visibleTo dari Firestore akan menjadi sumber kebenaran utama.
+// Ini hanya fallback jika Firestore belum diisi.
 const katByRole = {
-  guru: ['adm_guru', 'adm_umum', 'evaluasi', 'perpus'],
-  kepsek: ['adm_guru', 'adm_kepsek', 'kosp', 'adm_umum', 'keuangan', 'evaluasi', 'perpus'],
-  bendahara: ['keuangan', 'evaluasi'],
-  ops: ['adm_umum', 'keuangan', 'evaluasi', 'perpus'],
+  guru:        ['adm_guru', 'naskah_soal', 'kosp', 'evaluasi', 'perpus'],
+  guru_pai:    ['adm_guru', 'naskah_soal', 'kosp', 'evaluasi'],
+  guru_pjok:   ['adm_guru', 'naskah_soal', 'kosp', 'evaluasi', 'adm_uks_pjok'],
+  kepsek:      ['adm_guru', 'naskah_soal', 'adm_kepsek', 'kosp', 'adm_umum', 'keuangan', 'evaluasi', 'perpus', 'tata_usaha', 'adm_gpk', 'adm_ekskul', 'kokurikuler', 'adm_uks_pjok'],
+  bendahara:   ['keuangan', 'evaluasi'],
+  ops:         ['adm_umum', 'kosp', 'keuangan', 'evaluasi', 'perpus', 'tata_usaha'],
+  tu:          ['adm_umum', 'tata_usaha'],
+  pustakawan:  ['perpus', 'evaluasi'],
+  gpk:         ['adm_gpk', 'evaluasi'],
+  ekskul:      ['adm_ekskul', 'evaluasi'],
+  koordinator: ['kokurikuler', 'adm_guru', 'evaluasi'],
+  fasilitator: ['kokurikuler', 'adm_guru', 'evaluasi'],
 };
 
-const KAT_ORDER = ['adm_guru', 'adm_kepsek', 'kosp', 'adm_umum', 'keuangan', 'evaluasi', 'perpus'];
+const KAT_ORDER = [
+  'adm_guru', 'naskah_soal', 'adm_kepsek', 'kosp',
+  'adm_umum', 'keuangan', 'evaluasi', 'perpus',
+  'tata_usaha', 'adm_gpk', 'adm_ekskul', 'kokurikuler', 'adm_uks_pjok'
+];
 
 function getOrderedKats(roles) {
   const merged = new Set();
@@ -303,10 +323,18 @@ function setupUser() {
   if (elSidebarSekolah) elSidebarSekolah.textContent = userData.sekolah || '-';
 
   const roleMap = {
-    guru: { cls: 'role-guru', label: '👨‍🏫 Guru' },
-    kepsek: { cls: 'role-kepsek', label: '🏛️ Kepsek' },
-    bendahara: { cls: 'role-bendahara', label: '💰 Bendahara' },
-    ops: { cls: 'role-ops', label: '💻 Operator' },
+    guru:        { cls: 'role-guru',      label: '👨‍🏫 Guru Kelas' },
+    guru_pai:    { cls: 'role-guru',      label: '🕌 Guru PAI' },
+    guru_pjok:   { cls: 'role-guru',      label: '🏃 Guru PJOK' },
+    kepsek:      { cls: 'role-kepsek',    label: '🏛️ Kepala Sekolah' },
+    bendahara:   { cls: 'role-bendahara', label: '💰 Bendahara' },
+    ops:         { cls: 'role-ops',       label: '💻 Operator' },
+    tu:          { cls: 'role-ops',       label: '🗂️ Tata Usaha' },
+    pustakawan:  { cls: 'role-guru',      label: '📚 Pustakawan' },
+    gpk:         { cls: 'role-guru',      label: '♿ GPK Inklusif' },
+    ekskul:      { cls: 'role-guru',      label: '🎭 Pembina Ekskul' },
+    koordinator: { cls: 'role-kepsek',   label: '🎯 Koordinator Kokurikuler' },
+    fasilitator: { cls: 'role-guru',      label: '🌱 Fasilitator Kokurikuler' },
   };
   
   const rb = document.getElementById('sidebarRole');

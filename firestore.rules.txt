@@ -2,113 +2,293 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ── HELPER FUNCTIONS ──────────────────────────────────
-    
+
+    // ══════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS
+    // ══════════════════════════════════════════════════════════
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     function isAdmin() {
-      return isAuthenticated() && (getUserData().role == 'admin' || getUserData().roles.hasAny(['admin']));
+      return isAuthenticated() && (
+        getUserData().role == 'admin' || 
+        getUserData().roles.hasAny(['admin'])
+      );
     }
 
     function isRole(roleName) {
-      return isAuthenticated() && (getUserData().role == roleName || getUserData().roles.hasAny([roleName]));
+      return isAuthenticated() && (
+        getUserData().role == roleName || 
+        getUserData().roles.hasAny([roleName])
+      );
     }
 
     function isOpsOrAdmin() {
       return isAdmin() || isRole('ops');
     }
 
-    // ── COLLECTIONS ───────────────────────────────────────
-
-    // USERS: Admin can manage all; Users can read all (to see names/schools) but only edit self (limited).
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin() || request.auth.uid == userId;
+    function isBendaharaOrAdmin() {
+      return isAdmin() || isRole('bendahara');
     }
 
-    // SEKOLAH: Admin can manage; All authenticated can read.
+    function isKepsekOrAdmin() {
+      return isAdmin() || isRole('kepsek');
+    }
+
+    // Cek apakah user adalah salah satu dari 12 role yang valid
+    function isValidRole() {
+      return isAuthenticated() && getUserData().roles.hasAny([
+        'guru', 'guru_pai', 'guru_pjok',
+        'kepsek', 'bendahara', 'ops',
+        'tu', 'gpk', 'ekskul',
+        'koordinator', 'fasilitator', 'pustakawan',
+        'admin'
+      ]);
+    }
+
+    // Cek apakah user satu sekolah dengan dokumen
+    function isSameSchool(resourceData) {
+      return getUserData().school_id == resourceData.school_id;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // USER & SEKOLAH MANAGEMENT
+    // ══════════════════════════════════════════════════════════
+
+    // USERS: Admin kelola semua; User baca semua (untuk lihat nama/sekolah); 
+    //        User hanya edit dirinya sendiri (update presence/last_seen)
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || request.auth.uid == userId;
+      allow delete: if isAdmin();
+    }
+
+    // SEKOLAH: Admin kelola; semua user terautentikasi bisa baca
     match /sekolah/{sekolahId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
 
-    // KATEGORI & KONTEN (Administrasi)
-    // Admin can manage everything.
-    // Users can read if the category/content is visible to their role.
+    // ══════════════════════════════════════════════════════════
+    // ADMINISTRASI & KATEGORI (Role-Based)
+    // ══════════════════════════════════════════════════════════
+
+    // KATEGORI: Admin kelola; user baca jika role mereka ada di visibleTo
     match /kategori/{katId} {
-      allow read: if isAuthenticated() && (isAdmin() || getUserData().roles.hasAny(resource.data.visibleTo));
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.visibleTo == null || 
+        getUserData().roles.hasAny(resource.data.visibleTo)
+      );
       allow write: if isAdmin();
     }
 
+    // KONTEN ADMINISTRASI: Sama dengan kategori
     match /konten/{kontenId} {
-      allow read: if isAuthenticated() && (isAdmin() || getUserData().roles.hasAny(resource.data.visibleTo));
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.visibleTo == null || 
+        getUserData().roles.hasAny(resource.data.visibleTo)
+      );
       allow write: if isAdmin();
     }
 
-    // ADMIN TEMPLATES (AI)
+    // ══════════════════════════════════════════════════════════
+    // ADMIN TEMPLATES (AI Prompt Templates)
+    // ══════════════════════════════════════════════════════════
+
     match /admin_templates/{tmpId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
 
-    // MUSIC (BGM)
-    match /app_music/{musicId} {
-      allow read: if true; // Publicly readable for BGM
-      allow write: if isAdmin();
+    // ══════════════════════════════════════════════════════════
+    // DOKUMEN KERJA PER MODUL (dibuat oleh user sesuai role)
+    // ══════════════════════════════════════════════════════════
+
+    // PERENCANAAN (Guru, Koordinator, Fasilitator)
+    match /perencanaan/{docId} {
+      allow read: if isAuthenticated() && (isAdmin() || isSameSchool(resource.data));
+      allow create: if isAuthenticated() && isValidRole();
+      allow update, delete: if isAuthenticated() && (
+        isAdmin() || resource.data.teacher_id == request.auth.uid
+      );
     }
 
-    // CONFIG & UPDATES
-    match /appConfig/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    match /updateHistory/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-
-    // NOTIFICATIONS
-    match /notifications/{notifId} {
-      allow read: if isAuthenticated() && (resource.data.target == 'all' || isRole(resource.data.target) || isAdmin());
-      allow write: if isAdmin();
+    // ASESMEN & PENILAIAN (Guru semua jenis)
+    match /asesmen/{docId} {
+      allow read: if isAuthenticated() && (isAdmin() || isSameSchool(resource.data));
+      allow create: if isAuthenticated() && (
+        isRole('guru') || isRole('guru_pai') || isRole('guru_pjok') || isAdmin()
+      );
+      allow update, delete: if isAuthenticated() && (
+        isAdmin() || resource.data.teacher_id == request.auth.uid
+      );
     }
 
-    // LOGS
-    match /adminLog/{logId} {
-      allow create: if isAuthenticated(); // Allow logging from app
-      allow read, update, delete: if isAdmin();
+    // PELAKSANAAN / JURNAL (Guru semua jenis, Fasilitator)
+    match /pelaksanaan/{docId} {
+      allow read: if isAuthenticated() && (isAdmin() || isSameSchool(resource.data));
+      allow create: if isAuthenticated() && (
+        isRole('guru') || isRole('guru_pai') || isRole('guru_pjok') || 
+        isRole('fasilitator') || isAdmin()
+      );
+      allow update, delete: if isAuthenticated() && (
+        isAdmin() || resource.data.teacher_id == request.auth.uid
+      );
     }
 
-    // ── MODULE BASED RULES (Legacy/Extensions) ───────────
-    
+    // ARSIP MAKRO / KELEMBAGAAN (Kepsek, TU, Ops)
+    match /arsip_makro/{docId} {
+      allow read: if isAuthenticated() && (isAdmin() || isSameSchool(resource.data));
+      allow create: if isAuthenticated() && (
+        isKepsekOrAdmin() || isRole('ops') || isRole('tu')
+      );
+      allow update, delete: if isKepsekOrAdmin() || isRole('tu');
+    }
+
+    // KEUANGAN (Bendahara, Kepsek)
+    match /keuangan/{docId} {
+      allow read: if isBendaharaOrAdmin() || isKepsekOrAdmin();
+      allow write: if isBendaharaOrAdmin();
+    }
+
+    // STUDENTS / DATA SISWA (Ops, Wali Kelas/Guru, GPK)
     match /students/{studentId} {
       allow read: if isAuthenticated();
-      allow write: if isOpsOrAdmin();
+      allow create: if isOpsOrAdmin() || isRole('gpk');
+      allow update: if isOpsOrAdmin() || isRole('guru') || isRole('gpk');
+      allow delete: if isOpsOrAdmin();
     }
 
+    // PTK / DATA GURU (Ops, Admin)
     match /ptk/{ptkId} {
       allow read: if isAuthenticated();
       allow write: if isOpsOrAdmin();
     }
 
-    match /keuangan/{docId} {
-      allow read, write: if isAdmin() || isRole('bendahara') || isRole('kepsek');
+    // GPK / INKLUSI (GPK, Kepsek, Admin)
+    match /gpk_data/{docId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || isRole('gpk') || isKepsekOrAdmin()
+      );
+      allow create, update: if isRole('gpk') || isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // GLOBAL CATCH-ALL (DISABLED IN PRODUCTION)
-    // Currently set to allow read if authenticated for stability, but write is strictly for Admin.
-    match /{document=**} {
+    // EKSKUL (Pembina Ekskul, Koordinator, Admin)
+    match /ekskul_data/{docId} {
+      allow read: if isAuthenticated() && (isAdmin() || isSameSchool(resource.data));
+      allow create, update: if isRole('ekskul') || isRole('koordinator') || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // PERPUSTAKAAN (Pustakawan, Admin)
+    match /perpustakaan/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isRole('pustakawan') || isAdmin();
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // KOMUNIKASI & KOLABORASI
+    // ══════════════════════════════════════════════════════════
+
+    // CHAT SEKOLAH (E2E encrypted — semua user serekolah)
+    match /chats/{chatId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || resource.data.school_id == getUserData().school_id
+      );
+      allow create: if isAuthenticated() && isValidRole();
+      // Hanya boleh update pesan milik sendiri (soft-delete flag)
+      allow update: if isAuthenticated() && (
+        isAdmin() || resource.data.sender_id == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    // SHARED DOCS (Dokumen dibagikan antar user serekolah)
+    match /shared_docs/{docId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.sender_id == request.auth.uid ||
+        resource.data.recipient_id == request.auth.uid
+      );
+      allow create: if isAuthenticated() && isValidRole();
+      allow update: if isAuthenticated() && (
+        isAdmin() || resource.data.recipient_id == request.auth.uid
+      );
+      allow delete: if isAdmin() || resource.data.sender_id == request.auth.uid;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // CLOUD DRIVE & STORAGE METADATA
+    // ══════════════════════════════════════════════════════════
+
+    // CLOUD FILES METADATA (metadata di Firestore, file di Supabase Storage)
+    match /cloud_files/{fileId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || resource.data.school_id == getUserData().school_id
+      );
+      allow create: if isAuthenticated() && isValidRole();
+      allow delete: if isAuthenticated() && (
+        isAdmin() || resource.data.uploader_id == request.auth.uid
+      );
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // SISTEM & KONFIGURASI
+    // ══════════════════════════════════════════════════════════
+
+    // MUSIK BGM
+    match /app_music/{musicId} {
+      allow read: if true; // Publik untuk autoplay BGM
+      allow write: if isAdmin();
+    }
+
+    // APP CONFIG & VERSI UPDATE
+    match /appConfig/{docId} {
+      allow read: if true; // Publik agar login page bisa cek versi
+      allow write: if isAdmin();
+    }
+
+    match /updateHistory/{docId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
+
+    // NOTIFIKASI
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && (
+        resource.data.target == 'all' || 
+        isRole(resource.data.target) || 
+        isAdmin()
+      );
+      allow write: if isAdmin();
+    }
+
+    // LOG ADMIN
+    match /adminLog/{logId} {
+      allow create: if isAuthenticated(); // Semua user bisa nulis log
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // CATCH-ALL: Fallback keamanan — LEBIH KETAT dari sebelumnya
+    // ══════════════════════════════════════════════════════════
+    // Koleksi yang belum punya rule eksplisit:
+    // - Read: hanya jika terautentikasi DAN punya role valid
+    // - Write: hanya Admin
+    match /{document=**} {
+      allow read: if isAuthenticated() && isValidRole();
+      allow write: if isAdmin();
+    }
+
   }
 }
-

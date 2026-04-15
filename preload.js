@@ -1,5 +1,5 @@
 // ============================================================
-// CIMEGA SMART OFFICE — preload.js (v4.1 STABLE)
+// CIMEGA SMART OFFICE — preload.js (v5.0 STABLE)
 // sandbox: false di main.js → require() bekerja di preload
 //
 // ARSITEKTUR:
@@ -18,10 +18,10 @@ const fs   = require('fs');
 try {
   // dotenv tersedia di node_modules (sudah terpasang bersama firebase-admin)
   require('dotenv').config({ path: require('path').join(__dirname, '.env') });
-  console.log('✅ PRELOAD v4.1: dotenv.config() berhasil');
+  console.log('✅ PRELOAD v5.0: dotenv.config() berhasil');
 } catch (_) {
   // dotenv tidak tersedia — fallback ke parsing manual di bawah
-  console.warn('⚠️ PRELOAD v4.1: dotenv tidak tersedia, pakai parser manual');
+  console.warn('⚠️ PRELOAD v5.0: dotenv tidak tersedia, pakai parser manual');
 }
 
 // ── 1. Baca .env dengan fallback manual (jika dotenv tidak lengkap) ────
@@ -44,7 +44,7 @@ for (const ep of envPaths) {
         if (!process.env[key]) process.env[key] = val; // Tidak timpa yang sudah ada
       }
     });
-    console.log(`✅ PRELOAD v4.1: .env (manual fallback) → ${ep}`);
+    console.log(`✅ PRELOAD v5.0: .env (manual fallback) → ${ep}`);
     envLoaded = true;
     break;
   }
@@ -74,7 +74,7 @@ const firebaseConfig = {
 if (!firebaseConfig.apiKey) {
   console.error('❌ PRELOAD FATAL: FIREBASE_API_KEY kosong! Cek .env');
 } else {
-  console.log(`✅ PRELOAD v4.1: Config OK → [${firebaseConfig.projectId}]`);
+  console.log(`✅ PRELOAD v5.0: Config OK → [${firebaseConfig.projectId}]`);
 }
 
 // ── 3. Expose window.cimegaConfig ────────────────────────────
@@ -99,6 +99,9 @@ try {
     getBootStatus:       ()   => ipcRenderer.invoke('get-boot-status'),
     openExternal:        (u)  => ipcRenderer.invoke('open-external', u),
 
+    // ── GEMINI AI (CimegaAI.ask → ai_helper.js) ─────────────────
+    geminiAsk: (payload) => ipcRenderer.invoke('gemini-ask', payload),
+
     // Musik via IPC
     musicInit:           ()   => ipcRenderer.invoke('music-init'),
     musicGetState:       ()   => ipcRenderer.invoke('music-get-state'),
@@ -108,9 +111,19 @@ try {
     onMusicStateChanged: (cb) => ipcRenderer.on('music-state-changed', (_e, d) => cb(d)),
 
     // Daftar file musik lokal dari folder assets_music (via IPC)
-    getMusicList:        ()   => ipcRenderer.invoke('get-music-list'),
+    getMusicList:        ()            => ipcRenderer.invoke('get-music-list'),
+    // ── SIMPAN / HAPUS LOKAL (Upload Musik tanpa cloud) ─────────
+    musicSaveLocal:      (p)           => ipcRenderer.invoke('music-save-local', p),
+    musicDeleteLocal:    (p)           => ipcRenderer.invoke('music-delete-local', p),
+
+    // ── AUTO UPDATER (updater.js) ────────────────────────────────
+    checkGithubUpdate:      (opts) => ipcRenderer.invoke('check-github-update', opts),
+    downloadUpdate:         (opts) => ipcRenderer.invoke('download-update', opts),
+    installUpdate:          (opts) => ipcRenderer.invoke('install-update', opts),
+    onDownloadProgress:     (cb)   => ipcRenderer.on('update-download-progress', (_e, d) => cb(d)),
+    removeDownloadListener: ()     => ipcRenderer.removeAllListeners('update-download-progress'),
   });
-  console.log('✅ PRELOAD v4.1: window.cimegaConfig exposed');
+  console.log('✅ PRELOAD v5.0: window.cimegaConfig exposed');
 } catch (e) {
   console.error('❌ PRELOAD: window.cimegaConfig GAGAL expose:', e.message);
 }
@@ -128,6 +141,12 @@ try {
     }),
     openExternal:      (u) => ipcRenderer.invoke('open-external', u),
     getMusicList:      ()  => ipcRenderer.invoke('get-music-list'),
+    // ── SIMPAN / HAPUS LOKAL ────────────────────────────────────
+    musicSaveLocal:    (p) => ipcRenderer.invoke('music-save-local', p),
+    musicDeleteLocal:  (p) => ipcRenderer.invoke('music-delete-local', p),
+
+    // ── GEMINI AI (dipakai oleh ai_helper.js → CimegaAI.ask) ────
+    geminiAsk: (payload) => ipcRenderer.invoke('gemini-ask', payload),
 
     // Musik wrapper (backward compat dengan music.js v4.0)
     musicInit:           ()   => ipcRenderer.invoke('music-init'),
@@ -135,10 +154,17 @@ try {
     musicPrev:           ()   => ipcRenderer.invoke('music-prev'),
     musicToggleMute:     ()   => ipcRenderer.invoke('music-toggle-mute'),
     onMusicStateChanged: (cb) => ipcRenderer.on('music-state-changed', (_e, d) => cb(d)),
+
+    // ── AUTO UPDATER (dipakai oleh updater.js) ───────────────────
+    checkGithubUpdate:      (opts) => ipcRenderer.invoke('check-github-update', opts),
+    downloadUpdate:         (opts) => ipcRenderer.invoke('download-update', opts),
+    installUpdate:          (opts) => ipcRenderer.invoke('install-update', opts),
+    onDownloadProgress:     (cb)   => ipcRenderer.on('update-download-progress', (_e, d) => cb(d)),
+    removeDownloadListener: ()     => ipcRenderer.removeAllListeners('update-download-progress'),
   });
-  console.log('✅ PRELOAD v4.1: window.cimegaAPI exposed');
+  console.log('✅ PRELOAD v5.0: window.cimegaAPI exposed');
 } catch (e) {
   console.error('❌ PRELOAD: window.cimegaAPI GAGAL expose:', e.message);
 }
 
-console.log('🚀 PRELOAD v4.1: Bridge siap. Firebase SDK → load via CDN di renderer.');
+console.log('🚀 PRELOAD v5.0: Bridge siap. Firebase SDK → load via CDN di renderer. Gemini AI & Auto-Updater IPC aktif.');
