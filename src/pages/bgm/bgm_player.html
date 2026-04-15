@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>BGM_IDLE</title>
+  <style>body { margin:0; background:#000; }</style>
+</head>
+<body>
+  <!-- Audio element -- loaded from file:// origin sehingga file:// audio bisa diputar -->
+  <audio id="bgm" preload="auto"></audio>
+  <script>
+    var bgm = document.getElementById('bgm');
+    window._bgm = bgm; // Expose ke main.js untuk cek isPlaying via executeJavaScript
+
+    bgm.onended = function() {
+      document.title = 'BGM_ENDED_' + Date.now();
+    };
+
+    bgm.onerror = function() {
+      var code = bgm.error ? bgm.error.code : '?';
+      console.error('[BGM] Audio error code ' + code + ' | src: ' + bgm.src);
+      setTimeout(function() {
+        document.title = 'BGM_ENDED_' + Date.now();
+      }, 500);
+    };
+
+    // Dipanggil dari main.js via executeJavaScript
+    window.playSong = function(fileUrl, volume) {
+      bgm.pause();
+      bgm.removeAttribute('src');
+      bgm.load();
+      bgm.src    = fileUrl;
+      bgm.volume = typeof volume === 'number' ? volume : 0.8;
+      bgm.load();
+      var promise = bgm.play();
+      if (promise && promise.catch) {
+        promise.catch(function(e) {
+          console.error('[BGM] play() rejected:', e.name, e.message);
+          setTimeout(function() {
+            document.title = 'BGM_ENDED_' + Date.now();
+          }, 500);
+        });
+      }
+    };
+
+    window.setVolume = function(v) {
+      bgm.volume = v;
+    };
+
+    window.isPaused = function() {
+      return bgm.paused;
+    };
+  </script>
+</body>
+</html>

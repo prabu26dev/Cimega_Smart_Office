@@ -112,9 +112,10 @@ try {
 
     // Daftar file musik lokal dari folder assets_music (via IPC)
     getMusicList:        ()            => ipcRenderer.invoke('get-music-list'),
-    // ── SIMPAN / HAPUS LOKAL (Upload Musik tanpa cloud) ─────────
+    // ── SIMPAN / HAPUS / BACA LOKAL (Upload Musik tanpa cloud) ──
     musicSaveLocal:      (p)           => ipcRenderer.invoke('music-save-local', p),
     musicDeleteLocal:    (p)           => ipcRenderer.invoke('music-delete-local', p),
+    musicReadFile:       (p)           => ipcRenderer.invoke('music-read-file', p),
 
     // ── AUTO UPDATER (updater.js) ────────────────────────────────
     checkGithubUpdate:      (opts) => ipcRenderer.invoke('check-github-update', opts),
@@ -146,9 +147,10 @@ try {
     }),
     openExternal:      (u) => ipcRenderer.invoke('open-external', u),
     getMusicList:      ()  => ipcRenderer.invoke('get-music-list'),
-    // ── SIMPAN / HAPUS LOKAL ────────────────────────────────────
+    // ── SIMPAN / HAPUS / BACA LOKAL ──────────────────────────────
     musicSaveLocal:    (p) => ipcRenderer.invoke('music-save-local', p),
     musicDeleteLocal:  (p) => ipcRenderer.invoke('music-delete-local', p),
+    musicReadFile:     (p) => ipcRenderer.invoke('music-read-file', p),
 
     // ── GEMINI AI (dipakai oleh ai_helper.js → CimegaAI.ask) ────
     geminiAsk: (payload) => ipcRenderer.invoke('gemini-ask', payload),

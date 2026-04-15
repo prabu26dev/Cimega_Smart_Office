@@ -52,17 +52,22 @@ try {
   console.error('[ERROR] AI Service:', err.message);
 }
 
-// ── Musik state (Hybrid: Lokal + Firestore) ────────────
-let musicFiles = []; // Diisi dari assets_music lokal dulu
-const musicState = {
-  index:    0,
-  muted:    false,
-  position: 0,
-};
+// ── Musik state (Lokal) ──────────────────────────────────
+let musicFiles = []; // SELALU dari assets_music (lokal)
+const musicState = { index: 0, muted: false };
 
-// ── Shuffle Queue (Fisher-Yates) ──────────────────────
-// Pastikan semua lagu diputar acak sebelum mengulang
-let _shuffleQueue = []; // Antrian index acak
+// ── Shuffle Queue (Fisher-Yates infinite) ────────────────────
+let _shuffleQueue = [];
+let _bgmSkipCount = 0;
+const BGM_MAX_SKIP = 15;
+
+function sortMusicFiles(arr) {
+  return arr.slice().sort((a, b) => {
+    const tA = (a.title || a.id || '').toLowerCase();
+    const tB = (b.title || b.id || '').toLowerCase();
+    return tA < tB ? -1 : tA > tB ? 1 : 0;
+  });
+}
 
 function buildShuffleQueue() {
   if (musicFiles.length === 0) return;
@@ -72,43 +77,31 @@ function buildShuffleQueue() {
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
   _shuffleQueue = indices;
-  // Log dihapus — terlalu verbose saat banyak window membuka musik
+  _bgmSkipCount = 0;
 }
 
 function getNextShuffleIndex() {
   if (musicFiles.length === 0) return 0;
-  // Jika queue habis → auto rebuild shuffle baru (infinite loop)
   if (_shuffleQueue.length === 0) buildShuffleQueue();
-  
-  // Jika masih kosong setelah rebuild (misal musicFiles kosong), return 0
   if (_shuffleQueue.length === 0) return 0;
-  
-  const nextIdx = _shuffleQueue.shift();
-  // Update global index agar UI sinkron
-  musicState.index = nextIdx;
-  return nextIdx;
+  musicState.index = _shuffleQueue.shift();
+  return musicState.index;
 }
 
-// ── 1. Baca file lokal terlebih dahulu (sinkron, pasti tersedia) ──
-function sortMusicFiles(arr) {
-  return arr.sort(function(a, b) {
-    var tA = (a.title || a.id || '').toLowerCase();
-    var tB = (b.title || b.id || '').toLowerCase();
-    return tA < tB ? -1 : tA > tB ? 1 : 0;
-  });
-}
-
+// ── Baca file lokal dari assets_music (SUMBER UTAMA UNTUK BGM) ──
 function loadLocalMusicFiles() {
   try {
     const musicDir = path.join(__dirname, 'assets_music');
-    const raw = fs.readdirSync(musicDir).filter(f => /\.(mp3|ogg|wav|flac|m4a|aac)$/i.test(f));
-    const localFiles = raw.map(f => ({
-      id:    f,
-      title: f.replace(/\.(mp3|ogg|wav|flac|m4a|aac)$/i, '').trim(),
-      url:   url.pathToFileURL(path.join(__dirname, 'assets_music', f)).href,
-    }));
-    if (localFiles.length > 0) {
-      musicFiles = sortMusicFiles(localFiles);
+    if (!fs.existsSync(musicDir)) return;
+    const files = fs.readdirSync(musicDir)
+      .filter(f => /\.(mp3|ogg|wav|flac|m4a|aac)$/i.test(f));
+    if (files.length > 0) {
+      musicFiles = sortMusicFiles(files.map(f => ({
+        id:    f,
+        title: f.replace(/\.(mp3|ogg|wav|flac|m4a|aac)$/i, '').trim(),
+        // Absolute file:// URL — WAJIB untuk bgm_player.html (same-origin file://)
+        url:   url.pathToFileURL(path.join(__dirname, 'assets_music', f)).href,
+      })));
     }
   } catch (e) {
     console.warn('[WARN] loadLocalMusicFiles:', e.message);
@@ -116,38 +109,21 @@ function loadLocalMusicFiles() {
 }
 loadLocalMusicFiles();
 
-// ── 2. Sync Firestore (debounced, non-blocking) ──────────
+// ── Firestore sync: hanya update metadata/list di cloud ─────
+// TIDAK menggantikan musicFiles untuk playback — BGM selalu lokal
 let _musicSyncDebounce = null;
-
 function syncMusicFromFirestore() {
   try {
     db.collection('app_music').where('status', '==', 'active').onSnapshot(snap => {
       if (_musicSyncDebounce) clearTimeout(_musicSyncDebounce);
       _musicSyncDebounce = setTimeout(() => {
-        const cloudFiles = [];
-        snap.forEach(doc => {
-          const data = doc.data();
-          if (data.audioUrl) {
-            cloudFiles.push({ id: doc.id, title: data.title || doc.id, url: data.audioUrl });
-          }
-        });
-
-        if (cloudFiles.length > 0) {
-          const sorted  = sortMusicFiles(cloudFiles);
-          const changed = sorted.length !== musicFiles.length
-            || (sorted[0] && musicFiles[0] && sorted[0].id !== musicFiles[0].id);
-          if (changed) {
-            musicFiles = sorted;
-            buildShuffleQueue();
-            if (musicState.index >= musicFiles.length) musicState.index = 0;
-            broadcastMusicState();
-          }
-        } else {
-          if (musicFiles.length === 0) {
-            loadLocalMusicFiles();
-            buildShuffleQueue();
-            broadcastMusicState();
-          }
+        // Hanya reload lokal jika jumlah lagu berubah (file ditambah/hapus via Sinkron)
+        const prevCount = musicFiles.length;
+        loadLocalMusicFiles();
+        if (musicFiles.length !== prevCount) {
+          buildShuffleQueue();
+          if (musicState.index >= musicFiles.length) musicState.index = 0;
+          broadcastMusicState();
         }
       }, 1500);
     }, err => {
@@ -159,9 +135,8 @@ function syncMusicFromFirestore() {
 }
 syncMusicFromFirestore();
 
-// ── Update state ───────────────────────────
-let updateInfo = null; // simpan info update yang tersedia
-
+// ── Update state ─────────────────────────────────────────────
+let updateInfo   = null;
 let mainWindow;
 let bgMusicWindow = null;
 
@@ -170,21 +145,32 @@ function createBgMusicWindow() {
   bgMusicWindow = new BrowserWindow({
     show: false,
     webPreferences: {
+      // webSecurity: false agar audio file:// bisa diputar dari halaman file://
       webSecurity:    false,
-      autoplayPolicy: 'no-user-gesture-required'
+      autoplayPolicy: 'no-user-gesture-required',
+      // Tidak perlu preload — bgm_player.html sudah self-contained
     }
   });
-  bgMusicWindow.loadURL('data:text/html,<html><head><title>BGM_IDLE</title></head><body></body></html>');
+
+  // Load dari FILE (bukan data: URL) agar origin = file:// → bisa play file:// audio
+  bgMusicWindow.loadFile(path.join(__dirname, 'src', 'pages', 'bgm', 'bgm_player.html'));
 
   bgMusicWindow.on('page-title-updated', (e, title) => {
     if (title.startsWith('BGM_ENDED')) {
+      _bgmSkipCount++;
+      if (_bgmSkipCount >= BGM_MAX_SKIP) {
+        console.warn('[BGM] Audio gagal dimuat setelah ' + BGM_MAX_SKIP + ' percobaan. Cek folder assets_music.');
+        _bgmSkipCount = 0;
+        return;
+      }
       getNextShuffleIndex();
       playMusicOnBgWindow();
     }
   });
 
   bgMusicWindow.webContents.on('did-finish-load', () => {
-    playMusicOnBgWindow(); // mulai putar tanpa log
+    _bgmSkipCount = 0;
+    playMusicOnBgWindow();
   });
 }
 
@@ -200,42 +186,28 @@ function broadcastMusicState() {
 
 function playMusicOnBgWindow() {
   if (!bgMusicWindow || bgMusicWindow.isDestroyed() || musicFiles.length === 0) return;
-
-  const music    = musicFiles[musicState.index];
-  const audioUrl = music.url.startsWith('http') || music.url.startsWith('file://')
-    ? music.url
-    : url.pathToFileURL(path.join(__dirname, music.url)).href;
-
-  bgMusicWindow.webContents.executeJavaScript(`
-    (function() {
-      if (!window._bgm) {
-        window._bgm = new Audio();
-        window._bgm.onended = () => { document.title = 'BGM_ENDED_' + Date.now(); };
-        window._bgm.onerror = (e) => {
-          console.warn('BGM: File gagal dimuat, skip...', e);
-          setTimeout(() => { document.title = 'BGM_ENDED_' + Date.now(); }, 2000);
-        };
-      }
-      window._bgm.pause();
-      window._bgm.src = ${JSON.stringify(audioUrl)};
-      window._bgm.volume = ${musicState.muted ? 0 : 0.8};
-      window._bgm.load();
-      window._bgm.play().catch(e => {
-        console.error('BGM Play Error:', e.message);
-        setTimeout(() => { document.title = 'BGM_ENDED_' + Date.now(); }, 2000);
-      });
-    })();
-  `).catch(e => console.error('BGM Execute Error:', e));
+  const music = musicFiles[musicState.index];
+  if (!music || !music.url) return;
+  // musicFiles selalu berisi file:// URLs dari loadLocalMusicFiles()
+  const audioUrl = music.url;
+  const volume   = musicState.muted ? 0 : 0.8;
+  bgMusicWindow.webContents
+    .executeJavaScript(`window.playSong && window.playSong(${JSON.stringify(audioUrl)}, ${volume});`)
+    .catch(e => console.error('[ERROR] BGM executeJavaScript:', e.message));
   broadcastMusicState();
 }
 
 function toggleMuteBgWindow(mute) {
   musicState.muted = mute;
-  if (bgMusicWindow) {
-    bgMusicWindow.webContents.executeJavaScript(`if(window._bgm) window._bgm.volume = ${mute ? 0 : 0.8};`);
+  if (bgMusicWindow && !bgMusicWindow.isDestroyed()) {
+    bgMusicWindow.webContents
+      .executeJavaScript(`window.setVolume && window.setVolume(${mute ? 0 : 0.8});`)
+      .catch(() => {});
   }
   broadcastMusicState();
 }
+
+
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -321,9 +293,11 @@ ipcMain.handle('get-app-config', () => ({
 ipcMain.handle('music-init', () => {
   if (!bgMusicWindow) createBgMusicWindow();
 
-  // Guard: jangan rebuild shuffle queue jika sudah ada dan BGM sudah berjalan
-  bgMusicWindow.webContents.executeJavaScript('!!window._bgm && !window._bgm.paused')
-    .then(isPlaying => {
+  // Guard: jangan restart BGM jika sudah ada yang sedang berjalan
+  // Gunakan window.isPaused() yang di-expose oleh bgm_player.html
+  bgMusicWindow.webContents.executeJavaScript(
+    'typeof window.isPaused === "function" ? !window.isPaused() : (!!window._bgm && !!window._bgm.src && !window._bgm.paused)'
+  ).then(isPlaying => {
       if (!isPlaying) {
         // Hanya build shuffle baru jika queue memang kosong
         if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
@@ -560,6 +534,24 @@ ipcMain.handle('music-delete-local', async (e, { fileName }) => {
   }
 });
 
+// ── Baca file musik dari assets_music sebagai buffer (untuk Sinkron ke Cloud) ──
+// Dipakai oleh sinkronMusik() di admin.html — aman tanpa perlu fetch file://
+ipcMain.handle('music-read-file', async (e, { fileName }) => {
+  try {
+    const musicDir = path.join(__dirname, 'assets_music');
+    const filePath  = path.join(musicDir, fileName);
+    if (!fs.existsSync(filePath)) {
+      return { success: false, error: `File tidak ditemukan: ${fileName}` };
+    }
+    const buffer = fs.readFileSync(filePath);
+    // Kirim sebagai Array agar bisa di-clone via contextBridge (structured clone)
+    return { success: true, data: Array.from(buffer), fileName };
+  } catch (err) {
+    console.error('[ERROR] music-read-file:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
 // ── Daftar musik lokal dari folder assets_music ──────────────
 ipcMain.handle('get-music-list', () => {
   try {
@@ -715,18 +707,18 @@ app.whenReady().then(async () => {
   await seedInitialTemplates(db);
   createWindow();
 
-  // ── Startup Banner (tampil 1x setelah semua siap) ──────────
+  // Startup Banner — tampil 1x setelah semua service siap
   setTimeout(() => {
     const ver  = require('./package.json').version;
     const node = process.versions.node;
-    const line = '─'.repeat(52);
-    console.log(`\n${line}`);
-    console.log(`  CIMEGA SMART OFFICE  v${ver}`);
-    console.log(`  Firebase  : ${firebaseAdminReady ? 'Connected' : 'OFFLINE'}`);
-    console.log(`  Musik     : ${musicFiles.length} lagu dimuat`);
-    console.log(`  Node.js   : v${node}  |  Electron: v${process.versions.electron}`);
-    console.log(`${line}\n`);
-  }, 2000); // Tunggu semua service selesai init
+    const sep  = '='.repeat(52);
+    console.log('\n' + sep);
+    console.log('  CIMEGA SMART OFFICE  v' + ver);
+    console.log('  Firebase  : ' + (firebaseAdminReady ? 'Connected' : 'OFFLINE'));
+    console.log('  Musik     : ' + musicFiles.length + ' lagu siap diputar');
+    console.log('  Node.js   : v' + node + '  |  Electron: v' + process.versions.electron);
+    console.log(sep + '\n');
+  }, 2000);
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

@@ -1493,11 +1493,19 @@ async function sinkronMusik() {
       }
 
       try {
-        // 1. Baca file dari lokal via fetch (Electron file:// protocol)
-        const filePath = `../../assets_music/${encodeURIComponent(fileName)}`;
-        const resp = await fetch(filePath);
-        if (!resp.ok) throw new Error(`File tidak dapat dibaca: ${fileName}`);
-        const blob = await resp.blob();
+        // 1. Baca file dari lokal via IPC (Node.js fs di Main Process)
+        //    Ini lebih aman & handal daripada fetch(file://) dari renderer
+        //    karena mainWindow punya webSecurity:true yang bisa blokir cross-origin file://
+        const readResult = await api.musicReadFile({ fileName });
+        if (!readResult.success) throw new Error(readResult.error || `Gagal baca file: ${fileName}`);
+        const blob = new Blob([new Uint8Array(readResult.data)], {
+          type: /\.(mp3)$/i.test(fileName) ? 'audio/mpeg'
+              : /\.(ogg)$/i.test(fileName) ? 'audio/ogg'
+              : /\.(wav)$/i.test(fileName) ? 'audio/wav'
+              : /\.(m4a|aac)$/i.test(fileName) ? 'audio/aac'
+              : /\.(flac)$/i.test(fileName) ? 'audio/flac'
+              : 'audio/mpeg'
+        });
 
         // 2. Upload ke Supabase Storage
         const sbPath = `music/${Date.now()}_${fileName.replace(/\s+/g, '_')}`;
