@@ -42,7 +42,13 @@ const CimegaMusic = (() => {
   function normalizeItem(item) {
     if (item && typeof item === 'object') return item;
     const clean = String(item);
-    return { id: clean, title: clean, url: 'assets_music/' + clean };
+    // Jika sudah absolut (file:// atau http), jangan tambahkan prefix
+    const isAbsolute = clean.startsWith('file://') || clean.startsWith('http');
+    return {
+      id:    clean,
+      title: clean.replace(/\.(mp3|ogg|wav|flac|m4a|aac)$/i, '').split('/').pop(),
+      url:   isAbsolute ? clean : 'assets_music/' + clean,
+    };
   }
 
   // ── Sort playlist secara alfabetis berdasarkan title ────────

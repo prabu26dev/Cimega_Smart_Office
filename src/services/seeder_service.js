@@ -21,19 +21,13 @@ async function seedInitialTemplates(db) {
   //   Admin Panel → Template AI → SINKRON TEMPLATE AI
   // Kedua tombol mendorong data dari admin_master_data.js (75 template)
   // ke Firestore dan Supabase secara real-time.
-  console.log('ℹ️ Seeder: Template admin dikelola via Admin Panel (Sinkron). Skip seeder template.');
+  // Template dikelola via Admin Panel — skip seeder
 
   // ── SEED MUSIK DEFAULT (Hanya jika koleksi app_music kosong) ──
   try {
     const musicRef  = db.collection('app_music');
     const musicSnap = await musicRef.limit(1).get();
-
-    if (!musicSnap.empty) {
-      console.log('ℹ️ Seeder: Playlist musik sudah tersedia. Skip seed musik.');
-      return;
-    }
-
-    console.log('🎵 Seeder: Koleksi app_music kosong, memasukkan playlist default...');
+    if (!musicSnap.empty) return; // Sudah ada data, tidak perlu seed
 
     const songs = [
       {
@@ -58,11 +52,10 @@ async function seedInitialTemplates(db) {
     });
 
     await musicBatch.commit();
-    console.log(`✅ Seeder: ${songs.length} lagu default berhasil ditambahkan ke app_music.`);
+    console.log('[Seeder] Playlist default ditambahkan ke Firestore.');
 
   } catch (err) {
-    // Jangan crash app hanya karena seeder musik gagal
-    console.warn('⚠️ Seeder musik gagal (non-fatal):', err.message);
+    console.warn('[Seeder] Musik gagal (non-fatal):', err.message);
   }
 }
 

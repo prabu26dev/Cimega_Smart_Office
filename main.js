@@ -1,7 +1,7 @@
-// ============================================
-// CIMEGA SMART OFFICE - main.js
-// Versi lengkap dengan auto-updater
-// ============================================
+// ─────────────────────────────────────────────────────────
+//   CIMEGA SMART OFFICE v2.0
+//   Platform Administrasi Sekolah — Kurikulum Merdeka
+// ─────────────────────────────────────────────────────────
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path  = require('path');
 const fs    = require('fs');
@@ -10,18 +10,17 @@ const url   = require('url');
 const admin = require('firebase-admin');
 const { seedInitialTemplates } = require('./src/services/seeder_service');
 
-// ── Init Firebase Admin ──────────────────────
+// ── Init Firebase Admin ──────────────────────────────────
 let firebaseAdminReady = false;
 try {
   const serviceAccount = require('./serviceAccountKey.json');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: 'cimega-smart-office.appspot.com' // Sesuaikan dengan Bucket Anda
+    storageBucket: 'cimega-smart-office.appspot.com'
   });
   firebaseAdminReady = true;
-  console.log('✅ Firebase Admin SDK siap');
 } catch (err) {
-  console.error('Firebase Admin Init Error:', err.message);
+  console.error('[ERROR] Firebase Admin:', err.message);
 }
 const db = admin.firestore();
 
@@ -46,11 +45,11 @@ function loadEnv() {
 }
 const envConfig = loadEnv();
 
-// ── Jalankan AI Generator Service (Port 3001) ──────────────
+// ── Jalankan AI Generator Service (Port 3001) ────────────
 try {
   require('./src/services/ai_generator_service.js');
 } catch (err) {
-  console.error('Gagal menjalankan AI Service:', err.message);
+  console.error('[ERROR] AI Service:', err.message);
 }
 
 // ── Musik state (Hybrid: Lokal + Firestore) ────────────
@@ -67,15 +66,13 @@ let _shuffleQueue = []; // Antrian index acak
 
 function buildShuffleQueue() {
   if (musicFiles.length === 0) return;
-  // Buat array index [0, 1, 2, ..., n-1]
   const indices = Array.from({ length: musicFiles.length }, (_, i) => i);
-  // Fisher-Yates shuffle
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
   _shuffleQueue = indices;
-  console.log(`🔀 Shuffle queue rebuilt: ${musicFiles.length} songs. Infinite loop ready.`);
+  // Log dihapus — terlalu verbose saat banyak window membuka musik
 }
 
 function getNextShuffleIndex() {
@@ -104,50 +101,60 @@ function sortMusicFiles(arr) {
 function loadLocalMusicFiles() {
   try {
     const musicDir = path.join(__dirname, 'assets_music');
-    const raw = fs.readdirSync(musicDir).filter(f => /\.(mp3|ogg|wav|flac)$/i.test(f));
+    const raw = fs.readdirSync(musicDir).filter(f => /\.(mp3|ogg|wav|flac|m4a|aac)$/i.test(f));
     const localFiles = raw.map(f => ({
       id:    f,
-      title: f.replace(/\.mp3$/i, '').trim(),
-      url:   `assets_music/${f}`,
+      title: f.replace(/\.(mp3|ogg|wav|flac|m4a|aac)$/i, '').trim(),
+      url:   url.pathToFileURL(path.join(__dirname, 'assets_music', f)).href,
     }));
     if (localFiles.length > 0) {
-      // Sort lokal secara alfabetis berdasarkan title
       musicFiles = sortMusicFiles(localFiles);
-      console.log(`🎵 Musik Lokal: ${musicFiles.length} file ditemukan di assets_music`);
     }
   } catch (e) {
-    console.warn('⚠️ loadLocalMusicFiles:', e.message);
+    console.warn('[WARN] loadLocalMusicFiles:', e.message);
   }
 }
 loadLocalMusicFiles();
 
-// ── 2. Sync Firestore sebagai suplemen (opsional, tidak blokir startup) ──
+// ── 2. Sync Firestore (debounced, non-blocking) ──────────
+let _musicSyncDebounce = null;
+
 function syncMusicFromFirestore() {
   try {
     db.collection('app_music').where('status', '==', 'active').onSnapshot(snap => {
-      const cloudFiles = [];
-      snap.forEach(doc => {
-        const data = doc.data();
-        cloudFiles.push({ id: doc.id, title: data.title, url: data.audioUrl });
-      });
-      if (cloudFiles.length > 0) {
-        // Sort cloud musik secara alfabetis — konsisten dengan lokal
-        musicFiles = sortMusicFiles(cloudFiles);
-        // Force rebuild shuffle queue because playlist changed
-        buildShuffleQueue();
-        if (musicState.index >= musicFiles.length) musicState.index = 0;
-        console.log(`☁️ Sync Musik Cloud: ${musicFiles.length} lagu aktif (sorted). Shuffle queue updated.`);
-      } else {
-        loadLocalMusicFiles();
-        buildShuffleQueue();
-        console.log('ℹ️ Cloud music kosong, tetap pakai lokal.');
-      }
-      broadcastMusicState();
+      if (_musicSyncDebounce) clearTimeout(_musicSyncDebounce);
+      _musicSyncDebounce = setTimeout(() => {
+        const cloudFiles = [];
+        snap.forEach(doc => {
+          const data = doc.data();
+          if (data.audioUrl) {
+            cloudFiles.push({ id: doc.id, title: data.title || doc.id, url: data.audioUrl });
+          }
+        });
+
+        if (cloudFiles.length > 0) {
+          const sorted  = sortMusicFiles(cloudFiles);
+          const changed = sorted.length !== musicFiles.length
+            || (sorted[0] && musicFiles[0] && sorted[0].id !== musicFiles[0].id);
+          if (changed) {
+            musicFiles = sorted;
+            buildShuffleQueue();
+            if (musicState.index >= musicFiles.length) musicState.index = 0;
+            broadcastMusicState();
+          }
+        } else {
+          if (musicFiles.length === 0) {
+            loadLocalMusicFiles();
+            buildShuffleQueue();
+            broadcastMusicState();
+          }
+        }
+      }, 1500);
     }, err => {
-      console.warn('⚠️ Firestore music stream error:', err.message);
+      console.warn('[WARN] Music sync:', err.message);
     });
   } catch (e) {
-    console.warn('⚠️ syncMusicFromFirestore skip:', e.message);
+    console.warn('[WARN] syncMusicFromFirestore:', e.message);
   }
 }
 syncMusicFromFirestore();
@@ -160,26 +167,24 @@ let bgMusicWindow = null;
 
 function createBgMusicWindow() {
   if (bgMusicWindow) return;
-  bgMusicWindow = new BrowserWindow({ 
+  bgMusicWindow = new BrowserWindow({
     show: false,
     webPreferences: {
-      webSecurity: false,
-      autoplayPolicy: 'no-user-gesture-required' // Fix Chrome blocking autoplay
+      webSecurity:    false,
+      autoplayPolicy: 'no-user-gesture-required'
     }
   });
   bgMusicWindow.loadURL('data:text/html,<html><head><title>BGM_IDLE</title></head><body></body></html>');
-  
+
   bgMusicWindow.on('page-title-updated', (e, title) => {
     if (title.startsWith('BGM_ENDED')) {
-      // Ambil lagu berikutnya dari shuffle queue (acak & infinite)
       getNextShuffleIndex();
       playMusicOnBgWindow();
     }
   });
 
   bgMusicWindow.webContents.on('did-finish-load', () => {
-    console.log('BGM Window loaded, starting playback...');
-    playMusicOnBgWindow();
+    playMusicOnBgWindow(); // mulai putar tanpa log
   });
 }
 
@@ -194,37 +199,32 @@ function broadcastMusicState() {
 }
 
 function playMusicOnBgWindow() {
-  if (!bgMusicWindow || musicFiles.length === 0) return;
-  
-  const music = musicFiles[musicState.index];
-  let audioUrl = '';
-  
-  if (music.url.startsWith('http')) {
-    audioUrl = music.url;
-  } else {
-    // Local assets fallback
-    const absPath = path.join(__dirname, music.url);
-    audioUrl = url.pathToFileURL(absPath).href;
-  }
+  if (!bgMusicWindow || bgMusicWindow.isDestroyed() || musicFiles.length === 0) return;
+
+  const music    = musicFiles[musicState.index];
+  const audioUrl = music.url.startsWith('http') || music.url.startsWith('file://')
+    ? music.url
+    : url.pathToFileURL(path.join(__dirname, music.url)).href;
 
   bgMusicWindow.webContents.executeJavaScript(`
-    if (!window._bgm) {
-      window._bgm = new Audio();
-      // ✅ Saat lagu selesai → trigger lagu berikutnya (handled by BGM_ENDED)
-      window._bgm.onended = () => { document.title = 'BGM_ENDED_' + Date.now(); };
-      // ✅ Jika lagu gagal diload (file rusak/missing) → auto skip ke berikutnya
-      window._bgm.onerror = () => {
-        console.warn('BGM: File gagal dimuat, skip ke lagu berikutnya...');
+    (function() {
+      if (!window._bgm) {
+        window._bgm = new Audio();
+        window._bgm.onended = () => { document.title = 'BGM_ENDED_' + Date.now(); };
+        window._bgm.onerror = (e) => {
+          console.warn('BGM: File gagal dimuat, skip...', e);
+          setTimeout(() => { document.title = 'BGM_ENDED_' + Date.now(); }, 2000);
+        };
+      }
+      window._bgm.pause();
+      window._bgm.src = ${JSON.stringify(audioUrl)};
+      window._bgm.volume = ${musicState.muted ? 0 : 0.8};
+      window._bgm.load();
+      window._bgm.play().catch(e => {
+        console.error('BGM Play Error:', e.message);
         setTimeout(() => { document.title = 'BGM_ENDED_' + Date.now(); }, 2000);
-      };
-    }
-    window._bgm.src = "${audioUrl}";
-    window._bgm.volume = ${musicState.muted ? 0 : 0.8};
-    window._bgm.play().catch(e => {
-      console.error('BGM Play Error:', e);
-      // Auto-skip jika play() di-reject (infinite loop safeguard)
-      setTimeout(() => { document.title = 'BGM_ENDED_' + Date.now(); }, 2000);
-    });
+      });
+    })();
   `).catch(e => console.error('BGM Execute Error:', e));
   broadcastMusicState();
 }
@@ -263,13 +263,11 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.maximize();
-    // Kirim sinyal sync-complete agar renderer tahu sistem siap
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('sync-complete', { status: 'ok', musicCount: musicFiles.length });
-        console.log('✅ sync-complete dikirim ke renderer');
       }
-    }, 1500); // Delay 1.5s agar Firestore onSnapshot sempat attach
+    }, 1500);
   });
 
 
@@ -322,25 +320,28 @@ ipcMain.handle('get-app-config', () => ({
 // Musik
 ipcMain.handle('music-init', () => {
   if (!bgMusicWindow) createBgMusicWindow();
+
+  // Guard: jangan rebuild shuffle queue jika sudah ada dan BGM sudah berjalan
   bgMusicWindow.webContents.executeJavaScript('!!window._bgm && !window._bgm.paused')
     .then(isPlaying => {
       if (!isPlaying) {
-        // Mulai dari lagu acak (shuffle dari awal)
-        if (musicFiles.length > 0) {
+        // Hanya build shuffle baru jika queue memang kosong
+        if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
           buildShuffleQueue();
-          musicState.index = _shuffleQueue.shift();
+          musicState.index = _shuffleQueue.shift() || 0;
         }
         playMusicOnBgWindow();
-      } else {
-        broadcastMusicState();
       }
+      // Jika sudah main: cukup broadcast state saja — tidak perlu rebuild apapun
+      broadcastMusicState();
     }).catch(() => {
-      if (musicFiles.length > 0) {
+      if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
         buildShuffleQueue();
-        musicState.index = _shuffleQueue.shift();
+        musicState.index = _shuffleQueue.shift() || 0;
       }
       playMusicOnBgWindow();
     });
+
   return { ...musicState, files: musicFiles, total: musicFiles.length };
 });
 
@@ -532,10 +533,10 @@ ipcMain.handle('music-save-local', async (e, { fileName, fileBuffer }) => {
     buildShuffleQueue();
     broadcastMusicState();
 
-    console.log(`✅ music-save-local: "${safeName}" disimpan (${Math.round(buf.length/1024)} KB)`);
+    console.log(`[Music] Disimpan: "${safeName}" (${Math.round(buf.length/1024)} KB)`);
     return { success: true, fileName: safeName, path: destPath };
   } catch (err) {
-    console.error('❌ music-save-local error:', err.message);
+    console.error('[ERROR] music-save-local:', err.message);
     return { success: false, error: err.message };
   }
 });
@@ -547,48 +548,33 @@ ipcMain.handle('music-delete-local', async (e, { fileName }) => {
     const filePath  = path.join(musicDir, fileName);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      console.log(`🗑️ music-delete-local: "${fileName}" dihapus dari assets_music`);
+      console.log(`[Music] Dihapus: "${fileName}"`);
     }
-    // Reload list
     loadLocalMusicFiles();
     buildShuffleQueue();
     broadcastMusicState();
     return { success: true };
   } catch (err) {
-    console.error('❌ music-delete-local error:', err.message);
+    console.error('[ERROR] music-delete-local:', err.message);
     return { success: false, error: err.message };
   }
 });
 
 // ── Daftar musik lokal dari folder assets_music ──────────────
-// Mengembalikan array objek {id, title, url} — KONSISTEN dengan musicFiles
 ipcMain.handle('get-music-list', () => {
   try {
     const musicDir = path.join(__dirname, 'assets_music');
-    if (!fs.existsSync(musicDir)) {
-      console.warn('⚠️ Folder assets_music tidak ditemukan:', musicDir);
-      return [];
-    }
-    const raw = fs.readdirSync(musicDir)
-      .filter(f => /\.(mp3|ogg|wav|aac|m4a|flac)$/i.test(f));
-
-    // Buat objek per file, lalu sort alfabetis berdasarkan title
-    const result = raw
+    if (!fs.existsSync(musicDir)) return [];
+    return fs.readdirSync(musicDir)
+      .filter(f => /\.(mp3|ogg|wav|aac|m4a|flac)$/i.test(f))
       .map(f => ({
         id:    f,
-        title: f.replace(/\.mp3$/i, '').trim(),
-        url:   `assets_music/${f}`,
+        title: f.replace(/\.(mp3|ogg|wav|aac|m4a|flac)$/i, '').trim(),
+        url:   url.pathToFileURL(path.join(__dirname, 'assets_music', f)).href,
       }))
-      .sort(function(a, b) {
-        var tA = a.title.toLowerCase();
-        var tB = b.title.toLowerCase();
-        return tA < tB ? -1 : tA > tB ? 1 : 0;
-      });
-
-    console.log(`🎵 get-music-list: ${result.length} file audio ditemukan di assets_music`);
-    return result;
+      .sort((a, b) => a.title.toLowerCase() < b.title.toLowerCase() ? -1 : 1);
   } catch (e) {
-    console.warn('⚠️ get-music-list error:', e.message);
+    console.warn('[WARN] get-music-list:', e.message);
     return [];
   }
 });
@@ -726,11 +712,24 @@ app.on('web-contents-created', (event, contents) => {
 
 // ══════════════════════════════════════════
 app.whenReady().then(async () => {
-  // Jalankan Seeder
   await seedInitialTemplates(db);
   createWindow();
+
+  // ── Startup Banner (tampil 1x setelah semua siap) ──────────
+  setTimeout(() => {
+    const ver  = require('./package.json').version;
+    const node = process.versions.node;
+    const line = '─'.repeat(52);
+    console.log(`\n${line}`);
+    console.log(`  CIMEGA SMART OFFICE  v${ver}`);
+    console.log(`  Firebase  : ${firebaseAdminReady ? 'Connected' : 'OFFLINE'}`);
+    console.log(`  Musik     : ${musicFiles.length} lagu dimuat`);
+    console.log(`  Node.js   : v${node}  |  Electron: v${process.versions.electron}`);
+    console.log(`${line}\n`);
+  }, 2000); // Tunggu semua service selesai init
 });
+
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (!mainWindow) createWindow(); });
-// Bersihkan session key store saat app tutup
 app.on('before-quit', () => { _sessionKeyStore = {}; });
+

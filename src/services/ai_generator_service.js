@@ -114,7 +114,7 @@ app.get('/api/generate-admin', async (req, res) => {
 // Start Server (Hanya jika belum jalan)
 if (!global.aiServerStarted) {
   app.listen(PORT, () => {
-    console.log(`🚀 Dynamic AI Service running on http://localhost:${PORT}`);
+    console.log(`[AI] Service ready on port ${PORT}`);
     global.aiServerStarted = true;
   });
 }
