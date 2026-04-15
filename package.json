@@ -1,7 +1,7 @@
 {
   "name": "cimega-smart-office",
-  "version": "1.0.0",
-  "description": "Sistem Administrasi Digital SDN Cimega",
+  "version": "2.0.0",
+  "description": "Platform Administrasi Sekolah Cerdas — Kurikulum Merdeka 2025/2026",
   "main": "main.js",
   "author": "Kang Prabu",
   "scripts": {

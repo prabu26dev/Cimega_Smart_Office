@@ -1,84 +1,132 @@
-# ============================================
-# CIMEGA SMART OFFICE - .gitignore
-# ============================================
+# ================================================================
+# CIMEGA SMART OFFICE v2.0 — .gitignore
+# Electron.js + Firebase + Supabase + Gemini AI
+# Target OS: Windows 10/11 (64-bit)
+# ================================================================
 
-# !! WAJIB - Jangan upload ke GitHub !!
+# ───────────────────────────────────────────────────────────────
+# !! KEAMANAN — WAJIB TIDAK DI-UPLOAD KE GITHUB !!
+# ───────────────────────────────────────────────────────────────
+
+# Environment variables (kredensial Firebase, Supabase, Gemini)
 .env
 .env.local
 .env.production
 .env.development
-*.env
+.env.staging
 
-# Firebase private keys
-firebase-adminsdk*.json
+# Firebase Service Account Keys (digunakan oleh firebase-admin)
 serviceAccountKey.json
+firebase-adminsdk*.json
 *-firebase-adminsdk-*.json
+google-services.json
 
-# Node modules (besar, tidak perlu diupload)
+# ───────────────────────────────────────────────────────────────
+# DEPENDENSI NODE.JS
+# ───────────────────────────────────────────────────────────────
+
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.npm/
+.pnpm-store/
 
-# Build output
+# ───────────────────────────────────────────────────────────────
+# BUILD OUTPUT ELECTRON (Windows only)
+# ───────────────────────────────────────────────────────────────
+
 dist/
 build/
 out/
 release/
-
-# Electron build
 dist_electron/
+
+# File installer Windows
 *.exe
-*.dmg
-*.AppImage
-*.deb
-*.rpm
+*.msi
+*.nsis
 
-# Log files
-logs/
-*.log
-log.txt
+# ───────────────────────────────────────────────────────────────
+# ASET MEDIA (terlalu besar untuk GitHub)
+# ───────────────────────────────────────────────────────────────
 
-# Cache
+# File audio BGM lokal — cukup simpan di mesin admin
+assets_music/*.mp3
+assets_music/*.wav
+assets_music/*.ogg
+assets_music/*.aac
+assets_music/*.flac
+assets_music/*.m4a
+
+# ───────────────────────────────────────────────────────────────
+# CACHE & DATA SEMENTARA
+# ───────────────────────────────────────────────────────────────
+
+# Cache aplikasi
 data_cache/
 .cache/
 *.cache
 
-# OS files
-.DS_Store
+# Scratch / file kerja sementara
+scratch/
+
+# ───────────────────────────────────────────────────────────────
+# LOG FILES
+# ───────────────────────────────────────────────────────────────
+
+logs/
+*.log
+log.txt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ───────────────────────────────────────────────────────────────
+# FILE SISTEM OPERASI
+# ───────────────────────────────────────────────────────────────
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
 desktop.ini
 $RECYCLE.BIN/
+*.lnk
 
-# VS Code settings (opsional, bisa dihapus jika ingin share settings)
+# macOS (jika developer menggunakan Mac)
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ───────────────────────────────────────────────────────────────
+# EDITOR & IDE
+# ───────────────────────────────────────────────────────────────
+
+# VS Code (settings sensitif, bukan extensions)
 .vscode/settings.json
 .vscode/launch.json
+.vscode/*.code-workspace
 
-# Python cache (untuk folder AI nanti)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-*.egg
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+*.iml
 
-# AI model files (terlalu besar untuk GitHub)
-folder_otak_ai/models/
-folder_otak_ai/*.bin
-folder_otak_ai/*.gguf
-folder_otak_ai/*.ggml
+# ───────────────────────────────────────────────────────────────
+# FILE TEMP & BACKUP
+# ───────────────────────────────────────────────────────────────
 
-# Temporary files
 *.tmp
 *.temp
+*.bak
+*.backup
 *.swp
 *.swo
 *~
 
-# Package lock (opsional)
-# package-lock.json
-
-# Upload setup files (sudah tidak diperlukan setelah setup)
-upload_users.html
+# ───────────────────────────────────────────────────────────────
+# CATATAN DEVELOPER
+# ───────────────────────────────────────────────────────────────
+# package-lock.json SENGAJA tidak di-ignore agar versi dependensi
+# antar developer/lingkungan tetap konsisten (reproducible builds).
+# ================================================================
