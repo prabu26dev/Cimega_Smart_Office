@@ -1475,9 +1475,10 @@ async function sinkronMusik() {
     }
 
     const { collection, doc, setDoc, serverTimestamp, getDocs, query, where } = window._fb;
-    let synced = 0;
-    let skipped = 0;
-    let failed  = 0;
+    let synced      = 0;
+    let skipped     = 0;
+    let failed      = 0;
+    const failedItems = []; // FIX v2.3: kumpulkan detail error
 
     for (let i = 0; i < localFiles.length; i++) {
       const f        = localFiles[i];
@@ -1509,7 +1510,9 @@ async function sinkronMusik() {
         });
 
         // 2. Upload ke Supabase Storage
-        const sbPath = `music/${Date.now()}_${fileName.replace(/\s+/g, '_')}`;
+        // FIX v2.2: path deterministik — hindari duplikat saat sinkronisasi ulang
+        const safeName = fileName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
+        const sbPath   = `music/${safeName}`;
         const { error: sbErr } = await window._supabase.storage
           .from('app-music')
           .upload(sbPath, blob, { upsert: true, contentType: blob.type || 'audio/mpeg' });
@@ -1540,7 +1543,11 @@ async function sinkronMusik() {
         _cloudSyncedUrls[fileName] = publicUrl;
         synced++;
       } catch (itemErr) {
+        // FIX v2.3: kumpulkan error detail agar muncul di summary akhir
+        const errMsg = itemErr.message || 'Error tidak diketahui';
         console.error(`Sinkron gagal untuk "${fileName}":`, itemErr);
+        statusEl.innerHTML = `❌ [${i+1}/${localFiles.length}] Gagal: <strong>${cleanTitle}</strong> — ${errMsg}`;
+        failedItems.push(`<li><strong>${cleanTitle}</strong>: ${errMsg}</li>`);
         failed++;
       }
     }
@@ -1568,7 +1575,12 @@ async function sinkronMusik() {
       failed  > 0 ? `❌ ${failed} lagu gagal` : ''
     ].filter(Boolean).join(' · ');
 
-    statusEl.innerHTML = summary;
+    // FIX v2.3: tampilkan detail error di bawah summary jika ada kegagalan
+    const errorDetail = failedItems.length > 0
+      ? `<ul style="margin:6px 0 0 0;padding-left:16px;font-size:10px;color:#ff6688">${failedItems.join('')}</ul>`
+      : '';
+
+    statusEl.innerHTML = summary + errorDetail;
     showToast(failed > 0 ? 'warning' : 'success', 'Sinkron Selesai', summary);
 
     await loadMusik(); // Refresh tampilan

@@ -84,8 +84,8 @@ try {
     // Static config objects (serializable)
     firebase: Object.freeze({ ...firebaseConfig }),
     supabase: Object.freeze({
-      url: process.env.SUPABASE_URL      || '',
-      key: process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || '',
+      url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      key: process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '',
     }),
     // SECURITY FIX v2.1: gemini.key DIHAPUS dari bridge publik.
     // Raw API key tidak boleh diakses dari renderer — gunakan IPC geminiAsk() saja.

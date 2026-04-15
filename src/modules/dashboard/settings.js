@@ -988,7 +988,13 @@ async function loadProfil() {
     const data = snap.data();
     const roles = data.roles || [data.role || 'guru'];
     const avEl = document.getElementById('profilAvatar');
-    if (avEl) avEl.textContent = roles.includes('bendahara') ? '💰' : roles.includes('kepsek') ? '🏛️' : '👨‍🏫';
+    if (avEl) {
+      if (data.avatarUrl) {
+        avEl.innerHTML = `<img src="${data.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      } else {
+        avEl.textContent = roles.includes('bendahara') ? '💰' : roles.includes('kepsek') ? '🏛️' : '👨‍🏫';
+      }
+    }
     const nameEl = document.getElementById('profilNama');
     if (nameEl) nameEl.textContent = data.nama;
     const badgeEl = document.getElementById('profilRoleBadge');
@@ -1006,20 +1012,63 @@ async function loadProfil() {
     if (stEl) stEl.innerHTML = `<span class="badge badge-${data.status === 'aktif' ? 'approved' : 'rejected'}">${data.status}</span>`;
   } catch (e) { }
 }
-async function gantiPasswordUser() {
-  const { collection, query, where, getDocs, doc, updateDoc, serverTimestamp } = window._fb;
-  const old = document.getElementById('oldPassUser')?.value;
-  const nw = document.getElementById('newPassUser')?.value;
-  const conf = document.getElementById('confirmPassUser')?.value;
-  if (!old || !nw || !conf) { showToast('warn', 'Field kosong', 'Semua field wajib diisi'); return; }
-  if (nw !== conf) { showToast('warn', 'Mismatch', 'Password baru tidak cocok'); return; }
+async function uploadAvatar() {
+  const fileInput = document.getElementById('avatarUploadInput');
+  const statusEl = document.getElementById('avatarUploadStatus');
+  const btn = document.getElementById('btnUploadAvatar');
+  
+  if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+    showToast('warn', 'Pilih File', 'Silakan pilih foto terlebih dahulu');
+    return;
+  }
+  
+  const file = fileInput.files[0];
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('warn', 'File Terlalu Besar', 'Maksimal ukuran foto adalah 2MB');
+    return;
+  }
+
+  if (!window._supabase) {
+    showToast('error', 'Supabase', 'Koneksi penyimpanan tidak tersedia');
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = '⏳ Mengunggah...';
+  statusEl.textContent = 'Mengunggah foto ke Supabase...';
+  
   try {
-    const snap = await getDocs(query(collection(db, 'users'), where('username', '==', userData.username)));
-    const userDoc = snap.docs[0];
-    if (userDoc.data().password !== old) { showToast('error', 'Gagal', 'Password lama salah'); return; }
-    await updateDoc(doc(db, 'users', userDoc.id), { password: nw, updatedAt: serverTimestamp() });
-    showToast('success', 'Berhasil', 'Password diperbarui');
-  } catch (e) { }
+    const ext = file.name.split('.').pop();
+    const safeName = `avatar_${userData.id}_${Date.now()}.${ext}`;
+    
+    // Upload ke bucket user-profiles
+    const { error: uploadErr } = await window._supabase.storage
+      .from('user-profiles')
+      .upload(`avatars/${safeName}`, file, { upsert: true, contentType: file.type });
+      
+    if (uploadErr) throw new Error(uploadErr.message);
+    
+    const { data: urlData } = window._supabase.storage.from('user-profiles').getPublicUrl(`avatars/${safeName}`);
+    
+    // Update data user di Firestore
+    const { doc, updateDoc, serverTimestamp } = window._fb;
+    await updateDoc(doc(db, 'users', userData.id), { 
+      avatarUrl: urlData.publicUrl, 
+      updatedAt: serverTimestamp() 
+    });
+    
+    showToast('success', 'Berhasil', 'Foto profil diperbarui!');
+    statusEl.textContent = 'Selesai';
+    await loadProfil(); // Refresh UI profile
+  } catch (err) {
+    console.error(err);
+    showToast('error', 'Gagal Mengunggah', err.message);
+    statusEl.textContent = 'Error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 Upload Foto';
+    fileInput.value = '';
+  }
 }
 
 function toggleNotif() { document.getElementById('notifPanel')?.classList.toggle('show'); }
@@ -1216,7 +1265,7 @@ window.rejectDoc = rejectDoc;
 window.loadRekap = loadRekap;
 window.loadBeranda = loadBeranda;
 window.loadProfil = loadProfil;
-window.gantiPasswordUser = gantiPasswordUser;
+window.uploadAvatar = uploadAvatar;
 window.toggleNotif = toggleNotif;
 window.doUpdate = doUpdate;
 window.doLogout = doLogout;

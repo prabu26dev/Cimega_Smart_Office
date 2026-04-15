@@ -1997,18 +1997,15 @@
         </div>
         <div class="card" style="margin-top:14px">
           <div class="card-header">
-            <div class="card-title">🔒 GANTI PASSWORD</div>
+            <div class="card-title">🖼️ UPLOAD FOTO PROFIL</div>
           </div>
           <div class="card-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
-              <div class="form-group" style="margin:0"><label class="form-label">Password Lama</label><input
-                  class="form-control" type="password" id="oldPassUser" /></div>
-              <div class="form-group" style="margin:0"><label class="form-label">Password Baru</label><input
-                  class="form-control" type="password" id="newPassUser" /></div>
-              <div class="form-group" style="margin:0"><label class="form-label">Konfirmasi</label><input
-                  class="form-control" type="password" id="confirmPassUser" /></div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">Pilih Foto (Maks 2MB, JPG/PNG)</label>
+              <input class="form-control" type="file" id="avatarUploadInput" accept="image/png, image/jpeg" style="padding: 6px;"/>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="gantiPasswordUser()">🔒 Ganti Password</button>
+            <button id="btnUploadAvatar" class="btn btn-primary btn-sm" onclick="uploadAvatar()">📤 Upload Foto</button>
+            <div id="avatarUploadStatus" style="font-size:12px;margin-top:8px;color:var(--muted)"></div>
           </div>
         </div>
       </div>

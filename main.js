@@ -281,8 +281,8 @@ ipcMain.handle('get-firebase-config', () => ({
 }));
 
 ipcMain.handle('get-supabase-config', () => ({
-  url: envConfig.SUPABASE_URL,
-  key: envConfig.SUPABASE_KEY,
+  url: envConfig.SUPABASE_URL || envConfig.NEXT_PUBLIC_SUPABASE_URL || '',
+  key: envConfig.SUPABASE_KEY || envConfig.SUPABASE_ANON_KEY || envConfig.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '',
 }));
 
 ipcMain.handle('get-app-config', () => ({
