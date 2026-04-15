@@ -177,9 +177,10 @@ function createBgMusicWindow() {
 function broadcastMusicState() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('music-state-changed', {
-      index: musicState.index,
-      muted: musicState.muted,
-      files: musicFiles
+      index:        musicState.index,
+      muted:        musicState.muted,
+      files:        musicFiles,
+      currentTitle: musicFiles[musicState.index]?.title || '' // FIX v2.1: kirim judul langsung
     });
   }
 }
@@ -290,40 +291,43 @@ ipcMain.handle('get-app-config', () => ({
 }));
 
 // Musik
-ipcMain.handle('music-init', () => {
+ipcMain.handle('music-init', async () => {
   if (!bgMusicWindow) createBgMusicWindow();
 
   // Guard: jangan restart BGM jika sudah ada yang sedang berjalan
-  // Gunakan window.isPaused() yang di-expose oleh bgm_player.html
-  bgMusicWindow.webContents.executeJavaScript(
-    'typeof window.isPaused === "function" ? !window.isPaused() : (!!window._bgm && !!window._bgm.src && !window._bgm.paused)'
-  ).then(isPlaying => {
-      if (!isPlaying) {
-        // Hanya build shuffle baru jika queue memang kosong
-        if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
-          buildShuffleQueue();
-          musicState.index = _shuffleQueue.shift() || 0;
-        }
-        playMusicOnBgWindow();
-      }
-      // Jika sudah main: cukup broadcast state saja — tidak perlu rebuild apapun
-      broadcastMusicState();
-    }).catch(() => {
+  // FIX v2.1: async/await agar return value mencerminkan state SESUNGGUHNYA setelah cek playback
+  try {
+    const isPlaying = await bgMusicWindow.webContents.executeJavaScript(
+      'typeof window.isPaused === "function" ? !window.isPaused() : (!!window._bgm && !!window._bgm.src && !window._bgm.paused)'
+    );
+    if (!isPlaying) {
+      // Hanya build shuffle baru jika queue memang kosong
       if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
         buildShuffleQueue();
         musicState.index = _shuffleQueue.shift() || 0;
       }
       playMusicOnBgWindow();
-    });
+    }
+    // Jika sudah main: cukup broadcast state saja — tidak perlu rebuild apapun
+    broadcastMusicState();
+  } catch (_) {
+    // bgMusicWindow belum siap atau executeJavaScript gagal → fallback mulai playback
+    if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
+      buildShuffleQueue();
+      musicState.index = _shuffleQueue.shift() || 0;
+    }
+    playMusicOnBgWindow();
+  }
 
-  return { ...musicState, files: musicFiles, total: musicFiles.length };
+  return { ...musicState, files: musicFiles, total: musicFiles.length, currentTitle: musicFiles[musicState.index]?.title || '' }; // FIX v2.1
 });
 
 ipcMain.handle('music-get-state', () => ({
-  index:    musicState.index,
-  muted:    musicState.muted,
-  files:    musicFiles,
-  total:    musicFiles.length,
+  index:        musicState.index,
+  muted:        musicState.muted,
+  files:        musicFiles,
+  total:        musicFiles.length,
+  currentTitle: musicFiles[musicState.index]?.title || '' // FIX v2.1
 }));
 
 ipcMain.handle('music-toggle-mute', () => {

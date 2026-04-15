@@ -87,9 +87,9 @@ try {
       url: process.env.SUPABASE_URL      || '',
       key: process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || '',
     }),
-    gemini: Object.freeze({
-      key: process.env.GEMINI_API_KEY || '',
-    }),
+    // SECURITY FIX v2.1: gemini.key DIHAPUS dari bridge publik.
+    // Raw API key tidak boleh diakses dari renderer — gunakan IPC geminiAsk() saja.
+    // gemini: Object.freeze({ key: ... }), ← DIHAPUS
 
     // IPC wrappers
     // onSyncComplete: menggunakan once untuk menghindari listener duplikat
@@ -135,6 +135,11 @@ try {
 }
 
 // ── 4. Legacy: window.cimegaAPI (backward compat) ───────────
+// @deprecated v2.1 — Gunakan window.cimegaConfig sebagai primary bridge.
+// cimegaAPI dipertahankan hanya untuk file lama yang belum dimigrasi.
+// Semua shared scripts (music.js, updater.js, ai_helper.js) sudah
+// menggunakan pola: const _api = window.cimegaConfig || window.cimegaAPI;
+// Hapus blok ini SETELAH semua renderer diverifikasi pakai cimegaConfig.
 try {
   contextBridge.exposeInMainWorld('cimegaAPI', {
     getFirebaseConfig: () => Promise.resolve({ ...firebaseConfig }),

@@ -46,6 +46,11 @@ app.get('/api/generate-admin', async (req, res) => {
     // Step 0-10%: Inisialisasi & Fetch Template
     sendEvent({ progress: 5, status: 'Mengambil template dari database...', isDone: false });
 
+    // GUARD v2.1: Pastikan Firebase Admin sudah siap sebelum akses Firestore
+    if (!admin.apps || admin.apps.length === 0) {
+      throw new Error('Firebase Admin belum diinisialisasi. Periksa serviceAccountKey.json dan koneksi jaringan.');
+    }
+
     // Ambil data dari Firestore admin_templates
     const db = admin.firestore();
     const templateDoc = await db.collection('admin_templates')

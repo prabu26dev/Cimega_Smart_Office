@@ -25,8 +25,9 @@ window.CimegaAI = {
     // 1. Check if options is defined
     if (!options) return { error: 'Parameter options tidak boleh kosong.' };
 
-    // 2. Check for API bridge existence
-    if (!window.cimegaAPI || !window.cimegaAPI.geminiAsk) {
+    // 2. Check for API bridge existence (FIX v2.1: fallback ke cimegaConfig jika cimegaAPI tidak ada)
+    const _api = window.cimegaConfig || window.cimegaAPI;
+    if (!_api || !_api.geminiAsk) {
       return { error: 'Cimega AI Bridge (geminiAsk) tidak ditemukan. Pastikan aplikasi berjalan di Electron.' };
     }
 
@@ -50,7 +51,7 @@ window.CimegaAI = {
       };
 
       // 6. Call underlying API
-      const res = await window.cimegaAPI.geminiAsk(payload);
+      const res = await _api.geminiAsk(payload);
 
       // 7. Handle empty responses from bridge
       if (!res) return { error: 'AI Bridge tidak mengembalikan respon.' };

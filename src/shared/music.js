@@ -16,6 +16,7 @@ const CimegaMusic = (() => {
   let PLAYLIST     = []; // Array of {id, title, url} — SELALU objek
   let _initialized = false;
   let _uiTimer     = null;
+  var _currentTitle = ''; // FIX v2.1: judul dari main.js langsung, tanpa bergantung index re-mapping
 
   // ── Ekstrak judul bersih dari item playlist ─────────────────
   // Menerima: string filename ATAU objek {id, title, url}
@@ -62,8 +63,9 @@ const CimegaMusic = (() => {
 
   // ── updateUI — support login (mw*) DAN admin/dashboard (music*) ──
   function updateUI() {
+    // FIX v2.1: gunakan _currentTitle dari main.js jika tersedia, fallback ke PLAYLIST[index]
     var item  = (PLAYLIST.length > 0) ? PLAYLIST[currentIndex] : null;
-    var title = item ? getTitle(item) : 'Memuat...';
+    var title = _currentTitle || (item ? getTitle(item) : 'Memuat...');
     var track = (PLAYLIST.length > 0) ? ((currentIndex + 1) + ' / ' + PLAYLIST.length) : '0 / 0';
     var icon  = isMuted ? '🔇' : '🔊';
 
@@ -109,6 +111,9 @@ const CimegaMusic = (() => {
       var normalized = state.files.map(normalizeItem);
       PLAYLIST = sortPlaylist(normalized);
     }
+
+    // FIX v2.1: jika main.js mengirim currentTitle, gunakan langsung (bypass re-mapping)
+    if (state.currentTitle) _currentTitle = state.currentTitle;
 
     // Re-mapping index: cari item yang sedang dimainkan di sorted array
     // (main.js menggunakan index di array TIDAK ter-sort/urutan asli Firestore/fs)

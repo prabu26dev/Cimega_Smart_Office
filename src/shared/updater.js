@@ -11,14 +11,17 @@ const CimegaUpdater = (() => {
 
   let config = {
     owner: '',      // ← nama akun GitHub Anda
-    repo:  '',      // ← nama repo GitHub Anda
+    repo: '',      // ← nama repo GitHub Anda
     checkInterval: 30 * 60 * 1000, // cek tiap 30 menit
   };
 
   let currentVersion = '1.0.0';
   let updateAvailable = null;
-  let downloadedPath  = null;
-  let isDownloading   = false;
+  let downloadedPath = null;
+  let isDownloading = false;
+
+  // FIX v2.1: helper fallback bridge API (cimegaConfig = primary, cimegaAPI = legacy)
+  function _api() { return window.cimegaConfig || window.cimegaAPI; }
 
   // ── Buat overlay popup ──────────────────
   function createPopup() {
@@ -130,12 +133,12 @@ const CimegaUpdater = (() => {
   function fillPopup(info, forceUpdate) {
     document.getElementById('updOldVer').textContent = 'v' + currentVersion;
     document.getElementById('updNewVer').textContent = 'v' + info.latestVersion;
-    document.getElementById('updNotes').innerHTML = (info.releaseNotes || 'Tidak ada catatan.').replace(/\n/g,'<br/>');
+    document.getElementById('updNotes').innerHTML = (info.releaseNotes || 'Tidak ada catatan.').replace(/\n/g, '<br/>');
     document.getElementById('updForceNote').style.display = forceUpdate ? '' : 'none';
-    document.getElementById('updSkipBtn').style.display   = forceUpdate ? 'none' : '';
+    document.getElementById('updSkipBtn').style.display = forceUpdate ? 'none' : '';
     document.getElementById('updTitle').textContent = forceUpdate ? 'UPDATE WAJIB' : 'UPDATE TERSEDIA';
-    document.getElementById('updIcon').textContent  = forceUpdate ? '⚠️' : '🚀';
-    document.getElementById('updMainBtn').disabled  = false;
+    document.getElementById('updIcon').textContent = forceUpdate ? '⚠️' : '🚀';
+    document.getElementById('updMainBtn').disabled = false;
     document.getElementById('updMainBtn').innerHTML = '⬇️ UPDATE SEKARANG';
     document.getElementById('updProgress').classList.remove('show');
   }
@@ -144,7 +147,7 @@ const CimegaUpdater = (() => {
   function updateProgress(pct, downloaded, total) {
     document.getElementById('updProgress').classList.add('show');
     document.getElementById('updProgressFill').style.width = pct + '%';
-    document.getElementById('updProgressPct').textContent  = pct + '%';
+    document.getElementById('updProgressPct').textContent = pct + '%';
     const dlMB = (downloaded / 1024 / 1024).toFixed(1);
     const ttMB = total > 0 ? (total / 1024 / 1024).toFixed(1) + ' MB' : '...';
     document.getElementById('updProgressLabel').textContent = `Mengunduh... ${dlMB} MB / ${ttMB}`;
@@ -160,11 +163,11 @@ const CimegaUpdater = (() => {
       const snap = await getDoc(doc(db, 'appConfig', 'version'));
       if (!snap.exists()) return;
 
-      const serverData   = snap.data();
-      const serverVer    = serverData.current || '1.0.0';
-      const forceUpdate  = serverData.forceUpdate || false;
-      const githubOwner  = serverData.githubOwner || config.owner;
-      const githubRepo   = serverData.githubRepo  || config.repo;
+      const serverData = snap.data();
+      const serverVer = serverData.current || '1.0.0';
+      const forceUpdate = serverData.forceUpdate || false;
+      const githubOwner = serverData.githubOwner || config.owner;
+      const githubRepo = serverData.githubRepo || config.repo;
 
       if (!isNewerVersion(serverVer, currentVersion) && !force) return;
 
@@ -174,12 +177,12 @@ const CimegaUpdater = (() => {
 
       // Kalau ada GitHub config, cek GitHub Releases untuk info lebih lengkap
       if (githubOwner && githubRepo) {
-        const ghInfo = await window.cimegaAPI.checkGithubUpdate({
+        const ghInfo = await _api().checkGithubUpdate({
           owner: githubOwner,
-          repo:  githubRepo,
+          repo: githubRepo,
         });
         if (!ghInfo.error) {
-          downloadUrl  = ghInfo.downloadUrl  || downloadUrl;
+          downloadUrl = ghInfo.downloadUrl || downloadUrl;
           releaseNotes = ghInfo.releaseNotes || releaseNotes;
         }
       }
@@ -194,7 +197,7 @@ const CimegaUpdater = (() => {
       fillPopup(updateAvailable, forceUpdate);
       showPopup();
 
-    } catch(e) {
+    } catch (e) {
       console.warn('CimegaUpdater: gagal cek update:', e.message);
     }
   }
@@ -203,55 +206,55 @@ const CimegaUpdater = (() => {
   async function startUpdate() {
     if (!updateAvailable || isDownloading) return;
     if (!updateAvailable.downloadUrl) {
-      await window.cimegaAPI.openExternal('https://github.com/' + config.owner + '/' + config.repo + '/releases/latest');
+      await _api().openExternal('https://github.com/' + config.owner + '/' + config.repo + '/releases/latest');
       return;
     }
 
     isDownloading = true;
     const btn = document.getElementById('updMainBtn');
-    btn.disabled  = true;
+    btn.disabled = true;
     btn.innerHTML = '<span class="upd-spinner"></span>MENGUNDUH...';
     document.getElementById('updSkipBtn').style.display = 'none';
     document.getElementById('updProgress').classList.add('show');
 
     // Dengarkan progress dari main process
-    window.cimegaAPI.onDownloadProgress((data) => {
+    _api().onDownloadProgress((data) => {
       updateProgress(data.pct, data.downloaded, data.total);
     });
 
-    const result = await window.cimegaAPI.downloadUpdate({
-      url:     updateAvailable.downloadUrl,
+    const result = await _api().downloadUpdate({
+      url: updateAvailable.downloadUrl,
       version: updateAvailable.latestVersion,
     });
 
-    window.cimegaAPI.removeDownloadListener();
+    _api().removeDownloadListener();
     isDownloading = false;
 
     if (!result.success) {
-      btn.disabled  = false;
+      btn.disabled = false;
       btn.innerHTML = '⬇️ COBA LAGI';
       document.getElementById('updProgressLabel').textContent = '❌ Gagal: ' + result.error;
       return;
     }
 
     downloadedPath = result.filePath;
-    btn.disabled   = false;
-    btn.innerHTML  = '✅ INSTALL SEKARANG';
-    btn.onclick    = () => CimegaUpdater.installNow();
+    btn.disabled = false;
+    btn.innerHTML = '✅ INSTALL SEKARANG';
+    btn.onclick = () => CimegaUpdater.installNow();
     document.getElementById('updProgressLabel').textContent = '✅ Unduhan selesai! Klik Install untuk melanjutkan.';
     document.getElementById('updProgressFill').style.width = '100%';
-    document.getElementById('updProgressPct').textContent  = '100%';
+    document.getElementById('updProgressPct').textContent = '100%';
   }
 
   // ── Install ──────────────────────────────
   async function installNow() {
     if (!downloadedPath) return;
     const btn = document.getElementById('updMainBtn');
-    btn.disabled  = true;
+    btn.disabled = true;
     btn.innerHTML = '<span class="upd-spinner"></span>MENGINSTAL...';
     document.getElementById('updProgressLabel').textContent = 'Memulai installer, aplikasi akan ditutup...';
 
-    await window.cimegaAPI.installUpdate({ filePath: downloadedPath });
+    await _api().installUpdate({ filePath: downloadedPath });
   }
 
   // ── Skip ─────────────────────────────────
@@ -269,7 +272,7 @@ const CimegaUpdater = (() => {
 
   // ── Bandingkan versi ─────────────────────
   function isNewerVersion(remote, local) {
-    const parse = v => v.replace(/[^0-9.]/g,'').split('.').map(Number);
+    const parse = v => v.replace(/[^0-9.]/g, '').split('.').map(Number);
     const r = parse(remote), l = parse(local);
     for (let i = 0; i < Math.max(r.length, l.length); i++) {
       const rv = r[i] || 0, lv = l[i] || 0;
@@ -286,9 +289,9 @@ const CimegaUpdater = (() => {
 
     // Ambil versi lokal
     try {
-      const appConfig = await window.cimegaAPI.getAppConfig();
+      const appConfig = await _api().getAppConfig();
       currentVersion = appConfig.appVersion || '1.0.0';
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // Panggil ini setelah Firebase db siap

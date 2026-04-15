@@ -1469,8 +1469,9 @@ async function sinkronMusik() {
     const localFiles = await api.getMusicList();
 
     if (!localFiles || localFiles.length === 0) {
-      showToast('warning', 'Playlist Kosong', 'Tidak ada file di assets_music untuk disinkronkan.');
-      return;
+      showToast('warn', 'Playlist Kosong', 'Tidak ada file di assets_music untuk disinkronkan.');
+      // FIX v2.1: throw agar finally block tetap dieksekusi (reset button)
+      throw new Error('EMPTY_PLAYLIST');
     }
 
     const { collection, doc, setDoc, serverTimestamp, getDocs, query, where } = window._fb;
@@ -1572,8 +1573,11 @@ async function sinkronMusik() {
 
     await loadMusik(); // Refresh tampilan
   } catch (e) {
-    statusEl.innerHTML = `❌ Error: ${e.message}`;
-    showToast('error', 'Sinkron Gagal', e.message);
+    // FIX v2.1: EMPTY_PLAYLIST adalah sentinel — bukan error nyata, jangan tampilkan merah
+    if (e.message !== 'EMPTY_PLAYLIST') {
+      statusEl.innerHTML = `❌ Error: ${e.message}`;
+      showToast('error', 'Sinkron Gagal', e.message);
+    }
   } finally {
     btn.disabled    = false;
     btn.textContent = '🔄 Sinkron Musik';
