@@ -21,6 +21,11 @@ firebase-adminsdk*.json
 *-firebase-adminsdk-*.json
 google-services.json
 
+# Firebase config dengan hardcoded credentials (gunakan .env + preload.js)
+# File ini sudah diganti menjadi dokumentasi saja, tapi tetap diabaikan
+# untuk mencegah developer lain meng-hardcode credentials di sini
+src/firebase/config.js
+
 # ───────────────────────────────────────────────────────────────
 # DEPENDENSI NODE.JS
 # ───────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 // ============================================================
-// CIMEGA SMART OFFICE — preload.js (v5.0 STABLE)
+// CIMEGA SMART OFFICE — preload.js (v5.1 SECURE)
 // sandbox: false di main.js → require() bekerja di preload
 //
 // ARSITEKTUR:
@@ -122,8 +122,13 @@ try {
     installUpdate:          (opts) => ipcRenderer.invoke('install-update', opts),
     onDownloadProgress:     (cb)   => ipcRenderer.on('update-download-progress', (_e, d) => cb(d)),
     removeDownloadListener: ()     => ipcRenderer.removeAllListeners('update-download-progress'),
+
+    // ── SECURITY: In-Memory Session Key (school_key tidak di localStorage) ──
+    setSessionKey:   (key) => ipcRenderer.invoke('session-set-key', key),
+    getSessionKey:   ()    => ipcRenderer.invoke('session-get-key'),
+    clearSessionKey: ()    => ipcRenderer.invoke('session-clear-key'),
   });
-  console.log('✅ PRELOAD v5.0: window.cimegaConfig exposed');
+  console.log('✅ PRELOAD v5.1 SECURE: window.cimegaConfig exposed');
 } catch (e) {
   console.error('❌ PRELOAD: window.cimegaConfig GAGAL expose:', e.message);
 }
@@ -161,10 +166,15 @@ try {
     installUpdate:          (opts) => ipcRenderer.invoke('install-update', opts),
     onDownloadProgress:     (cb)   => ipcRenderer.on('update-download-progress', (_e, d) => cb(d)),
     removeDownloadListener: ()     => ipcRenderer.removeAllListeners('update-download-progress'),
+
+    // ── SECURITY: In-Memory Session Key ────────────────────────────
+    setSessionKey:   (key) => ipcRenderer.invoke('session-set-key', key),
+    getSessionKey:   ()    => ipcRenderer.invoke('session-get-key'),
+    clearSessionKey: ()    => ipcRenderer.invoke('session-clear-key'),
   });
-  console.log('✅ PRELOAD v5.0: window.cimegaAPI exposed');
+  console.log('✅ PRELOAD v5.1 SECURE: window.cimegaAPI exposed');
 } catch (e) {
   console.error('❌ PRELOAD: window.cimegaAPI GAGAL expose:', e.message);
 }
 
-console.log('🚀 PRELOAD v5.0: Bridge siap. Firebase SDK → load via CDN di renderer. Gemini AI & Auto-Updater IPC aktif.');
+console.log('🚀 PRELOAD v5.1 SECURE: Bridge siap. Firebase → CDN renderer. Gemini AI, Auto-Updater, Session Key Store aktif.');

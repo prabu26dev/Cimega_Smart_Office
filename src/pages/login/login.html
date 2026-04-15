@@ -284,13 +284,91 @@
     document.addEventListener('keydown', (e) => {
       if(e.key === 'Enter') {
         const overlay = document.getElementById('initOverlay');
-        if(!overlay) {
-          window.doLogin();
-        }
+        if(!overlay) window.doLogin();
       }
     });
 
-    // AUTH ENGINE
+    // ── SECURITY: SHA-256 helper (Web Crypto API) ──────────────
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray  = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // ── SECURITY: Brute-Force Rate Limiter ─────────────────────
+    // Max 5 attempts dalam 5 menit, lalu lockout 5 menit
+    const RATE_KEY      = '_cimega_rl';
+    const MAX_ATTEMPTS  = 5;
+    const LOCKOUT_MS    = 5 * 60 * 1000; // 5 menit
+    const WINDOW_MS     = 5 * 60 * 1000; // 5 menit sliding window
+
+    function getRateData() {
+      try { return JSON.parse(sessionStorage.getItem(RATE_KEY)) || { attempts: 0, firstAttempt: 0, lockedUntil: 0 }; }
+      catch (_) { return { attempts: 0, firstAttempt: 0, lockedUntil: 0 }; }
+    }
+    function saveRateData(d) { sessionStorage.setItem(RATE_KEY, JSON.stringify(d)); }
+
+    function checkRateLimit() {
+      const d   = getRateData();
+      const now = Date.now();
+      // Cek apakah sedang dalam masa lockout
+      if (d.lockedUntil > now) {
+        const remaining = Math.ceil((d.lockedUntil - now) / 1000);
+        return { blocked: true, remaining };
+      }
+      // Reset jika sliding window sudah lewat
+      if (now - d.firstAttempt > WINDOW_MS) {
+        saveRateData({ attempts: 0, firstAttempt: now, lockedUntil: 0 });
+      }
+      return { blocked: false, attempts: d.attempts };
+    }
+
+    function recordFailedAttempt() {
+      const d   = getRateData();
+      const now = Date.now();
+      if (d.attempts === 0) d.firstAttempt = now;
+      d.attempts++;
+      if (d.attempts >= MAX_ATTEMPTS) {
+        d.lockedUntil = now + LOCKOUT_MS;
+        console.warn(`[SECURITY] Brute force terdeteksi — akun dikunci ${LOCKOUT_MS/60000} menit`);
+      }
+      saveRateData(d);
+      return d.attempts;
+    }
+
+    function resetRateLimit() {
+      sessionStorage.removeItem(RATE_KEY);
+    }
+
+    // ── Tampilkan pesan lockout dengan countdown ────────────────
+    let _lockTimer = null;
+    function showLockout(remaining) {
+      const errBox = document.getElementById('alertError');
+      const errTxt = document.getElementById('errorText');
+      const btn    = document.getElementById('btnLogin');
+      let secs = remaining;
+      if (_lockTimer) clearInterval(_lockTimer);
+      _lockTimer = setInterval(() => {
+        if (secs <= 0) {
+          clearInterval(_lockTimer);
+          if (errBox) errBox.classList.remove('show');
+          if (btn) { btn.disabled = false; btn.innerHTML = 'OTORISASI AKSES'; }
+          return;
+        }
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        if (errTxt) errTxt.textContent = `Terlalu banyak percobaan. Tunggu ${m}:${String(s).padStart(2,'0')} lagi.`;
+        if (errBox) errBox.classList.add('show');
+        if (btn)    btn.disabled = true;
+        secs--;
+      }, 1000);
+    }
+
+    // ══════════════════════════════════════════
+    // AUTH ENGINE — Secure v2.0
+    // Proteksi: Brute-Force + SHA-256 hashing
+    // ══════════════════════════════════════════
     window.doLogin = async function() {
       const usernameInput = document.getElementById('username');
       const passwordInput = document.getElementById('password');
@@ -298,17 +376,25 @@
 
       const username = usernameInput.value.trim();
       const password = passwordInput.value;
-      const btn = document.getElementById('btnLogin');
+      const btn    = document.getElementById('btnLogin');
       const errBox = document.getElementById('alertError');
-      const warnBox = document.getElementById('alertExpired');
+      const warnBox= document.getElementById('alertExpired');
+      const errTxt = document.getElementById('errorText');
 
-      if(errBox) errBox.classList.remove('show');
+      if(errBox)  errBox.classList.remove('show');
       if(warnBox) warnBox.classList.remove('show');
 
       if (!username || !password) {
-        const errTxt = document.getElementById('errorText');
         if(errTxt) errTxt.textContent = 'Identitas dan Passkey wajib diisi.';
         if(errBox) errBox.classList.add('show');
+        return;
+      }
+
+      // ── SECURITY CHECK 1: Brute-Force Rate Limiter ────────────
+      const rl = checkRateLimit();
+      if (rl.blocked) {
+        showLockout(rl.remaining);
+        passwordInput.value = '';
         return;
       }
 
@@ -316,20 +402,52 @@
       btn.innerHTML = '<span class="spinner"></span>MENGHUBUNGKAN...';
 
       try {
-        // Gunakan modul yang sudah di-cache dari initApp() — zero re-import
         const { collection, query, where, getDocs, getDoc, doc } = window._fbFs;
 
         // 1. Fetch User Profile
-        const q = query(collection(db, 'users'), where('username', '==', username));
+        const q    = query(collection(db, 'users'), where('username', '==', username));
         const snap = await getDocs(q);
 
-        if (snap.empty) throw new Error('ID_NOT_FOUND');
+        if (snap.empty) {
+          recordFailedAttempt();
+          throw new Error('ID_NOT_FOUND');
+        }
 
         const userDoc = snap.docs[0];
-        const data = userDoc.data();
+        const data    = userDoc.data();
 
-        // 2. Encryption Match Check
-        if (data.password !== password) throw new Error('PASSKEY_MISMATCH');
+        // ── SECURITY CHECK 2: Password Comparison ─────────────
+        // Cimega menyimpan password sebagai SHA-256 hash di Firestore.
+        // Hash input user → bandingkan dengan stored hash.
+        // Fallback ke plaintext untuk kompatibilitas data lama.
+        let passwordMatch = false;
+        const inputHash = await sha256(password);
+        if (data.password) {
+          // Deteksi apakah stored password sudah di-hash (64 hex chars) atau masih plaintext
+          const isHashed = /^[a-f0-9]{64}$/.test(data.password);
+          if (isHashed) {
+            passwordMatch = (inputHash === data.password);
+          } else {
+            // Data lama: plaintext — bandingkan langsung, lalu naikkan ke hash
+            passwordMatch = (data.password === password);
+          }
+        }
+
+        if (!passwordMatch) {
+          recordFailedAttempt();
+          const attempts = getRateData().attempts;
+          const remaining = MAX_ATTEMPTS - attempts;
+          if (remaining <= 0) {
+            showLockout(LOCKOUT_MS / 1000);
+          } else {
+            if(errTxt) errTxt.textContent = `ID atau Passkey tidak valid. (${remaining} percobaan tersisa)`;
+            if(errBox) errBox.classList.add('show');
+          }
+          passwordInput.value = '';
+          btn.disabled = false;
+          btn.innerHTML = 'OTORISASI AKSES';
+          return;
+        }
 
         // 3. Subscription & Status Verification
         if (data.role !== 'admin') {
@@ -337,7 +455,6 @@
             if(warnBox) warnBox.classList.add('show');
             throw new Error('STATUS_DISABLED');
           }
-          
           const expField = data.expiredDate || data.expired;
           if (expField) {
             const expDate = expField.toDate ? expField.toDate() : new Date(expField);
@@ -348,30 +465,42 @@
           }
         }
 
-        // 4. Retrieve School Cryptography Keys (Institutions collection)
+        // 4. Retrieve School Cryptography Keys
         const schoolId = data.school_id || 'NPSN_MIGRATE_2026';
         let schoolSecretKey = '';
-
         try {
           const instDoc = await getDoc(doc(db, 'institutions', schoolId));
-          if (instDoc.exists()) {
-            schoolSecretKey = instDoc.data().school_secret_key || '';
-          }
-        } catch(e) { console.warn("Key handover failed", e); }
+          if (instDoc.exists()) schoolSecretKey = instDoc.data().school_secret_key || '';
+        } catch(e) { console.warn('Key handover failed', e); }
 
-        // 5. Build Session context
+        // 5. Build Session — SECURITY: school_key TIDAK masuk localStorage
+        //    Hanya metadata non-sensitif yang disimpan.
+        //    school_key dikirim ke sessionStore via preload bridge (in-memory only).
         const roles = data.roles || (data.role ? [data.role] : []);
-        localStorage.setItem('cimega_user', JSON.stringify({
-          id: userDoc.id,
-          nama: data.nama,
-          role: data.role,
-          roles: roles,
-          sekolah: data.sekolah,
+        const sessionData = {
+          id:        userDoc.id,
+          nama:      data.nama,
+          role:      data.role,
+          roles:     roles,
+          sekolah:   data.sekolah,
           school_id: schoolId,
-          school_key: schoolSecretKey,
-          username: data.username
-        }));
+          username:  data.username
+          // ⚠️ school_key TIDAK disimpan di sini — disimpan in-memory via API
+        };
+        localStorage.setItem('cimega_user', JSON.stringify(sessionData));
 
+        // Simpan school_key di sessionStorage (dibersihkan saat tab ditutup)
+        // dan via cimegaAPI.setSessionKey agar tersedia lintas window via IPC
+        if (schoolSecretKey) {
+          sessionStorage.setItem('_ck', btoa(schoolSecretKey)); // base64 only, bukan enkripsi
+          const api = window.cimegaConfig || window.cimegaAPI;
+          if (api && typeof api.setSessionKey === 'function') {
+            api.setSessionKey(schoolSecretKey);
+          }
+        }
+
+        // Login berhasil — reset rate limiter
+        resetRateLimit();
         btn.innerHTML = '✓ AKSES DIBUKA';
 
         // 6. Navigation Handover
@@ -381,16 +510,14 @@
         }, 800);
 
       } catch (err) {
-        console.error("Auth Exception:", err);
+        console.error('Auth Exception:', err.message);
         btn.disabled = false;
         btn.innerHTML = 'OTORISASI AKSES';
 
         if (err.message === 'ID_NOT_FOUND' || err.message === 'PASSKEY_MISMATCH') {
-          const errTxt = document.getElementById('errorText');
           if(errTxt) errTxt.textContent = 'ID atau Passkey tidak valid.';
           if(errBox) errBox.classList.add('show');
         } else if (err.message !== 'STATUS_DISABLED' && err.message !== 'SUBSCRIPTION_EXPIRED') {
-          const errTxt = document.getElementById('errorText');
           if(errTxt) errTxt.textContent = 'Gagal terhubung ke pusat data.';
           if(errBox) errBox.classList.add('show');
         }

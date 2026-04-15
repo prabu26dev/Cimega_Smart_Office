@@ -241,12 +241,13 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280, height: 800, minWidth: 1024, minHeight: 600,
     webPreferences: {
-      nodeIntegration:  false,
-      contextIsolation: true,
-      sandbox:          false,   // ← WAJIB: agar require() bekerja di preload.js
-      webSecurity:      false,   // ← Izinkan akses file lokal
+      nodeIntegration:  false,      // ✅ AMAN: tidak ekspos Node.js API ke renderer
+      contextIsolation: true,       // ✅ AMAN: isolasi context preload vs renderer
+      sandbox:          false,      // Diperlukan agar require() bekerja di preload.js
+      webSecurity:      true,       // ✅ AMAN: aktifkan Same-Origin Policy (sebelumnya false!)
+      allowRunningInsecureContent: false, // ✅ Blokir mixed content
+      devTools:         false,      // ✅ AMAN: tutup DevTools di production
       preload: path.join(__dirname, 'preload.js'),
-      devTools:         true,    // Aktifkan untuk debugging
     },
     show: false,
     backgroundColor: '#020b18',
@@ -486,7 +487,29 @@ ipcMain.handle('install-update', async (e, { filePath }) => {
 
 // Buka link di browser
 ipcMain.handle('open-external', (e, url) => {
-  shell.openExternal(url);
+  // Whitelist: only allow http/https external links
+  if (url && (url.startsWith('https://') || url.startsWith('http://'))) {
+    shell.openExternal(url);
+  }
+});
+
+// ── SECURITY: In-Memory Session Key Store ────────────────────
+// school_key tidak disimpan di localStorage — hanya di memori Main Process
+// Dibersihkan otomatis saat app ditutup.
+let _sessionKeyStore = {}; // { webContentsId → schoolSecretKey }
+
+ipcMain.handle('session-set-key', (e, key) => {
+  _sessionKeyStore[e.sender.id] = key;
+  return { success: true };
+});
+
+ipcMain.handle('session-get-key', (e) => {
+  return _sessionKeyStore[e.sender.id] || '';
+});
+
+ipcMain.handle('session-clear-key', (e) => {
+  delete _sessionKeyStore[e.sender.id];
+  return { success: true };
 });
 
 // ── Simpan file musik ke assets_music LOKAL saja (tanpa Firestore/Supabase) ──
@@ -659,6 +682,48 @@ ipcMain.handle('gemini-ask', async (e, { messages, system, maxTokens }) => {
   });
 });
 
+// ── SECURITY: Content Security Policy (CSP) ─────────────────
+// Diterapkan ke semua BrowserWindow via web-contents-created
+app.on('web-contents-created', (event, contents) => {
+  contents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.gstatic.com",
+            "img-src 'self' data: blob: https://*.supabase.co https://firebasestorage.googleapis.com",
+            "connect-src 'self' https://*.firebaseio.com https://*.firestore.googleapis.com https://*.googleapis.com https://*.supabase.co wss://*.firebaseio.com http://localhost:3001",
+            "media-src 'self' blob: https://*.supabase.co",
+            "object-src 'none'",
+            "frame-src 'none'",
+            "base-uri 'self'"
+          ].join('; ')
+        ]
+      }
+    });
+  });
+
+  // Blokir navigasi ke URL eksternal dari dalam window
+  contents.on('will-navigate', (event, navigationUrl) => {
+    const parsedUrl = new URL(navigationUrl);
+    // Izinkan hanya file:// dan localhost
+    if (parsedUrl.protocol !== 'file:' && parsedUrl.hostname !== 'localhost') {
+      console.warn('[SECURITY] Navigasi eksternal diblokir:', navigationUrl);
+      event.preventDefault();
+    }
+  });
+
+  // Blokir window.open() dan popup
+  contents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://')) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+});
+
 // ══════════════════════════════════════════
 app.whenReady().then(async () => {
   // Jalankan Seeder
@@ -667,3 +732,5 @@ app.whenReady().then(async () => {
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (!mainWindow) createWindow(); });
+// Bersihkan session key store saat app tutup
+app.on('before-quit', () => { _sessionKeyStore = {}; });
