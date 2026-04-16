@@ -476,7 +476,7 @@ window.CimegaMasterData = {
           ai_prompt: "Bertindaklah sebagai Pengembang Kurikulum PAI. Susun Analisis CP dan ATP PAI.\n\n1. ANALISIS CP — 5 Elemen: {{cp_pai}}.\n2. PETA MATERI: {{peta_materi}}.\n3. RUMUSAN TP (kontekstual, bukan dogmatis): {{tp_pai}}."
         },
         {
-          id: 'modul_ajar_pai', nama: 'Modul Ajar & RPP PAI', icon: '📖',
+          id: 'modul_ajar_pai', nama: 'Modul Ajar PAI', icon: '📖',
           components: [
             { id: 'identitas_pai', label: 'Identitas Modul (Kelas, Semester, Elemen)', type: 'textarea' },
             { id: 'metode_pai', label: 'Strategi Pembelajaran (Rihlah, Simulasi Ibadah, Diskusi)', type: 'textarea' },

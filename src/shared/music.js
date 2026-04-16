@@ -9,7 +9,7 @@
 // - Fallback: jika musicInit() gagal, coba getMusicList() langsung
 // ============================================
 
-const CimegaMusic = (() => {
+window.CimegaMusic = (() => {
 
   let currentIndex = 0;
   let isMuted      = false;
@@ -63,10 +63,10 @@ const CimegaMusic = (() => {
 
   // ── updateUI — support login (mw*) DAN admin/dashboard (music*) ──
   function updateUI() {
-    // FIX v2.1: gunakan _currentTitle dari main.js jika tersedia, fallback ke PLAYLIST[index]
+    // FIX v4.2: Gunakan teks yang lebih deskriptif saat transisi
     var item  = (PLAYLIST.length > 0) ? PLAYLIST[currentIndex] : null;
-    var title = _currentTitle || (item ? getTitle(item) : 'Memuat...');
-    var track = (PLAYLIST.length > 0) ? ((currentIndex + 1) + ' / ' + PLAYLIST.length) : '0 / 0';
+    var title = _currentTitle || (item ? getTitle(item) : 'Menghubungkan Musik...');
+    var track = (PLAYLIST.length > 0) ? ((currentIndex + 1) + ' / ' + PLAYLIST.length) : '- / -';
     var icon  = isMuted ? '🔇' : '🔊';
 
     // Admin & Dashboard IDs
@@ -95,10 +95,10 @@ const CimegaMusic = (() => {
       else mwBars.classList.remove('paused');
     }
 
-    // Retry jika elemen belum terbentuk
+    // Retry jika elemen belum terbentuk (hanya jika memang tidak ada sama sekali)
     if (!t && !mwT) {
       if (_uiTimer) clearTimeout(_uiTimer);
-      _uiTimer = setTimeout(updateUI, 300);
+      _uiTimer = setTimeout(updateUI, 500);
     }
   }
 
@@ -107,32 +107,21 @@ const CimegaMusic = (() => {
     if (!state) return;
 
     if (state.files && Array.isArray(state.files) && state.files.length > 0) {
-      // Normalisasi semua item ke objek, lalu sort alfabetis
       var normalized = state.files.map(normalizeItem);
       PLAYLIST = sortPlaylist(normalized);
     }
 
-    // FIX v2.1: jika main.js mengirim currentTitle, gunakan langsung (bypass re-mapping)
     if (state.currentTitle) _currentTitle = state.currentTitle;
 
-    // Re-mapping index: cari item yang sedang dimainkan di sorted array
-    // (main.js menggunakan index di array TIDAK ter-sort/urutan asli Firestore/fs)
+    // Mapping index
     if (typeof state.index !== 'undefined' && state.files && state.files.length > 0) {
       var playingItem = state.files[state.index];
       if (playingItem) {
-        var playingId = typeof playingItem === 'object'
-          ? (playingItem.id || playingItem.url || playingItem.title)
+        var playingId = typeof playingItem === 'object' 
+          ? (playingItem.id || playingItem.url || playingItem.title) 
           : String(playingItem);
-
-        var sortedIdx = -1;
-        for (var i = 0; i < PLAYLIST.length; i++) {
-          var p = PLAYLIST[i];
-          var pId = typeof p === 'object' ? (p.id || p.url || p.title) : String(p);
-          if (pId === playingId) { sortedIdx = i; break; }
-        }
-        currentIndex = sortedIdx !== -1 ? sortedIdx : 0;
-      } else {
-        currentIndex = 0;
+        var sortedIdx = PLAYLIST.findIndex(p => (p.id || p.url || p.title) === playingId);
+        currentIndex = (sortedIdx !== -1) ? sortedIdx : 0;
       }
     }
 
@@ -141,43 +130,46 @@ const CimegaMusic = (() => {
   }
 
   // ── Init ─────────────────────────────────────────────────────
-  async function init() {
+  async function init(retries = 0) {
+    if (_initialized && retries === 0) return;
+    
+    var api = window.cimegaConfig || window.cimegaAPI;
+    if (!api && retries < 15) {
+      setTimeout(() => init(retries + 1), 300);
+      return;
+    }
+    
     if (_initialized) return;
     _initialized = true;
 
-    // Pasang listener broadcast 'music-state-changed' dari main.js
-    var api = window.cimegaConfig || window.cimegaAPI;
+    // Update UI segera untuk mengganti "Memuat..." bawaan HTML
+    updateUI();
+
     if (api && api.onMusicStateChanged) {
       api.onMusicStateChanged(function(state) { applyState(state); });
     }
 
     try {
-      // Minta state awal dari main.js (juga memulai playback jika belum)
-      var initFn = (window.cimegaAPI && window.cimegaAPI.musicInit)
-        || (window.cimegaConfig && window.cimegaConfig.musicInit);
+      var initFn = (api && api.musicInit);
       if (initFn) {
-        var initialState = await initFn();
-        applyState(initialState);
+        const initialState = await initFn();
+        if (initialState) applyState(initialState);
       }
     } catch (e) {
       console.error('CimegaMusic init fail:', e);
-      // Fallback: ambil daftar file lokal langsung jika IPC gagal
       try {
-        var getMusicFn = (window.cimegaConfig && window.cimegaConfig.getMusicList)
-          || (window.cimegaAPI && window.cimegaAPI.getMusicList);
+        var getMusicFn = (api && api.getMusicList);
         if (typeof getMusicFn === 'function') {
           var files = await getMusicFn();
           if (files && files.length > 0) {
-            var normalized = files.map(normalizeItem);
-            PLAYLIST = sortPlaylist(normalized);
-            currentIndex = 0;
+            PLAYLIST = sortPlaylist(files.map(normalizeItem));
+            updateUI();
           }
         }
       } catch (_) {}
     }
 
     updateUI();
-    setTimeout(updateUI, 800); // Retry setelah DOM stabil
   }
 
   async function toggleMute() {

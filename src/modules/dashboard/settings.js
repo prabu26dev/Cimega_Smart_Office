@@ -23,11 +23,11 @@ if (!userData?.role || userData.role === 'admin') {
 
 // Normalize roles
 if (!userData.roles) {
-  userData.roles = userData.role ? [userData.role.toLowerCase()] : ['guru'];
+  userData.roles = userData.role ? [userData.role.toLowerCase().trim().replace(/[\s-]/g, '_')] : ['guru'];
 } else if (!Array.isArray(userData.roles)) {
-  userData.roles = [userData.roles.toLowerCase()];
+  userData.roles = [userData.roles.toLowerCase().trim().replace(/[\s-]/g, '_')];
 } else {
-  userData.roles = userData.roles.map(r => r.toLowerCase());
+  userData.roles = userData.roles.map(r => r.toLowerCase().trim().replace(/[\s-]/g, '_'));
 }
 window._userData = userData; // Global access
 
@@ -42,7 +42,7 @@ function filterAiTabsByRole() {
 
 // ── Kategori meta ──────────────────────────
 const katMeta = {
-  adm_guru:     { icon: '📚', title: 'Administrasi Guru & Pembelajaran', desc: 'RPP, Modul Ajar, Penilaian, Jurnal' },
+  adm_guru:     { icon: '📚', title: 'Administrasi Guru & Pembelajaran', desc: 'Modul Ajar, ATP, CP, Penilaian, Jurnal' },
   naskah_soal:  { icon: '📝', title: 'Naskah Soal & Bank Evaluasi',      desc: 'Kisi-Kisi, Soal HOTS, Rubrik, Analisis Butir' },
   adm_kepsek:   { icon: '🏛️', title: 'Administrasi Kepala Sekolah',      desc: 'Tugas Pokok, Supervisi, Manajerial, Humas' },
   kosp:         { icon: '📋', title: 'Kurikulum Operasional (KOSP)',      desc: 'Karakteristik, Visi Misi, Perencanaan' },
@@ -339,13 +339,42 @@ function setupUser() {
   
   const rb = document.getElementById('sidebarRole');
   if (rb) {
-    if (roles.length === 1) {
-      const r = roleMap[roles[0]] || { cls: 'role-guru', label: roles[0] };
+    // Prioritaskan specialist role jika ada guru_pai/guru_pjok bersama guru kelas
+    let activeRoles = [...roles];
+    if (activeRoles.includes('guru_pai') || activeRoles.includes('guru_pjok')) {
+      activeRoles = activeRoles.filter(r => r !== 'guru');
+    }
+
+    if (activeRoles.length === 1) {
+      const r = roleMap[activeRoles[0]] || { cls: 'role-guru', label: activeRoles[0] };
       rb.className = 'user-role-badge ' + r.cls;
       rb.textContent = r.label;
     } else {
       rb.className = 'user-role-badge role-guru';
-      rb.textContent = roles.map(r => roleMap[r]?.label || r).join(' · ');
+      rb.textContent = activeRoles.map(r => roleMap[r]?.label || r).join(' · ');
+    }
+  }
+
+  // Display Teaching Assignments (Specialists)
+  const elSidebarAssignment = document.getElementById('sidebarAssignment');
+  if (elSidebarAssignment) {
+    if (userData.teaching_assignments) {
+      const { classes, phases } = userData.teaching_assignments;
+      let texts = [];
+      if (phases?.length) texts.push(...phases);
+      if (classes?.length) texts.push('Klompok: ' + classes.join(', '));
+      
+      if (texts.length) {
+        elSidebarAssignment.innerHTML = `📍 ${texts.join(' · ')}`;
+        elSidebarAssignment.style.display = 'block';
+      } else {
+        elSidebarAssignment.style.display = 'none';
+      }
+    } else if (userData.wali_kelas) {
+      elSidebarAssignment.innerHTML = `📍 Wali Kelas: ${userData.wali_kelas}`;
+      elSidebarAssignment.style.display = 'block';
+    } else {
+      elSidebarAssignment.style.display = 'none';
     }
   }
 
@@ -992,7 +1021,7 @@ async function loadProfil() {
       if (data.avatarUrl) {
         avEl.innerHTML = `<img src="${data.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
       } else {
-        avEl.textContent = roles.includes('bendahara') ? '💰' : roles.includes('kepsek') ? '🏛️' : '👨‍🏫';
+        avEl.innerHTML = roles.includes('bendahara') ? '💰' : roles.includes('kepsek') ? '🏛️' : '👨‍🏫';
       }
     }
     const nameEl = document.getElementById('profilNama');
@@ -1012,6 +1041,81 @@ async function loadProfil() {
     if (stEl) stEl.innerHTML = `<span class="badge badge-${data.status === 'aktif' ? 'approved' : 'rejected'}">${data.status}</span>`;
   } catch (e) { }
 }
+
+/**
+ * addAdminLog: Mengirim log aktivitas ke koleksi adminLog agar terlihat oleh Admin
+ */
+async function addAdminLog(aksi, detail) {
+  const { collection, addDoc, serverTimestamp } = window._fb;
+  try {
+    await addDoc(collection(db, 'adminLog'), {
+      admin: userData.nama || 'User',
+      aksi: aksi,
+      detail: detail,
+      time: serverTimestamp()
+    });
+  } catch (e) { console.warn('Gagal mencatat log admin:', e); }
+}
+
+window.toggleUserPass = function(id) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  const btn = el.nextElementSibling;
+  if (el.type === 'password') {
+    el.type = 'text';
+    if(btn) btn.textContent = '🔒';
+  } else {
+    el.type = 'password';
+    if(btn) btn.textContent = '👁️';
+  }
+};
+
+async function changePassword() {
+  const oldPass = document.getElementById('oldPassUser')?.value.trim();
+  const newPass = document.getElementById('newPassUser')?.value.trim();
+  const confirmPass = document.getElementById('confirmPassUser')?.value.trim();
+
+  if (!oldPass || !newPass || !confirmPass) {
+    showToast('warn', 'Data Tidak Lengkap', 'Harap isi semua kolom password.');
+    return;
+  }
+
+  if (newPass !== confirmPass) {
+    showToast('error', 'Konfirmasi Gagal', 'Password baru dan konfirmasi tidak sesuai.');
+    return;
+  }
+
+  const { doc, getDoc, updateDoc, serverTimestamp } = window._fb;
+  try {
+    const userRef = doc(db, 'users', userData.id);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return;
+    
+    const data = snap.data();
+    if (data.password !== oldPass) {
+      showToast('error', 'Gagal', 'Password lama Anda salah.');
+      return;
+    }
+
+    await updateDoc(userRef, { 
+      password: newPass,
+      updatedAt: serverTimestamp() 
+    });
+
+    // KIRIM NOTIF/LOG KE ADMIN (Sesuai permintaan USER: perlihatkan password baru)
+    await addAdminLog('KEAMANAN (Update)', `User ${userData.nama} (@${userData.username}) mengganti password sendiri menjadi: ${newPass}`);
+
+    showToast('success', 'Berhasil', 'Password Anda telah diperbarui.');
+    
+    // Reset form
+    document.getElementById('oldPassUser').value = '';
+    document.getElementById('newPassUser').value = '';
+    document.getElementById('confirmPassUser').value = '';
+  } catch (err) {
+    showToast('error', 'Gagal', err.message);
+  }
+}
+
 async function uploadAvatar() {
   const fileInput = document.getElementById('avatarUploadInput');
   const statusEl = document.getElementById('avatarUploadStatus');
@@ -1041,7 +1145,6 @@ async function uploadAvatar() {
     const ext = file.name.split('.').pop();
     const safeName = `avatar_${userData.id}_${Date.now()}.${ext}`;
     
-    // Upload ke bucket user-profiles
     const { error: uploadErr } = await window._supabase.storage
       .from('user-profiles')
       .upload(`avatars/${safeName}`, file, { upsert: true, contentType: file.type });
@@ -1050,16 +1153,18 @@ async function uploadAvatar() {
     
     const { data: urlData } = window._supabase.storage.from('user-profiles').getPublicUrl(`avatars/${safeName}`);
     
-    // Update data user di Firestore
     const { doc, updateDoc, serverTimestamp } = window._fb;
     await updateDoc(doc(db, 'users', userData.id), { 
       avatarUrl: urlData.publicUrl, 
       updatedAt: serverTimestamp() 
     });
     
+    // Log ke admin
+    await addAdminLog('PROFIL', `User ${userData.nama} memperbarui foto profil.`);
+
     showToast('success', 'Berhasil', 'Foto profil diperbarui!');
     statusEl.textContent = 'Selesai';
-    await loadProfil(); // Refresh UI profile
+    await loadProfil();
   } catch (err) {
     console.error(err);
     showToast('error', 'Gagal Mengunggah', err.message);
@@ -1127,7 +1232,10 @@ async function generateDocAI() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating...'; }
   try {
     const res = await window.CimegaAI.ask({
-      messages: [{ role: 'user', content: `Buatkan isi "${currentDocName}". Instruksi: ${prompt}. Role: ${userData.roles.join(', ')}. Output: HANYA HTML murni.` }],
+      system: `TUGAS: Membuat konten untuk "${currentDocName}". 
+KATEGORI: ${currentKat}.
+FORMAT: Output HANYA berupa HTML murni tanpa tag <html>/<body>. Gunakan <h3>, <p>, <ul>, <table> untuk struktur.`,
+      messages: [{ role: 'user', content: `Buatkan isi konten berkualitas untuk ${currentDocName}. Instruksi: ${prompt}` }],
       maxTokens: 3000
     });
     const ce = document.getElementById('docContent');
@@ -1160,7 +1268,7 @@ async function sendChat() {
   document.getElementById('chatMessages')?.appendChild(typingDiv);
   try {
     const res = await window.CimegaAI.ask({
-      system: `Anda adalah "AI SUPER ASISTEN" khusus SDN Cimega. Pakar Kurikulum Merdeka & Administrasi.`,
+      system: `DOMAIN: Chat Umum Asisten Administrasi Sekolah.`,
       messages: _chatHistory.slice(-10),
       maxTokens: 2000,
     });
@@ -1227,6 +1335,16 @@ async function initApp() {
       const snap = await getDocs(query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah), where('target', '==', 'bendahara'), where('status', '==', 'pending')));
       if (!snap.empty) { const b = document.getElementById('submBadge'); if (b) { b.style.display = ''; b.textContent = snap.size; } }
     }
+
+    // ── Inisialisasi Supabase ──────────────────────────────
+    try {
+      const sbCfg = window.cimegaConfig?.supabase || await window.cimegaAPI?.getSupabaseConfig();
+      if(sbCfg?.url && typeof supabase !== 'undefined') {
+        window._supabase = supabase.createClient(sbCfg.url, sbCfg.key);
+        console.log('✅ Settings: Supabase Ready');
+      }
+    } catch(e) { console.warn('Supabase init failed:', e.message); }
+
   } catch (e) { console.error('initApp error', e); }
 }
 
@@ -1249,7 +1367,6 @@ window.setOrientation = setOrientation;
 window.openShareModal = openShareModal;
 window.doShare = doShare;
 window.loadShared = loadShared;
-window.filterShared = filterShared;
 window.openSharedDocDetail = openSharedDocDetail;
 window.submitComment = submitComment;
 window.downloadSharedDoc = downloadSharedDoc;
@@ -1265,6 +1382,7 @@ window.rejectDoc = rejectDoc;
 window.loadRekap = loadRekap;
 window.loadBeranda = loadBeranda;
 window.loadProfil = loadProfil;
+window.changePassword = changePassword;
 window.uploadAvatar = uploadAvatar;
 window.toggleNotif = toggleNotif;
 window.doUpdate = doUpdate;

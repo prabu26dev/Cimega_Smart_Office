@@ -66,6 +66,7 @@ window.AdminMaster = {
                     <div style="font-size:11px;color:var(--muted);margin-top:3px">Kelola hubungan Sekolah & Pengguna secara langsung</div>
                 </div>
                 <div style="display:flex;gap:10px">
+                    <button class="btn btn-primary" id="btnSyncMaster" onclick="masterSync('master')">🔄 Sinkron Sekarang</button>
                     <button class="btn btn-ghost" onclick="window.AdminMaster.init()">🔄 Refresh</button>
                     <button class="btn btn-gold" onclick="openModalSekolah()">🏫 + Tambah Institusi</button>
                 </div>
@@ -165,7 +166,12 @@ window.AdminMaster = {
 
         const rows = users.map(u => `
             <tr>
-                <td><strong>${u.nama || '-'}</strong></td>
+                <td>
+                    <strong>${u.nama || '-'}</strong>
+                    ${u.wali_kelas ? `<div style="font-size:9px;color:var(--muted)">📍 Walas: ${u.wali_kelas}</div>` : ''}
+                    ${(u.teaching_assignments && ((u.teaching_assignments.classes && u.teaching_assignments.classes.length) || (u.teaching_assignments.phases && u.teaching_assignments.phases.length))) ? 
+                        `<div style="font-size:9px;color:var(--cyan)">📍 Jangkauan: ${[...(u.teaching_assignments.phases||[]), ...(u.teaching_assignments.classes||[]).map(c=>'Kls '+c)].join(', ')}</div>` : ''}
+                </td>
                 <td><span class="badge badge-guru">${(u.roles || [u.role] || []).join(', ')}</span></td>
                 <td><code>${u.username || '-'}</code></td>
                 <td><span style="font-family:monospace; background:rgba(255,208,0,0.1); padding:2px 6px; border-radius:4px; color:var(--gold)">${u.password || '******'}</span></td>

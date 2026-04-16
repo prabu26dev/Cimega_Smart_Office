@@ -63,7 +63,7 @@
     .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
     .topbar{padding:11px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--dark2);flex-shrink:0}
     .topbar-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#fff;letter-spacing:1px}
-    .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-right{display:flex;align-items:center;gap:12px;justify-content:flex-end}
     .topbar-time{font-size:12px;color:var(--muted);font-family:'Orbitron',sans-serif}
     .topbar-status{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--success)}
     .topbar-status::before{content:'';width:6px;height:6px;background:var(--success);border-radius:50%;animation:blink 2s ease-in-out infinite}
@@ -247,7 +247,7 @@
     <div class="nav-section">Menu Utama</div>
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-section">Manajemen Terpadu</div>
-    <div class="nav-item active" style="color:var(--gold)" onclick="showPage('master',this)"><span class="nav-icon">📦</span>Data Master (Sinkron)</div>
+    <div class="nav-item active" style="color:var(--gold)" onclick="showPage('master',this)"><span class="nav-icon">📦</span>Data Master</div>
     <div class="nav-item" onclick="showPage('cloud',this)"><span class="nav-icon">☁️</span>Cimega Cloud Drive</div>
     <div class="nav-item" onclick="showPage('oversight',this)"><span class="nav-icon">🛡️</span>Pengawasan Dokumen</div>
     <div class="nav-section">Sistem</div>
@@ -658,11 +658,28 @@
 <!-- MODAL USER -->
 <div class="modal-overlay" id="modalUser">
   <div class="modal" style="max-width:560px">
-    <div class="modal-header"><div class="modal-title" id="modalUserTitle">Tambah Pengguna</div><button class="modal-close" onclick="closeModal('modalUser')">✕</button></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modalUserTitle">Kelola Pengguna</div>
+      <button class="modal-close" onclick="closeModal('modalUser')">✕</button>
+    </div>
     <input type="hidden" id="userId"/>
-    <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" id="userNama" placeholder="Nama lengkap"/></div>
-    <div class="form-group"><label class="form-label">Username</label><input class="form-control" id="userUsername" placeholder="Username untuk login"/></div>
-    <div class="form-group"><label class="form-label">Password</label><input class="form-control" type="password" id="userPassword" placeholder="Kosongkan jika tidak diubah"/></div>
+
+    <div class="form-group">
+      <label class="form-label">Nama Lengkap</label>
+      <input class="form-control" id="userNama" placeholder="Nama lengkap"/>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-control" id="userUsername" placeholder="Username untuk login"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control" type="password" id="userPassword" placeholder="Kosongkan jika tidak diubah"/>
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Jabatan <span style="color:var(--muted);font-weight:400">(boleh lebih dari satu)</span></label>
       <div class="roles-checkboxes" id="rolesCheckboxes">
@@ -680,8 +697,23 @@
         <label class="role-cb" data-role="fasilitator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="fasilitator"/>  🌱 Fasilitator Kokurikuler</label>
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Wali Kelas <span style="font-weight:400;color:var(--muted)">(Opsional)</span></label>
+
+    <div id="teachingAssignmentsContainer" style="display:none; margin-bottom: 20px; padding: 15px; background: rgba(0, 229, 255, 0.04); border: 1px dashed rgba(0, 229, 255, 0.2); border-radius: 12px;">
+      <label class="form-label" style="font-size: 11px; margin-bottom: 10px;">🎯 JANGKAUAN MENGAJAR (Pilih Kelas)</label>
+      <div id="teachingClasses">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+          <label class="role-cb" style="padding: 6px 10px; font-size: 11px;" data-val="1" onclick="toggleSimpleCb(this, event)"><input type="checkbox" value="1"/> Kelas 1</label>
+          <label class="role-cb" style="padding: 6px 10px; font-size: 11px;" data-val="2" onclick="toggleSimpleCb(this, event)"><input type="checkbox" value="2"/> Kelas 2</label>
+          <label class="role-cb" style="padding: 6px 10px; font-size: 11px;" data-val="3" onclick="toggleSimpleCb(this, event)"><input type="checkbox" value="3"/> Kelas 3</label>
+          <label class="role-cb" style="padding: 6px 10px; font-size: 11px;" data-val="4" onclick="toggleSimpleCb(this, event)"><input type="checkbox" value="4"/> Kelas 4</label>
+          <label class="role-cb" style="padding: 6px 10px; font-size: 11px;" data-val="5" onclick="toggleSimpleCb(this, event)"><input type="checkbox" value="5"/> Kelas 5</label>
+          <label class="role-cb" style="padding: 6px 10px; font-size: 11px;" data-val="6" onclick="toggleSimpleCb(this, event)"><input type="checkbox" value="6"/> Kelas 6</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group" id="waliKelasContainer">
+      <label class="form-label">Wali Kelas <span style="font-weight:400;color:var(--muted)">(Wajib jika Guru Kelas)</span></label>
       <input class="form-control" id="userWaliKelas" placeholder="Misal: Kelas 1A"/>
     </div>
     <!-- Sekolah readonly, terisi otomatis dari konteks sekolah yang dipilih -->
@@ -913,23 +945,95 @@ function showToast(type,title,msg){
 }
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 function openModal(id){document.getElementById(id).classList.add('show');}
+// Roles that require selecting multiple classes or phases
+const SPECIALIST_ROLES = ['guru_pai', 'guru_pjok', 'gpk', 'ekskul', 'koordinator', 'fasilitator'];
+// Roles that show the Class/Phase selection panel
+const CLASS_SELECT_ROLES = ['guru', ...SPECIALIST_ROLES];
 
 // ── Role Checkbox ──────────────────────────
-// FIX: event.preventDefault() mencegah double-fire label→input→label
+// FIX: Mutual Exclusivity logic: Guru Kelas vs Specialist (Multi-Class)
 function toggleRoleCb(el,event){
   if(event) event.preventDefault();
+  const role = el.dataset.role;
+  const isCurrentlyChecked = el.classList.contains('checked');
+
+  // Logic: Jika pilih Specialist Multi-Class, matikan Guru Kelas (dan sebaliknya)
+  // Ini untuk mencegah kerancuan antara pengisian Wali Kelas vs Specialist
+  if (!isCurrentlyChecked) {
+    if (SPECIALIST_ROLES.includes(role)) {
+      const guruKelasEl = document.querySelector('#rolesCheckboxes .role-cb[data-role="guru"]');
+      if (guruKelasEl) {
+        guruKelasEl.classList.remove('checked');
+        guruKelasEl.querySelector('input').checked = false;
+      }
+    } else if (role === 'guru') {
+      const specialists = document.querySelectorAll(SPECIALIST_ROLES.map(r => `#rolesCheckboxes .role-cb[data-role="${r}"]`).join(', '));
+      specialists.forEach(s => {
+        s.classList.remove('checked');
+        s.querySelector('input').checked = false;
+      });
+    }
+  }
+
   el.classList.toggle('checked');
-  el.querySelector('input').checked=el.classList.contains('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+  
+  updateAssignmentVisibility();
 }
+
+function updateAssignmentVisibility() {
+  const roles = getCheckedRoles('rolesCheckboxes');
+  
+  // 1. Panel Kelas/Fase: Tampil untuk Guru Kelas & Semua Specialist
+  const showClassSelect = roles.some(r => CLASS_SELECT_ROLES.includes(r));
+  const classPanel = document.getElementById('teachingAssignmentsContainer');
+  if (classPanel) classPanel.style.display = showClassSelect ? 'block' : 'none';
+
+  // 2. Input Wali Kelas: HANYA tampil untuk Guru Kelas
+  const showWaliKelas = roles.includes('guru');
+  const waliPanel = document.getElementById('waliKelasContainer');
+  if (waliPanel) waliPanel.style.display = showWaliKelas ? 'block' : 'none';
+}
+
+function toggleSimpleCb(el, event) {
+  if (event) event.preventDefault();
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+}
+
 function getCheckedRoles(cid){
   return Array.from(document.querySelectorAll(`#${cid} .role-cb.checked`)).map(el=>el.dataset.role);
 }
+
+function getCheckedAssignments() {
+  const classes = Array.from(document.querySelectorAll('#teachingClasses .role-cb.checked')).map(el => el.dataset.val);
+  return { classes };
+}
+
 function setCheckedRoles(cid,roles){
   document.querySelectorAll(`#${cid} .role-cb`).forEach(el=>{
     const on=(roles||[]).includes(el.dataset.role);
     el.classList.toggle('checked',on);
     el.querySelector('input').checked=on;
   });
+  updateAssignmentVisibility();
+}
+
+function setCheckedAssignments(data) {
+  // Clear all
+  document.querySelectorAll('#teachingClasses .role-cb').forEach(el => {
+    el.classList.remove('checked');
+    el.querySelector('input').checked = false;
+  });
+  
+  if (!data) return;
+  
+  if (data.classes) {
+    data.classes.forEach(c => {
+      const el = document.querySelector(`#teachingClasses .role-cb[data-val="${c}"]`);
+      if (el) { el.classList.add('checked'); el.querySelector('input').checked = true; }
+    });
+  }
 }
 
 // ── Navigation ─────────────────────────────
@@ -1027,6 +1131,7 @@ function openModalUser(){
   document.getElementById('userSekolahDisplay').value = `${_activeSchoolName} (${npsn})`;
   
   setCheckedRoles('rolesCheckboxes',[]);
+  setCheckedAssignments(null);
   document.getElementById('modalUserTitle').textContent='Tambah Pengguna — '+_activeSchoolName;
   openModal('modalUser');
 }
@@ -1065,6 +1170,7 @@ function editUser(id){
   document.getElementById('userSekolahDisplay').value = `${d.sekolah || _activeSchoolName} (${d.school_id || 'N/A'})`;
   
   setCheckedRoles('rolesCheckboxes',d.roles||[d.role]);
+  setCheckedAssignments(d.teaching_assignments || null);
   document.getElementById('modalUserTitle').textContent='Edit Pengguna — '+(d.nama||'');
   openModal('modalUser');
 }
@@ -1081,6 +1187,7 @@ async function saveUser(){
   const expiredStr = document.getElementById('userExpired').value;
   const wali_kelas = document.getElementById('userWaliKelas').value.trim();
   const roles = getCheckedRoles('rolesCheckboxes');
+  const teaching_assignments = getCheckedAssignments();
 
   if(!nama || !username){showToast('warn','Peringatan','Nama dan username wajib diisi!');return;}
   if(roles.length===0){showToast('warn','Peringatan','Pilih minimal satu jabatan!');return;}
@@ -1091,6 +1198,7 @@ async function saveUser(){
     const payload = { 
       id, nama, username, roles, role, sekolah, school_id, status, 
       wali_kelas,
+      teaching_assignments,
       updatedAt: serverTimestamp() 
     };
     if(password) payload.password = password;
@@ -2311,6 +2419,40 @@ async function masterSync(mode = 'adm') {
     } finally { setSyncState(false); }
     return;
   }
+
+  // ══════════════════════════════════════════════════════
+  // MODE MASTER: Sinkronisasi Masal Sekolah & Users
+  // ══════════════════════════════════════════════════════
+  if (mode === 'master') {
+    setSyncState(true, 'MENYINKRONKAN DATA MASTER...');
+    const { collection, getDocs } = window._fb;
+    try {
+      // 1. Sinkron Sekolah
+      const skolSnap = await getDocs(collection(db, 'sekolah'));
+      let skolOk = 0;
+      for (const d of skolSnap.docs) {
+        try { await syncToSupabase('sekolah', { id: d.id, ...d.data() }); skolOk++; }
+        catch(e) { console.warn('SB Sekolah Skip:', d.id, e.message); }
+      }
+
+      // 2. Sinkron Users
+      const usrSnap = await getDocs(collection(db, 'users'));
+      let usrOk = 0;
+      for (const d of usrSnap.docs) {
+        try { await syncToSupabase('users', { id: d.id, ...d.data() }); usrOk++; }
+        catch(e) { console.warn('SB Users Skip:', d.id, e.message); }
+      }
+
+      if (window.AdminMaster) await window.AdminMaster.init();
+      addLog('MASTER SYNC', `Data Master: ${skolOk} Sekolah & ${usrOk} Users → Supabase ✓`);
+      showToast('success', '✅ SINKRON MASTER SELESAI', 
+        `${skolOk} Sekolah & ${usrOk} Pengguna telah disinkronkan ke Supabase Storage.`);
+    } catch(e) {
+      showToast('error', 'Sinkron Master Gagal', e.message);
+      console.error('masterSync master:', e);
+    } finally { setSyncState(false); }
+    return;
+  }
 }
 
 // ── Modal Konten ──────────────────────────────────────────
@@ -2566,19 +2708,16 @@ async function initApp(){
 initApp();
 </script>
 
+  <!-- ██ PEMBALUT SCRIPTS AKHIR ██ -->
   <script src="../../modules/admin/oversight.js"></script>
   <script src="../../modules/admin/cloud_drive.js"></script>
 
   <!-- ██ MODUL EVALUASI NASKAH SOAL — Diperlukan untuk importDefaultTemplates() ██ -->
-  <!-- Guru Kelas -->
   <script src="../../modules/guru/evaluasi_naskah_soal.js"></script>
-  <!-- Guru PAI -->
   <script src="../../modules/guru_pai/evaluasi_naskah_soal_pai.js"></script>
-  <!-- Guru PJOK -->
   <script src="../../modules/guru_pjok/evaluasi_naskah_soal_pjok.js"></script>
 
   <!-- ██ ADMIN MASTER DATA — Sumber Kebenaran utama untuk masterSync() ██ -->
-  <!-- File ini berisi SEMUA kategori + template AI dari SEMUA 12 role      -->
   <script src="../../modules/admin/admin_master_data.js"></script>
 </body>
 </html>

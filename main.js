@@ -1,5 +1,7 @@
+process.env.NODE_NO_WARNINGS = '1';
+if (process.stdout.isTTY) console.clear();
 // ─────────────────────────────────────────────────────────
-//   CIMEGA SMART OFFICE v2.0
+//   CIMEGA SMART OFFICE v1.0.0
 //   Platform Administrasi Sekolah — Kurikulum Merdeka
 // ─────────────────────────────────────────────────────────
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
@@ -102,6 +104,8 @@ function loadLocalMusicFiles() {
         // Absolute file:// URL — WAJIB untuk bgm_player.html (same-origin file://)
         url:   url.pathToFileURL(path.join(__dirname, 'assets_music', f)).href,
       })));
+      buildShuffleQueue(); // Bangun antrean acak segera setelah file dimuat
+      musicState.index = getNextShuffleIndex(); // Pilih lagu pertama secara acak
     }
   } catch (e) {
     console.warn('[WARN] loadLocalMusicFiles:', e.message);
@@ -134,6 +138,46 @@ function syncMusicFromFirestore() {
   }
 }
 syncMusicFromFirestore();
+
+// ── Check Supabase Connection ────────────────────────────────
+async function checkSupabaseStatus() {
+  return new Promise((resolve) => {
+    const url = envConfig.SUPABASE_URL || envConfig.NEXT_PUBLIC_SUPABASE_URL;
+    if (!url) return resolve('NOT_CONFIGURED');
+    try {
+      const request = https.request(url, { method: 'HEAD', timeout: 3000 }, (res) => {
+        resolve('CONNECTED');
+      });
+      request.on('error', () => resolve('OFFLINE'));
+      request.on('timeout', () => { request.destroy(); resolve('TIMEOUT'); });
+      request.end();
+    } catch(e) { resolve('OFFLINE'); }
+  });
+}
+
+// ── Check Firestore Connection (Live Handshake) ─────────────
+async function checkFirestoreStatus() {
+  if (!firebaseAdminReady) return 'CONFIG_ERROR';
+  try {
+    // Ping Firestore dengan limit super kecil (cek koneksi & auth)
+    const snap = await db.collection('settings').limit(1).get();
+    return 'CONNECTED';
+  } catch (err) {
+    return 'OFFLINE';
+  }
+}
+
+// ── Check AI Service Status (Local TCP Ping) ────────────────
+async function checkAIServiceStatus() {
+  return new Promise((resolve) => {
+    const http = require('http');
+    const req = http.get('http://localhost:3001', (res) => {
+      resolve('ACTIVE (Port 3001)');
+    });
+    req.on('error', () => resolve('OFFLINE'));
+    req.setTimeout(1500, () => { req.destroy(); resolve('TIMEOUT'); });
+  });
+}
 
 // ── Update state ─────────────────────────────────────────────
 let updateInfo   = null;
@@ -259,6 +303,11 @@ function createWindow() {
     mainWindow.webContents.closeDevTools();
   });
 
+  // Proactively broadcast music state to the new window when it finishes loading
+  mainWindow.webContents.on('did-finish-load', () => {
+    broadcastMusicState();
+  });
+
   mainWindow.on('closed', () => { 
     mainWindow = null; 
     app.quit(); // Teruskan sinyal penghentian ke seluruh Jendela (termasuk bgMusicWindow) 
@@ -294,32 +343,26 @@ ipcMain.handle('get-app-config', () => ({
 ipcMain.handle('music-init', async () => {
   if (!bgMusicWindow) createBgMusicWindow();
 
-  // Guard: jangan restart BGM jika sudah ada yang sedang berjalan
-  // FIX v2.1: async/await agar return value mencerminkan state SESUNGGUHNYA setelah cek playback
   try {
     const isPlaying = await bgMusicWindow.webContents.executeJavaScript(
       'typeof window.isPaused === "function" ? !window.isPaused() : (!!window._bgm && !!window._bgm.src && !window._bgm.paused)'
     );
-    if (!isPlaying) {
-      // Hanya build shuffle baru jika queue memang kosong
-      if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
-        buildShuffleQueue();
-        musicState.index = _shuffleQueue.shift() || 0;
-      }
+    if (!isPlaying && musicFiles.length > 0) {
+      // Selalu pastikan queue tersedia dan ambil index acak pertama
+      if (_shuffleQueue.length === 0) buildShuffleQueue();
+      getNextShuffleIndex(); 
       playMusicOnBgWindow();
     }
-    // Jika sudah main: cukup broadcast state saja — tidak perlu rebuild apapun
     broadcastMusicState();
   } catch (_) {
-    // bgMusicWindow belum siap atau executeJavaScript gagal → fallback mulai playback
-    if (musicFiles.length > 0 && _shuffleQueue.length === 0) {
-      buildShuffleQueue();
-      musicState.index = _shuffleQueue.shift() || 0;
+    if (musicFiles.length > 0) {
+      if (_shuffleQueue.length === 0) buildShuffleQueue();
+      getNextShuffleIndex();
+      playMusicOnBgWindow();
     }
-    playMusicOnBgWindow();
   }
 
-  return { ...musicState, files: musicFiles, total: musicFiles.length, currentTitle: musicFiles[musicState.index]?.title || '' }; // FIX v2.1
+  return { ...musicState, files: musicFiles, total: musicFiles.length, currentTitle: musicFiles[musicState.index]?.title || '' };
 });
 
 ipcMain.handle('music-get-state', () => ({
@@ -711,18 +754,31 @@ app.whenReady().then(async () => {
   await seedInitialTemplates(db);
   createWindow();
 
-  // Startup Banner — tampil 1x setelah semua service siap
-  setTimeout(() => {
-    const ver  = require('./package.json').version;
-    const node = process.versions.node;
-    const sep  = '='.repeat(52);
-    console.log('\n' + sep);
-    console.log('  CIMEGA SMART OFFICE  v' + ver);
-    console.log('  Firebase  : ' + (firebaseAdminReady ? 'Connected' : 'OFFLINE'));
-    console.log('  Musik     : ' + musicFiles.length + ' lagu siap diputar');
-    console.log('  Node.js   : v' + node + '  |  Electron: v' + process.versions.electron);
-    console.log(sep + '\n');
-  }, 2000);
+  // Startup Banner — Professional Clean Edition (LIVE VALIDATION)
+  setTimeout(async () => {
+    // Jalankan semua pengetesan secara paralel (Real-Time Handshake)
+    const [fsStatus, sbStatus, aiStatus] = await Promise.all([
+      checkFirestoreStatus(),
+      checkSupabaseStatus(),
+      checkAIServiceStatus()
+    ]);
+
+    const pkg = require('./package.json');
+    const ver = pkg.version;
+    
+    console.clear ? console.clear() : console.log('\x1Bc'); 
+
+    console.log(`CIMEGA SMART OFFICE v${ver}`);
+    console.log(`Platform Administrasi Sekolah - Kurikulum Merdeka`);
+    console.log(`------------------------------------------------------------`);
+    console.log(`[CORE]   Database (Firestore) : ${fsStatus}`);
+    console.log(`[CORE]   Storage  (Supabase)  : ${sbStatus}`);
+    console.log(`[CORE]   AI Generation        : ${aiStatus}`);
+    console.log(`[ASSETS] Music Library        : ${musicFiles.length} Tracks Loaded`);
+    console.log(`[SYSTEM] Node.js              : v${process.versions.node}`);
+    console.log(`[SYSTEM] Electron             : v${process.versions.electron}`);
+    console.log(`------------------------------------------------------------`);
+  }, 1200);
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

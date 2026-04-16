@@ -43,18 +43,11 @@
     .stat-num { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--cyan); }
     .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 5px; }
     
-    .role-badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 25px; }
-    .role-tag { font-size: 10px; padding: 4px 12px; border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-    .role-tag.guru { background: rgba(0, 102, 255, 0.1); color: #66aaff; border: 1px solid rgba(0, 102, 255, 0.2); }
-    .role-tag.kepsek { background: rgba(170, 85, 255, 0.1); color: #cc88ff; border: 1px solid rgba(170, 85, 255, 0.2); }
-    .role-tag.bendahara { background: rgba(255, 208, 0, 0.1); color: var(--gold); border: 1px solid rgba(255, 208, 0, 0.25); }
-    .role-tag.ops { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.2); }
-
     .divider-line { position: fixed; left: 38%; top: 10%; height: 80%; width: 1px; background: linear-gradient(to bottom, transparent, var(--cyan), transparent); opacity: 0.25; z-index: 5; }
 
     /* LOGIN WRAPPER */
-    .login-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; z-index: 10; }
-    .login-card { width: 100%; max-width: 460px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 50px 45px; position: relative; overflow: hidden; backdrop-filter: blur(25px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    .login-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
+    .login-card { width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px 25px 30px; position: relative; overflow: hidden; backdrop-filter: blur(25px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
     .login-card::before, .login-card::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: var(--cyan); border-style: solid; opacity: 0.6; }
     .login-card::before { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 24px 0 0 0; }
     .login-card::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 24px 0; }
@@ -65,24 +58,24 @@
 
     .version-badge { position: absolute; top: 18px; right: 25px; font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--muted); opacity: 0.6; }
     .card-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 20px; padding: 5px 15px; font-size: 10px; color: var(--cyan); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; }
-    .card-title { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .card-title { font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1px; }
     .card-title span { color: var(--cyan); }
-    .card-desc { font-size: 14px; color: var(--muted); margin-top: 8px; margin-bottom: 35px; }
+    .card-desc { font-size: 15px; color: var(--muted); margin-top: 6px; margin-bottom: 20px; line-height: 1.4; }
 
     /* FORM */
-    .form-group { margin-bottom: 25px; }
-    .form-label { display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+    .form-group { margin-bottom: 15px; }
+    .form-label { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
     .form-label::before { content: ''; width: 3px; height: 15px; background: var(--cyan); border-radius: 2px; box-shadow: 0 0 10px var(--cyan); }
     .input-wrapper { position: relative; }
     .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.6; pointer-events: none; }
-    .form-input { width: 100%; padding: 15px 15px 15px 50px; background: rgba(0, 229, 255, 0.04); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 12px; color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 15px; outline: none; transition: all 0.3s; }
+    .form-input { width: 100%; padding: 15px 15px 15px 50px; background: rgba(0, 229, 255, 0.04); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 12px; color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 16px; outline: none; transition: all 0.3s; }
     .form-input::placeholder { color: var(--muted); opacity: 0.5; }
     .form-input:focus { border-color: var(--cyan); background: rgba(0, 229, 255, 0.08); box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); }
     
     .toggle-pass { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); padding: 5px; font-size: 16px; transition: color 0.2s; }
     .toggle-pass:hover { color: var(--cyan); }
 
-    .btn-login { width: 100%; padding: 18px; background: linear-gradient(135deg, #0044cc, #0066ff, #00aaff); background-size: 200% auto; border: none; border-radius: 12px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 4px; cursor: pointer; transition: all 0.4s; margin-top: 10px; box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3); }
+    .btn-login { width: 100%; padding: 18px; background: linear-gradient(135deg, #0044cc, #0066ff, #00aaff); background-size: 200% auto; border: none; border-radius: 12px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 4px; cursor: pointer; transition: all 0.4s; margin-top: 10px; box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3); }
     .btn-login:hover { transform: translateY(-2px); background-position: right center; box-shadow: 0 15px 40px rgba(0, 102, 255, 0.5); }
     .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -94,7 +87,7 @@
     @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
     /* MUSIC WIDGET */
-    .music-widget { position: fixed; bottom: 30px; right: 30px; z-index: 100; background: rgba(4, 20, 45, 0.85); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 15px; padding: 12px 18px; backdrop-filter: blur(15px); min-width: 230px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+    .music-widget { position: relative; width: 100%; max-width: 320px; margin-top: 40px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.12); border-radius: 15px; padding: 12px 18px; backdrop-filter: blur(5px); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); z-index: 10; }
     .mw-row1 { display: flex; align-items: center; gap: 10px; }
     .mw-bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
     .mw-bars .b { width: 3px; background: var(--cyan); border-radius: 1px; animation: barUp 0.7s infinite ease-in-out; }
@@ -108,6 +101,14 @@
     .mw-btn:hover { background: rgba(0, 229, 255, 0.15); transform: scale(1.1); }
 
     .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; vertical-align: middle; }
+
+    /* CONTACT SUPPORT */
+    .contact-support { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0, 229, 255, 0.1); display: flex; flex-direction: column; gap: 10px; }
+    .contact-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-align: center; }
+    .contact-items { display: flex; gap: 10px; }
+    .contact-item { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text); background: rgba(0, 229, 255, 0.03); padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(0, 229, 255, 0.08); transition: all 0.2s; overflow: hidden; }
+    .contact-item:hover { background: rgba(0, 229, 255, 0.07); border-color: rgba(0, 229, 255, 0.2); transform: translateY(-2px); }
+    .contact-item i { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0, 229, 255, 0.1); border-radius: 50%; font-style: normal; font-size: 10px; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -138,11 +139,19 @@
       </div>
     </div>
 
-    <div class="role-badges">
-      <span class="role-tag guru">👨‍🏫 GURU</span>
-      <span class="role-tag kepsek">🏛️ KEPSEK</span>
-      <span class="role-tag bendahara">💰 BENDAHARA</span>
-      <span class="role-tag ops">💻 OPERATOR</span>
+    <!-- MINI PLAYER IN SIDEBAR -->
+    <div class="music-widget">
+      <div class="mw-row1">
+        <div class="mw-bars">
+          <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+        </div>
+        <div class="mw-title" id="mwTitle">Sinkronisasi...</div>
+      </div>
+      <div class="mw-controls">
+        <button class="mw-btn" onclick="CimegaMusic.prev()">⏮</button>
+        <button class="mw-btn" onclick="CimegaMusic.toggleMute()">🔊</button>
+        <button class="mw-btn" onclick="CimegaMusic.next()">⏭</button>
+      </div>
     </div>
   </div>
 
@@ -153,15 +162,14 @@
     <div class="login-card">
       <div class="corner-tr"></div>
       <div class="corner-bl"></div>
-      <div class="version-badge">BETA v1.2.0</div>
+      <div class="version-badge">OFFICIAL PRE-RELEASE v1.0.0</div>
       
-      <div class="card-tag">OTORISASI CYBER</div>
-      <div class="card-title">PORTAL <span>AKSES</span></div>
-      <div class="card-desc">Hubungkan identitas Anda ke workstation sekolah.</div>
+      <div class="card-title">PORTAL <span>LOGIN</span></div>
+      <div class="card-desc">Silahkan masukan Username/NIP dan Password anda untuk masuk ke Aplikasi.</div>
 
       <!-- ERROR ALERTS -->
       <div class="alert alert-error" id="alertError">
-        <div class="alert-body"><strong>Login Gagal:</strong> <span id="errorText">ID atau Passkey salah.</span></div>
+        <div class="alert-body"><strong>LOGIN GAGAL:</strong> <span id="errorText">ID atau Passkey salah.</span></div>
       </div>
       <div class="alert alert-warn" id="alertExpired">
         <div class="alert-body"><strong>Akses Diblokir:</strong> Akun nonaktif atau langganan berakhir.</div>
@@ -169,7 +177,7 @@
 
       <!-- FORM -->
       <div class="form-group">
-        <div class="form-label">Identitas Workstation</div>
+        <div class="form-label">Username/NIP</div>
         <div class="input-wrapper">
           <span class="input-icon">👤</span>
           <input class="form-input" id="username" type="text" placeholder="Username..." autocomplete="username" />
@@ -177,7 +185,7 @@
       </div>
 
       <div class="form-group">
-        <div class="form-label">Passkey</div>
+        <div class="form-label">PASSWORD</div>
         <div class="input-wrapper">
           <span class="input-icon">🔑</span>
           <input class="form-input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
@@ -185,22 +193,28 @@
         </div>
       </div>
 
-      <button class="btn-login" id="btnLogin" onclick="doLogin()">OTORISASI AKSES</button>
-    </div>
-  </div>
+      <button class="btn-login" id="btnLogin" onclick="doLogin()">LOGIN</button>
 
-  <!-- MINI PLAYER -->
-  <div class="music-widget">
-    <div class="mw-row1">
-      <div class="mw-bars">
-        <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+      <!-- CONTACT SUPPORT -->
+      <div class="contact-support">
+        <div class="contact-label">Bantuan & Perpanjangan Masa Aktif</div>
+        <div class="contact-items">
+          <div class="contact-item">
+            <i>📧</i>
+            <div style="flex:1">
+              <div style="font-size:9px;color:var(--muted);margin-bottom:1px">Email</div>
+              <div style="font-weight:600">prabu26.dev@gmail.com</div>
+            </div>
+          </div>
+          <div class="contact-item">
+            <i>💬</i>
+            <div style="flex:1">
+              <div style="font-size:9px;color:var(--muted);margin-bottom:1px">WhatsApp</div>
+              <div style="font-weight:600">081313981641</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="mw-title" id="mwTitle">Cimega Lofi Radio</div>
-    </div>
-    <div class="mw-controls">
-      <button class="mw-btn" onclick="CimegaMusic.prev()">⏮</button>
-      <button class="mw-btn" onclick="CimegaMusic.toggleMute()">🔊</button>
-      <button class="mw-btn" onclick="CimegaMusic.next()">⏭</button>
     </div>
   </div>
 
@@ -225,8 +239,14 @@
     // SYSTEM INIT
     async function initApp() {
       try {
-        // ── Init musik (non-blocking) ──────────────────────────
-        if (window.CimegaMusic) CimegaMusic.init().catch(() => {});
+        // ── Init musik (non-blocking - with persistent retry) ────────
+        const musicRetry = setInterval(() => {
+          if (window.CimegaMusic) {
+            window.CimegaMusic.init().catch(() => {});
+            clearInterval(musicRetry);
+          }
+        }, 300);
+        setTimeout(() => clearInterval(musicRetry), 5000); // Guard 5s
 
         // ── Ambil config dari bridge ───────────────────────────
         const firebaseConfig = window.cimegaConfig?.firebase
@@ -353,7 +373,7 @@
         if (secs <= 0) {
           clearInterval(_lockTimer);
           if (errBox) errBox.classList.remove('show');
-          if (btn) { btn.disabled = false; btn.innerHTML = 'OTORISASI AKSES'; }
+          if (btn) { btn.disabled = false; btn.innerHTML = 'LOGIN'; }
           return;
         }
         const m = Math.floor(secs / 60);
@@ -445,7 +465,7 @@
           }
           passwordInput.value = '';
           btn.disabled = false;
-          btn.innerHTML = 'OTORISASI AKSES';
+          btn.innerHTML = 'LOGIN';
           return;
         }
 
@@ -512,7 +532,7 @@
       } catch (err) {
         console.error('Auth Exception:', err.message);
         btn.disabled = false;
-        btn.innerHTML = 'OTORISASI AKSES';
+        btn.innerHTML = 'LOGIN';
 
         if (err.message === 'ID_NOT_FOUND' || err.message === 'PASSKEY_MISMATCH') {
           if(errTxt) errTxt.textContent = 'ID atau Passkey tidak valid.';

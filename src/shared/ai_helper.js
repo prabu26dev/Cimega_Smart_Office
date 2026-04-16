@@ -7,69 +7,104 @@
 
 window.CimegaAI = {
   /**
-   * Cimega AI Guardrail
-   * Exact system instruction as per architectural requirement.
+   * Mengambil konteks user dari localStorage untuk Identity Injection
    */
-  SYSTEM_GUARDRAIL: "Anda adalah Cimega AI, Asisten Ahli Administrasi SD Kurikulum Merdeka. Anda HANYA boleh menjawab terkait pendidikan, Dapodik, BOSP, Modul Ajar, dan laporan sekolah. JIKA ditanya di luar topik sekolah (resep, coding, hiburan, dll), TOLAK DENGAN TEGAS: 'Maaf, saya hanya diprogram untuk tata kelola pendidikan Cimega Smart Office'.",
+  getUserContext: function() {
+    try {
+      const userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
+      if (!userData || !userData.nama) return null;
+      
+      const roles = Array.isArray(userData.roles) ? userData.roles : (userData.role ? [userData.role] : []);
+      const assignments = userData.teaching_assignments ? 
+        `Unit: ${userData.teaching_assignments.classes?.join(', ') || '-'} / ${userData.teaching_assignments.phases?.join(', ') || '-'}` : 
+        (userData.wali_kelas ? `Wali Kelas: ${userData.wali_kelas}` : '');
+
+      return {
+        nama: userData.nama,
+        sekolah: userData.sekolah || 'SDN Cimega',
+        roles: roles.map(r => r.toUpperCase()),
+        assignments: assignments
+      };
+    } catch (e) {
+      return null;
+    }
+  },
+
+  /**
+   * Cimega AI Guardrail - Fokus Kurikulum Merdeka 2025/2026
+   */
+  SYSTEM_GUARDRAIL: `### CIMEGA SMART OFFICE — PROTOKOL KEAMANAN AI ###
+Versi: Kurikulum Merdeka 2025/2026 (Modern SD)
+
+1. IDENTITAS: Anda adalah Cimega AI, Asisten Ahli khusus Administrasi Sekolah Kurikulum Merdeka.
+2. LIMITASI DOMAIN: Hanya layani Pendidikan SD, Modul Ajar, ATP, CP, BOSP, Dapodik, dan Manajemen Sekolah.
+3. KURIKULUM: Hapus referensi RPP/Kurtilas. Gunakan CP, TP, ATP, dan Modul Ajar.
+4. KEAMANAN ROLE (SANGAT PENTING): 
+   - Anda harus memeriksa Identitas User yang dikirimkan.
+   - Jika user meminta tugas/dokumen dari Role yang tidak dia miliki, TOLAK DENGAN TEGAS.
+   - Contoh: User Guru dilarang mengurus Keuangan BOS (Role Bendahara) atau Supervisi (Role Kepsek).
+   - Penolakan: "Mohon maaf, sebagai Cimega AI, saya mendeteksi tugas ini di luar wewenang Role [Role User] Anda."
+5. GUARD TOPIC: Tolak resep, coding umum, hiburan, atau hal di luar tata kelola sekolah.`,
 
   /**
    * Wrapper for sending prompts to the AI API.
-   * 
-   * @param {Object} options 
-   * @param {string} [options.system] - Optional extra system prompt.
-   * @param {Array} options.messages - Array of chat messages e.g. [{ role: 'user', content: '...' }]
-   * @param {number} [options.maxTokens=2000] - Max output tokens
-   * @returns {Promise<Object>} The AI response { text, error }
    */
   ask: async function(options) {
-    // 1. Check if options is defined
     if (!options) return { error: 'Parameter options tidak boleh kosong.' };
 
-    // 2. Check for API bridge existence (FIX v2.1: fallback ke cimegaConfig jika cimegaAPI tidak ada)
     const _api = window.cimegaConfig || window.cimegaAPI;
     if (!_api || !_api.geminiAsk) {
-      return { error: 'Cimega AI Bridge (geminiAsk) tidak ditemukan. Pastikan aplikasi berjalan di Electron.' };
+      return { error: 'Cimega AI Bridge tidak ditemukan.' };
     }
 
-    // 3. Validate messages
     if (!options.messages || !Array.isArray(options.messages) || options.messages.length === 0) {
-      return { error: 'Parameter messages harus berupa array yang tidak kosong.' };
+      return { error: 'Parameter messages tidak valid.' };
     }
 
     try {
-      // 4. Merge system guardrails using absolute reference
-      let mergedSystem = window.CimegaAI.SYSTEM_GUARDRAIL;
-      if (options.system) {
-        mergedSystem += '\n\nINSTRUKSI TAMBAHAN:\n' + options.system;
+      // 1. Identity Injection
+      const context = window.CimegaAI.getUserContext();
+      let identityPrompt = "";
+      
+      if (context) {
+        identityPrompt = `
+### IDENTITAS USER AKTIF ###
+Nama: ${context.nama}
+Sekolah: ${context.sekolah}
+Role Resmi: ${context.roles.join(', ')}
+Penugasan: ${context.assignments}
+---------------------------
+INSTRUKSI: Layani user HANYA untuk tugas yang sesuai dengan daftar Role Resmi di atas.
+`;
       }
 
-      // 5. Build payload with sanitized types
+      // 2. Build Merged System Prompt
+      let mergedSystem = window.CimegaAI.SYSTEM_GUARDRAIL + (identityPrompt ? "\n" + identityPrompt : "");
+      
+      if (options.system) {
+        mergedSystem += '\n\nKONTEKS TUGAS SPESIFIK:\n' + options.system;
+      }
+
+      // 3. Build Payload
       const payload = {
         system: mergedSystem,
         messages: options.messages,
         maxTokens: parseInt(options.maxTokens) || 2000
       };
 
-      // 6. Call underlying API
       const res = await _api.geminiAsk(payload);
-
-      // 7. Handle empty responses from bridge
-      if (!res) return { error: 'AI Bridge tidak mengembalikan respon.' };
-      
-      // 8. Error handling from bridge
+      if (!res) return { error: 'AI Bridge tidak merespon.' };
       if (res.error) return { error: res.error };
-
-      // 9. Standardize output text
       if (res.success && res.text) {
         return { success: true, text: res.text.trim() };
       }
 
-      return { error: 'AI mengembalikan respon kosong tanpa pesan kesalahan.' };
+      return { error: 'AI mengembalikan respon kosong.' };
       
     } catch (err) {
-      // 10. Global Exception Handling
-      console.error('CimegaAI Critical Error:', err);
-      return { error: 'Terjadi kesalahan sistem pada Cimega AI: ' + err.message };
+      console.error('CimegaAI Error:', err);
+      return { error: 'Terjadi kesalahan sistem Cimega AI: ' + err.message };
     }
   }
 };
+

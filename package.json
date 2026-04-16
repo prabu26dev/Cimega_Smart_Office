@@ -1,11 +1,12 @@
 {
   "name": "cimega-smart-office",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Platform Administrasi Sekolah Cerdas — Kurikulum Merdeka 2025/2026",
   "main": "main.js",
   "author": "Kang Prabu",
   "scripts": {
-    "start": "electron .",
+    "start": "cls && electron . --no-deprecation",
+    "clean": "powershell -Command \"Write-Host 'Cleaning project artifacts...' -ForegroundColor Yellow; Remove-Item -Path 'logs', 'data_cache', 'dist' -Recurse -Force -ErrorAction SilentlyContinue; Write-Host '--- Project is clean! ---' -ForegroundColor Green\"",
     "build:win": "electron-builder --win --x64",
     "build:all": "electron-builder --win --x64 --publish never",
     "build:secure": "node scripts/build-secure.js",
