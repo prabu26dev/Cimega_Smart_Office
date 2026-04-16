@@ -1,5 +1,5 @@
 # 🚀 PANDUAN SISTEM UPDATE OTOMATIS
-## Cimega Smart Office v2.0
+## Cimega Smart Office v1.0
 
 > Sistem pembaruan aplikasi berbasis **GitHub Releases** yang mendistribusikan versi terbaru
 > ke seluruh perangkat pengguna secara otomatis — tanpa intervensi teknis dari guru.
@@ -94,7 +94,7 @@ Di **Firebase Console → Firestore Database**, buat atau perbarui dokumen:
 Koleksi  : appConfig
 Dokumen  : version
 Field    : {
-  "currentVersion"  : "2.0.0",
+  "currentVersion"  : "1.0.0",
   "downloadUrl"     : "",
   "updateType"      : "optional",
   "changelog"       : "Versi awal.",
@@ -127,7 +127,7 @@ Sistem menggunakan **IPC Bridge v5.0** yang mengekspos fungsi berikut via `prelo
 | `onDownloadProgress(cb)` | `update-download-progress` | Listener progress unduhan |
 | `removeDownloadListener()` | — | Bersihkan listener setelah selesai |
 
-> ⚠️ Sebelum v2.0, fungsi-fungsi ini **tidak di-expose** di `preload.js`, menyebabkan
+> ⚠️ Sebelum v1.0, fungsi-fungsi ini **tidak di-expose** di `preload.js`, menyebabkan
 > fitur updater tidak berfungsi. Hal ini sudah diperbaiki di versi sekarang.
 
 ---

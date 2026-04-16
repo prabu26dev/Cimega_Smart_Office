@@ -1,6 +1,6 @@
 'use strict';
 // ================================================================
-// CIMEGA SMART OFFICE v2.0 — src/scripts/migrate_db.js
+// CIMEGA SMART OFFICE v1.0 — src/scripts/migrate_db.js
 //
 // Skrip migrasi & normalisasi Firestore untuk arsitektur Multi-Tenant
 // Kurikulum Merdeka 2025/2026 dengan 12 Role.
@@ -27,16 +27,16 @@
 // ================================================================
 
 const admin = require('firebase-admin');
-const path  = require('path');
-const fs    = require('fs');
+const path = require('path');
+const fs = require('fs');
 
 // ── Konfigurasi ──────────────────────────────────────────────────
 const TARGET_PROJECT_ID = 'cimega-smart-office'; // ← Sesuaikan jika berbeda
 const DEFAULT_SCHOOL_ID = 'NPSN_MIGRATE_2026';   // Fallback school_id untuk data lama
-const DRY_RUN           = process.env.DRY_RUN === 'true';
-const TARGET_COL        = process.env.COL || null; // Opsional: filter 1 koleksi saja
+const DRY_RUN = process.env.DRY_RUN === 'true';
+const TARGET_COL = process.env.COL || null; // Opsional: filter 1 koleksi saja
 
-// 12 role valid di sistem Cimega v2.0
+// 12 role valid di sistem Cimega v1.0
 const VALID_ROLES = new Set([
   'admin', 'guru', 'guru_pai', 'guru_pjok', 'kepsek',
   'bendahara', 'ops', 'tu', 'gpk', 'ekskul',
@@ -118,7 +118,7 @@ const COLLECTION_MIGRATORS = {
     const updates = {};
 
     if (!data.school_id) updates.school_id = DEFAULT_SCHOOL_ID;
-    if (!data.status)    updates.status    = 'aktif';
+    if (!data.status) updates.status = 'aktif';
 
     // Hapus field usang dari arsitektur lama
     if ('isGlobal' in data) {
@@ -147,12 +147,12 @@ const COLLECTION_MIGRATORS = {
   app_music: (data) => {
     const updates = {};
 
-    if (!data.status)     updates.status    = 'active';
+    if (!data.status) updates.status = 'active';
     if (!data.localFile && data.audioUrl) {
       // Ekstrak nama file dari URL sebagai referensi
       try {
         const segments = data.audioUrl.split('/');
-        const rawName  = decodeURIComponent(segments[segments.length - 1]);
+        const rawName = decodeURIComponent(segments[segments.length - 1]);
         // Hapus prefix timestamp jika ada (format: 1234567890_filename.mp3)
         updates.localFile = rawName.replace(/^\d+_/, '');
       } catch (_) { /* skip jika URL tidak bisa diparsing */ }
@@ -232,7 +232,7 @@ async function startMigration() {
   const summary = {};
   let totalUpdated = 0;
   let totalSkipped = 0;
-  let totalFailed  = 0;
+  let totalFailed = 0;
 
   try {
     for (const colName of collectionsToRun) {
@@ -247,10 +247,10 @@ async function startMigration() {
       }
 
       const migrateFn = COLLECTION_MIGRATORS[colName];
-      const batch     = db.batch();
+      const batch = db.batch();
       let updated = 0;
       let skipped = 0;
-      let failed  = 0;
+      let failed = 0;
 
       snapshot.forEach((doc) => {
         try {
@@ -286,7 +286,7 @@ async function startMigration() {
       summary[colName] = { updated, skipped, failed };
       totalUpdated += updated;
       totalSkipped += skipped;
-      totalFailed  += failed;
+      totalFailed += failed;
 
       const modeLabel = DRY_RUN ? '(simulasi) ' : '';
       console.log(`   ✅ Diperbarui  : ${updated} dokumen ${modeLabel}`);

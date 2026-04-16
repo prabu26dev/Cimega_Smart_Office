@@ -5,6 +5,16 @@
   <meta charset="UTF-8" />
   <title>Dashboard - Cimega Smart Office</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      window.require && require('fs').appendFileSync('debug.log', `[ERROR] ${message} at ${source}:${lineno}:${colno}\n`);
+    };
+    const origErr = console.error;
+    console.error = function(...args) {
+      window.require && require('fs').appendFileSync('debug.log', `[CONSOLE_ERROR] ${args.join(' ')}\n`);
+      origErr.apply(console, args);
+    };
+  </script>
   <link
     href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
@@ -2067,6 +2077,7 @@
   <script src="../../shared/crypto_helper.js"></script>
   <script src="../../shared/ai_helper.js"></script>
   <script src="../../shared/ai_chatbot.js"></script>
+  <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
   <script src="../../shared/chat.js"></script>
   <script src="../../shared/sharing.js"></script>

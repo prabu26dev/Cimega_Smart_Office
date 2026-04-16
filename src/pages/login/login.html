@@ -1,116 +1,700 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <title>Login - Cimega Smart Office</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
   <style>
     :root {
-      --cyan: #00e5ff; --blue: #0066ff; --dark: #020b18; --dark2: #041428;
-      --card: rgba(4, 20, 45, 0.95); --border: rgba(0, 229, 255, 0.25);
-      --text: #e0f4ff; --muted: #5a8aaa; --success: #00ff88; --danger: #ff4466;
-      --warn: #ffaa00; --gold: #ffd000; --purple: #aa55ff;
+      --cyan: #00e5ff;
+      --blue: #0066ff;
+      --dark: #020b18;
+      --dark2: #041428;
+      --card: rgba(4, 20, 45, 0.95);
+      --border: rgba(0, 229, 255, 0.25);
+      --text: #e0f4ff;
+      --muted: #5a8aaa;
+      --success: #00ff88;
+      --danger: #ff4466;
+      --warn: #ffaa00;
+      --gold: #ffd000;
+      --purple: #aa55ff;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Exo 2', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; display: flex; overflow: hidden; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
 
     /* BACKGROUND FX */
-    .glow-bg { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at 20% 50%, rgba(0, 102, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(0, 229, 255, 0.1) 0%, transparent 50%); z-index: 0; }
-    .scanline { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); z-index: 100; background-size: 100% 2px, 3px 100%; pointer-events: none; }
-    .particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-    .particle { position: absolute; background: var(--cyan); border-radius: 50%; opacity: 0; animation: float-up linear infinite; }
-    @keyframes float-up { 0% { opacity: 0; transform: translateY(100vh) scale(0); } 10% { opacity: 0.5; } 90% { opacity: 0.2; } 100% { opacity: 0; transform: translateY(-10vh) scale(1); } }
+    .glow-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 20% 50%, rgba(0, 102, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(0, 229, 255, 0.1) 0%, transparent 50%);
+      z-index: 0;
+    }
+
+    .scanline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      z-index: 100;
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
+
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      background: var(--cyan);
+      border-radius: 50%;
+      opacity: 0;
+      animation: float-up linear infinite;
+    }
+
+    @keyframes float-up {
+      0% {
+        opacity: 0;
+        transform: translateY(100vh) scale(0);
+      }
+
+      10% {
+        opacity: 0.5;
+      }
+
+      90% {
+        opacity: 0.2;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-10vh) scale(1);
+      }
+    }
 
     /* OVERLAY */
-    .init-overlay { position: fixed; inset: 0; background: var(--dark); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-    .init-overlay.hide { opacity: 0; pointer-events: none; transform: scale(1.1); }
-    .init-spinner { width: 40px; height: 40px; border: 3px solid rgba(0, 229, 255, 0.1); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2); }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .init-text { font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--cyan); letter-spacing: 4px; text-transform: uppercase; animation: pulse 2s ease-in-out infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .init-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--dark);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .init-overlay.hide {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.1);
+    }
+
+    .init-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 229, 255, 0.1);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .init-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      color: var(--cyan);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
 
     /* LEFT PANEL */
-    .left-panel { position: relative; width: 38%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; z-index: 10; border-right: 1px solid rgba(0, 229, 255, 0.1); }
-    .logo-img { width: 160px; height: 160px; object-fit: contain; filter: drop-shadow(0 0 25px rgba(0, 229, 255, 0.3)); margin-bottom: 25px; animation: float-logo 4s ease-in-out infinite; }
-    @keyframes float-logo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    .brand-name { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900; color: #fff; text-align: center; letter-spacing: 3px; line-height: 1.2; text-shadow: 0 0 20px rgba(0, 229, 255, 0.3); }
-    .brand-name span { color: var(--cyan); }
-    .brand-sub { font-size: 12px; color: var(--muted); text-align: center; letter-spacing: 5px; text-transform: uppercase; margin-top: 10px; opacity: 0.8; }
-    
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 320px; margin-top: 35px; }
-    .stat-box { background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.12); border-radius: 12px; padding: 15px; text-align: center; backdrop-filter: blur(5px); }
-    .stat-num { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--cyan); }
-    .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 5px; }
-    
-    .divider-line { position: fixed; left: 38%; top: 10%; height: 80%; width: 1px; background: linear-gradient(to bottom, transparent, var(--cyan), transparent); opacity: 0.25; z-index: 5; }
+    .left-panel {
+      position: relative;
+      width: 38%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      z-index: 10;
+      border-right: 1px solid rgba(0, 229, 255, 0.1);
+    }
+
+    .logo-img {
+      width: 160px;
+      height: 160px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 25px rgba(0, 229, 255, 0.3));
+      margin-bottom: 25px;
+      animation: float-logo 4s ease-in-out infinite;
+    }
+
+    @keyframes float-logo {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .brand-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      letter-spacing: 3px;
+      line-height: 1.2;
+      text-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+    }
+
+    .brand-name span {
+      color: var(--cyan);
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-top: 10px;
+      opacity: 0.8;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 35px;
+    }
+
+    .stat-box {
+      background: rgba(0, 229, 255, 0.05);
+      border: 1px solid rgba(0, 229, 255, 0.12);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .stat-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 5px;
+    }
+
+    .divider-line {
+      position: fixed;
+      left: 38%;
+      top: 10%;
+      height: 80%;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--cyan), transparent);
+      opacity: 0.25;
+      z-index: 5;
+    }
 
     /* LOGIN WRAPPER */
-    .login-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
-    .login-card { width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px 25px 30px; position: relative; overflow: hidden; backdrop-filter: blur(25px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-    .login-card::before, .login-card::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: var(--cyan); border-style: solid; opacity: 0.6; }
-    .login-card::before { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 24px 0 0 0; }
-    .login-card::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 24px 0; }
-    
-    .corner-tr, .corner-bl { position: absolute; width: 30px; height: 30px; border-color: var(--cyan); border-style: solid; opacity: 0.6; }
-    .corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 24px 0 0; }
-    .corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 24px; }
+    .login-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 10;
+    }
 
-    .version-badge { position: absolute; top: 18px; right: 25px; font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--muted); opacity: 0.6; }
-    .card-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 20px; padding: 5px 15px; font-size: 10px; color: var(--cyan); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; }
-    .card-title { font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1px; }
-    .card-title span { color: var(--cyan); }
-    .card-desc { font-size: 15px; color: var(--muted); margin-top: 6px; margin-bottom: 20px; line-height: 1.4; }
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 30px 25px 30px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(25px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .login-card::before,
+    .login-card::after {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-color: var(--cyan);
+      border-style: solid;
+      opacity: 0.6;
+    }
+
+    .login-card::before {
+      top: 0;
+      left: 0;
+      border-width: 2px 0 0 2px;
+      border-radius: 24px 0 0 0;
+    }
+
+    .login-card::after {
+      bottom: 0;
+      right: 0;
+      border-width: 0 2px 2px 0;
+      border-radius: 0 0 24px 0;
+    }
+
+    .corner-tr,
+    .corner-bl {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-color: var(--cyan);
+      border-style: solid;
+      opacity: 0.6;
+    }
+
+    .corner-tr {
+      top: 0;
+      right: 0;
+      border-width: 2px 2px 0 0;
+      border-radius: 0 24px 0 0;
+    }
+
+    .corner-bl {
+      bottom: 0;
+      left: 0;
+      border-width: 0 0 2px 2px;
+      border-radius: 0 0 0 24px;
+    }
+
+    .version-badge {
+      position: absolute;
+      top: 18px;
+      right: 25px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 20px;
+      padding: 5px 15px;
+      font-size: 10px;
+      color: var(--cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .card-title span {
+      color: var(--cyan);
+    }
+
+    .card-desc {
+      font-size: 15px;
+      color: var(--muted);
+      margin-top: 6px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
 
     /* FORM */
-    .form-group { margin-bottom: 15px; }
-    .form-label { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
-    .form-label::before { content: ''; width: 3px; height: 15px; background: var(--cyan); border-radius: 2px; box-shadow: 0 0 10px var(--cyan); }
-    .input-wrapper { position: relative; }
-    .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.6; pointer-events: none; }
-    .form-input { width: 100%; padding: 15px 15px 15px 50px; background: rgba(0, 229, 255, 0.04); border: 1px solid rgba(0, 229, 255, 0.15); border-radius: 12px; color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 16px; outline: none; transition: all 0.3s; }
-    .form-input::placeholder { color: var(--muted); opacity: 0.5; }
-    .form-input:focus { border-color: var(--cyan); background: rgba(0, 229, 255, 0.08); box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); }
-    
-    .toggle-pass { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); padding: 5px; font-size: 16px; transition: color 0.2s; }
-    .toggle-pass:hover { color: var(--cyan); }
+    .form-group {
+      margin-bottom: 15px;
+    }
 
-    .btn-login { width: 100%; padding: 18px; background: linear-gradient(135deg, #0044cc, #0066ff, #00aaff); background-size: 200% auto; border: none; border-radius: 12px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 4px; cursor: pointer; transition: all 0.4s; margin-top: 10px; box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3); }
-    .btn-login:hover { transform: translateY(-2px); background-position: right center; box-shadow: 0 15px 40px rgba(0, 102, 255, 0.5); }
-    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .form-label::before {
+      content: '';
+      width: 3px;
+      height: 15px;
+      background: var(--cyan);
+      border-radius: 2px;
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 15px 15px 15px 50px;
+      background: rgba(0, 229, 255, 0.04);
+      border: 1px solid rgba(0, 229, 255, 0.15);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .form-input::placeholder {
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    .form-input:focus {
+      border-color: var(--cyan);
+      background: rgba(0, 229, 255, 0.08);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+    }
+
+    .toggle-pass {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 5px;
+      font-size: 16px;
+      transition: color 0.2s;
+    }
+
+    .toggle-pass:hover {
+      color: var(--cyan);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #0044cc, #0066ff, #00aaff);
+      background-size: 200% auto;
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      cursor: pointer;
+      transition: all 0.4s;
+      margin-top: 10px;
+      box-shadow: 0 10px 30px rgba(0, 102, 255, 0.3);
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      background-position: right center;
+      box-shadow: 0 15px 40px rgba(0, 102, 255, 0.5);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
 
     /* ALERTS */
-    .alert { display: none; align-items: flex-start; gap: 12px; padding: 15px 20px; border-radius: 12px; font-size: 13px; margin-bottom: 25px; animation: slideDown 0.4s ease; }
-    .alert.show { display: flex; }
-    .alert-error { background: rgba(255, 68, 102, 0.1); border: 1px solid rgba(255, 68, 102, 0.2); color: #ff8899; }
-    .alert-warn { background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255, 170, 0, 0.2); color: #ffcc66; }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .alert {
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-bottom: 25px;
+      animation: slideDown 0.4s ease;
+    }
+
+    .alert.show {
+      display: flex;
+    }
+
+    .alert-error {
+      background: rgba(255, 68, 102, 0.1);
+      border: 1px solid rgba(255, 68, 102, 0.2);
+      color: #ff8899;
+    }
+
+    .alert-warn {
+      background: rgba(255, 170, 0, 0.1);
+      border: 1px solid rgba(255, 170, 0, 0.2);
+      color: #ffcc66;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
     /* MUSIC WIDGET */
-    .music-widget { position: relative; width: 100%; max-width: 320px; margin-top: 40px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.12); border-radius: 15px; padding: 12px 18px; backdrop-filter: blur(5px); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); z-index: 10; }
-    .mw-row1 { display: flex; align-items: center; gap: 10px; }
-    .mw-bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
-    .mw-bars .b { width: 3px; background: var(--cyan); border-radius: 1px; animation: barUp 0.7s infinite ease-in-out; }
-    @keyframes barUp { 0%, 100% { height: 4px; } 50% { height: 14px; } }
-    .mw-bars .b:nth-child(2) { animation-delay: 0.1s; }
-    .mw-bars .b:nth-child(3) { animation-delay: 0.2s; }
-    .mw-bars .b:nth-child(4) { animation-delay: 0.3s; }
-    .mw-title { font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-    .mw-controls { display: flex; gap: 8px; justify-content: center; }
-    .mw-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(0, 229, 255, 0.2); background: rgba(0, 229, 255, 0.05); color: var(--cyan); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-    .mw-btn:hover { background: rgba(0, 229, 255, 0.15); transform: scale(1.1); }
+    .music-widget {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 40px;
+      background: rgba(0, 229, 255, 0.05);
+      border: 1px solid rgba(0, 229, 255, 0.12);
+      border-radius: 15px;
+      padding: 12px 18px;
+      backdrop-filter: blur(5px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+    }
 
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; vertical-align: middle; }
+    .mw-row1 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mw-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+    }
+
+    .mw-bars .b {
+      width: 3px;
+      background: var(--cyan);
+      border-radius: 1px;
+      animation: barUp 0.7s infinite ease-in-out;
+    }
+
+    @keyframes barUp {
+
+      0%,
+      100% {
+        height: 4px;
+      }
+
+      50% {
+        height: 14px;
+      }
+    }
+
+    .mw-bars .b:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .mw-bars .b:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .mw-bars .b:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    .mw-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .mw-controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .mw-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      background: rgba(0, 229, 255, 0.05);
+      color: var(--cyan);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .mw-btn:hover {
+      background: rgba(0, 229, 255, 0.15);
+      transform: scale(1.1);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
 
     /* CONTACT SUPPORT */
-    .contact-support { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0, 229, 255, 0.1); display: flex; flex-direction: column; gap: 10px; }
-    .contact-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-align: center; }
-    .contact-items { display: flex; gap: 10px; }
-    .contact-item { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text); background: rgba(0, 229, 255, 0.03); padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(0, 229, 255, 0.08); transition: all 0.2s; overflow: hidden; }
-    .contact-item:hover { background: rgba(0, 229, 255, 0.07); border-color: rgba(0, 229, 255, 0.2); transform: translateY(-2px); }
-    .contact-item i { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0, 229, 255, 0.1); border-radius: 50%; font-style: normal; font-size: 10px; flex-shrink: 0; }
+    .contact-support {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(0, 229, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .contact-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    .contact-items {
+      display: flex;
+      gap: 10px;
+    }
+
+    .contact-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text);
+      background: rgba(0, 229, 255, 0.03);
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 229, 255, 0.08);
+      transition: all 0.2s;
+      overflow: hidden;
+    }
+
+    .contact-item:hover {
+      background: rgba(0, 229, 255, 0.07);
+      border-color: rgba(0, 229, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .contact-item i {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 229, 255, 0.1);
+      border-radius: 50%;
+      font-style: normal;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
   </style>
 </head>
+
 <body>
 
   <div class="init-overlay" id="initOverlay">
@@ -124,10 +708,11 @@
 
   <!-- LEFT BRANDING PANEL -->
   <div class="left-panel">
-    <img class="logo-img" src="../../../assets_images/Logo SDN Cimega.png" alt="Logo" onerror="this.style.opacity='0'"/>
-    <div class="brand-name">CIMEGA<br/><span>SMART OFFICE</span></div>
+    <img class="logo-img" src="../../../assets_images/Logo SDN Cimega.png" alt="Logo"
+      onerror="this.style.opacity='0'" />
+    <div class="brand-name">CIMEGA<br /><span>SMART OFFICE</span></div>
     <div class="brand-sub">Digital School Administration</div>
-    
+
     <div class="stats-grid">
       <div class="stat-box">
         <div class="stat-num" id="statGuru">—</div>
@@ -143,7 +728,10 @@
     <div class="music-widget">
       <div class="mw-row1">
         <div class="mw-bars">
-          <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+          <div class="b"></div>
+          <div class="b"></div>
+          <div class="b"></div>
+          <div class="b"></div>
         </div>
         <div class="mw-title" id="mwTitle">Sinkronisasi...</div>
       </div>
@@ -163,7 +751,7 @@
       <div class="corner-tr"></div>
       <div class="corner-bl"></div>
       <div class="version-badge">OFFICIAL PRE-RELEASE v1.0.0</div>
-      
+
       <div class="card-title">PORTAL <span>LOGIN</span></div>
       <div class="card-desc">Silahkan masukan Username/NIP dan Password anda untuk masuk ke Aplikasi.</div>
 
@@ -188,16 +776,24 @@
         <div class="form-label">PASSWORD</div>
         <div class="input-wrapper">
           <span class="input-icon">🔑</span>
-          <input class="form-input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+          <input class="form-input" id="password" type="password" placeholder="••••••••"
+            autocomplete="current-password" />
           <button class="toggle-pass" id="togglePassBtn" type="button">👁️</button>
         </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:8px; margin-top:5px; margin-bottom:15px; cursor:pointer;"
+        onclick="document.getElementById('rememberMe').click()">
+        <input type="checkbox" id="rememberMe"
+          style="width:16px; height:16px; accent-color:var(--cyan); cursor:pointer;">
+        <span style="font-size:12px; color:var(--muted); font-family:'Orbitron'; letter-spacing:1px;">INGAT SAYA</span>
       </div>
 
       <button class="btn-login" id="btnLogin" onclick="doLogin()">LOGIN</button>
 
       <!-- CONTACT SUPPORT -->
       <div class="contact-support">
-        <div class="contact-label">Bantuan & Perpanjangan Masa Aktif</div>
+        <div class="contact-label">CONTACT SUPPORT:</div>
         <div class="contact-items">
           <div class="contact-item">
             <i>📧</i>
@@ -225,9 +821,9 @@
     let db;
 
     // UI HELPER: Toggle Pass
-    document.getElementById('togglePassBtn').onclick = function() {
+    document.getElementById('togglePassBtn').onclick = function () {
       const inp = document.getElementById('password');
-      if(inp.type === 'password') {
+      if (inp.type === 'password') {
         inp.type = 'text';
         this.textContent = '🙈';
       } else {
@@ -242,11 +838,31 @@
         // ── Init musik (non-blocking - with persistent retry) ────────
         const musicRetry = setInterval(() => {
           if (window.CimegaMusic) {
-            window.CimegaMusic.init().catch(() => {});
+            window.CimegaMusic.init().catch(() => { });
             clearInterval(musicRetry);
           }
         }, 300);
         setTimeout(() => clearInterval(musicRetry), 5000); // Guard 5s
+
+        // ── Autofill Credentials (Remember Me) ────────────────────
+        try {
+          const remembered = localStorage.getItem('cimega_remembered');
+          if (remembered) {
+            const { u, p } = JSON.parse(remembered);
+            if (u) document.getElementById('username').value = u;
+            if (p) document.getElementById('password').value = p;
+            document.getElementById('rememberMe').checked = true;
+          }
+        } catch (e) { console.warn('Autofill failed', e); }
+
+        // Hide overlay with delay
+        setTimeout(() => {
+          const overlay = document.getElementById('initOverlay');
+          if (overlay) {
+            overlay.classList.add('hide');
+            setTimeout(() => overlay.remove(), 600);
+          }
+        }, 500);
 
         // ── Ambil config dari bridge ───────────────────────────
         const firebaseConfig = window.cimegaConfig?.firebase
@@ -258,7 +874,7 @@
 
         // ── Load Firebase SDK dari CDN ─────────────────────────
         const { initializeApp, getApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-        const fbFs   = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const fbFs = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
         const { getFirestore, collection, getDocs } = fbFs;
 
         // Safe init: hindari "App already exists" error
@@ -281,9 +897,9 @@
             if (data.role !== 'admin' && data.status !== 'nonaktif') aktif++;
           });
           const elGuru = document.getElementById('statGuru');
-          const elSch  = document.getElementById('statSekolah');
+          const elSch = document.getElementById('statSekolah');
           if (elGuru) elGuru.textContent = aktif;
-          if (elSch)  elSch.textContent  = skolSnap.size;
+          if (elSch) elSch.textContent = skolSnap.size;
         } catch (e) { console.warn('Live stats restricted:', e.message); }
 
         // ── Hide overlay ───────────────────────────────────────
@@ -302,9 +918,9 @@
 
     // ENTER KEY LISTENER
     document.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter') {
+      if (e.key === 'Enter') {
         const overlay = document.getElementById('initOverlay');
-        if(!overlay) window.doLogin();
+        if (!overlay) window.doLogin();
       }
     });
 
@@ -312,16 +928,16 @@
     async function sha256(message) {
       const msgBuffer = new TextEncoder().encode(message);
       const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray  = Array.from(new Uint8Array(hashBuffer));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
     // ── SECURITY: Brute-Force Rate Limiter ─────────────────────
     // Max 5 attempts dalam 5 menit, lalu lockout 5 menit
-    const RATE_KEY      = '_cimega_rl';
-    const MAX_ATTEMPTS  = 5;
-    const LOCKOUT_MS    = 5 * 60 * 1000; // 5 menit
-    const WINDOW_MS     = 5 * 60 * 1000; // 5 menit sliding window
+    const RATE_KEY = '_cimega_rl';
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_MS = 5 * 60 * 1000; // 5 menit
+    const WINDOW_MS = 5 * 60 * 1000; // 5 menit sliding window
 
     function getRateData() {
       try { return JSON.parse(sessionStorage.getItem(RATE_KEY)) || { attempts: 0, firstAttempt: 0, lockedUntil: 0 }; }
@@ -330,7 +946,7 @@
     function saveRateData(d) { sessionStorage.setItem(RATE_KEY, JSON.stringify(d)); }
 
     function checkRateLimit() {
-      const d   = getRateData();
+      const d = getRateData();
       const now = Date.now();
       // Cek apakah sedang dalam masa lockout
       if (d.lockedUntil > now) {
@@ -345,13 +961,13 @@
     }
 
     function recordFailedAttempt() {
-      const d   = getRateData();
+      const d = getRateData();
       const now = Date.now();
       if (d.attempts === 0) d.firstAttempt = now;
       d.attempts++;
       if (d.attempts >= MAX_ATTEMPTS) {
         d.lockedUntil = now + LOCKOUT_MS;
-        console.warn(`[SECURITY] Brute force terdeteksi — akun dikunci ${LOCKOUT_MS/60000} menit`);
+        console.warn(`[SECURITY] Brute force terdeteksi — akun dikunci ${LOCKOUT_MS / 60000} menit`);
       }
       saveRateData(d);
       return d.attempts;
@@ -366,7 +982,7 @@
     function showLockout(remaining) {
       const errBox = document.getElementById('alertError');
       const errTxt = document.getElementById('errorText');
-      const btn    = document.getElementById('btnLogin');
+      const btn = document.getElementById('btnLogin');
       let secs = remaining;
       if (_lockTimer) clearInterval(_lockTimer);
       _lockTimer = setInterval(() => {
@@ -378,9 +994,9 @@
         }
         const m = Math.floor(secs / 60);
         const s = secs % 60;
-        if (errTxt) errTxt.textContent = `Terlalu banyak percobaan. Tunggu ${m}:${String(s).padStart(2,'0')} lagi.`;
+        if (errTxt) errTxt.textContent = `Terlalu banyak percobaan. Tunggu ${m}:${String(s).padStart(2, '0')} lagi.`;
         if (errBox) errBox.classList.add('show');
-        if (btn)    btn.disabled = true;
+        if (btn) btn.disabled = true;
         secs--;
       }, 1000);
     }
@@ -389,24 +1005,24 @@
     // AUTH ENGINE — Secure v2.0
     // Proteksi: Brute-Force + SHA-256 hashing
     // ══════════════════════════════════════════
-    window.doLogin = async function() {
+    window.doLogin = async function () {
       const usernameInput = document.getElementById('username');
       const passwordInput = document.getElementById('password');
-      if(!usernameInput || !passwordInput) return;
+      if (!usernameInput || !passwordInput) return;
 
       const username = usernameInput.value.trim();
       const password = passwordInput.value;
-      const btn    = document.getElementById('btnLogin');
+      const btn = document.getElementById('btnLogin');
       const errBox = document.getElementById('alertError');
-      const warnBox= document.getElementById('alertExpired');
+      const warnBox = document.getElementById('alertExpired');
       const errTxt = document.getElementById('errorText');
 
-      if(errBox)  errBox.classList.remove('show');
-      if(warnBox) warnBox.classList.remove('show');
+      if (errBox) errBox.classList.remove('show');
+      if (warnBox) warnBox.classList.remove('show');
 
       if (!username || !password) {
-        if(errTxt) errTxt.textContent = 'Identitas dan Passkey wajib diisi.';
-        if(errBox) errBox.classList.add('show');
+        if (errTxt) errTxt.textContent = 'Identitas dan Passkey wajib diisi.';
+        if (errBox) errBox.classList.add('show');
         return;
       }
 
@@ -425,7 +1041,7 @@
         const { collection, query, where, getDocs, getDoc, doc } = window._fbFs;
 
         // 1. Fetch User Profile
-        const q    = query(collection(db, 'users'), where('username', '==', username));
+        const q = query(collection(db, 'users'), where('username', '==', username));
         const snap = await getDocs(q);
 
         if (snap.empty) {
@@ -434,7 +1050,7 @@
         }
 
         const userDoc = snap.docs[0];
-        const data    = userDoc.data();
+        const data = userDoc.data();
 
         // ── SECURITY CHECK 2: Password Comparison ─────────────
         // Cimega menyimpan password sebagai SHA-256 hash di Firestore.
@@ -460,8 +1076,8 @@
           if (remaining <= 0) {
             showLockout(LOCKOUT_MS / 1000);
           } else {
-            if(errTxt) errTxt.textContent = `ID atau Passkey tidak valid. (${remaining} percobaan tersisa)`;
-            if(errBox) errBox.classList.add('show');
+            if (errTxt) errTxt.textContent = `ID atau Passkey tidak valid. (${remaining} percobaan tersisa)`;
+            if (errBox) errBox.classList.add('show');
           }
           passwordInput.value = '';
           btn.disabled = false;
@@ -472,14 +1088,14 @@
         // 3. Subscription & Status Verification
         if (data.role !== 'admin') {
           if (data.status === 'nonaktif' || data.status_akun === 'Nonaktif') {
-            if(warnBox) warnBox.classList.add('show');
+            if (warnBox) warnBox.classList.add('show');
             throw new Error('STATUS_DISABLED');
           }
           const expField = data.expiredDate || data.expired;
           if (expField) {
             const expDate = expField.toDate ? expField.toDate() : new Date(expField);
             if (new Date() > expDate) {
-              if(warnBox) warnBox.classList.add('show');
+              if (warnBox) warnBox.classList.add('show');
               throw new Error('SUBSCRIPTION_EXPIRED');
             }
           }
@@ -491,23 +1107,31 @@
         try {
           const instDoc = await getDoc(doc(db, 'institutions', schoolId));
           if (instDoc.exists()) schoolSecretKey = instDoc.data().school_secret_key || '';
-        } catch(e) { console.warn('Key handover failed', e); }
+        } catch (e) { console.warn('Key handover failed', e); }
 
         // 5. Build Session — SECURITY: school_key TIDAK masuk localStorage
         //    Hanya metadata non-sensitif yang disimpan.
         //    school_key dikirim ke sessionStore via preload bridge (in-memory only).
         const roles = data.roles || (data.role ? [data.role] : []);
         const sessionData = {
-          id:        userDoc.id,
-          nama:      data.nama,
-          role:      data.role,
-          roles:     roles,
-          sekolah:   data.sekolah,
+          id: userDoc.id,
+          nama: data.nama,
+          role: data.role,
+          roles: roles,
+          sekolah: data.sekolah,
           school_id: schoolId,
-          username:  data.username
+          username: data.username
           // ⚠️ school_key TIDAK disimpan di sini — disimpan in-memory via API
         };
         localStorage.setItem('cimega_user', JSON.stringify(sessionData));
+
+        // REMEMBER ME LOGIC
+        const rememberMe = document.getElementById('rememberMe').checked;
+        if (rememberMe) {
+          localStorage.setItem('cimega_remembered', JSON.stringify({ u: username, p: password }));
+        } else {
+          localStorage.removeItem('cimega_remembered');
+        }
 
         // Simpan school_key di sessionStorage (dibersihkan saat tab ditutup)
         // dan via cimegaAPI.setSessionKey agar tersedia lintas window via IPC
@@ -535,11 +1159,11 @@
         btn.innerHTML = 'LOGIN';
 
         if (err.message === 'ID_NOT_FOUND' || err.message === 'PASSKEY_MISMATCH') {
-          if(errTxt) errTxt.textContent = 'ID atau Passkey tidak valid.';
-          if(errBox) errBox.classList.add('show');
+          if (errTxt) errTxt.textContent = 'ID atau Passkey tidak valid.';
+          if (errBox) errBox.classList.add('show');
         } else if (err.message !== 'STATUS_DISABLED' && err.message !== 'SUBSCRIPTION_EXPIRED') {
-          if(errTxt) errTxt.textContent = 'Gagal terhubung ke pusat data.';
-          if(errBox) errBox.classList.add('show');
+          if (errTxt) errTxt.textContent = 'Gagal terhubung ke pusat data.';
+          if (errBox) errBox.classList.add('show');
         }
       }
     };
@@ -547,10 +1171,10 @@
     initApp();
 
     // UI EFFECT: Particles
-    (function(){
+    (function () {
       const container = document.getElementById('particles');
-      if(!container) return;
-      for(let i=0; i<20; i++){
+      if (!container) return;
+      for (let i = 0; i < 20; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
         const size = Math.random() * 3 + 1;
@@ -563,4 +1187,5 @@
     })();
   </script>
 </body>
+
 </html>

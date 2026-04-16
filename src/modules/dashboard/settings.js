@@ -680,18 +680,24 @@ function renderShared(filter) {
   const gridEl = document.getElementById('sharedDocsGrid');
   if (!gridEl) return;
   const roles = userData.roles;
-  let items = allShared;
-  if (filter === 'school') items = allShared.filter(d => d.sharedById !== userData.id && d.target === 'school');
-  if (filter === 'mine') items = allShared.filter(d => d.sharedById === userData.id);
-  
-  if (roles.includes('kepsek')) {
-    items = allShared;
-  } else if (roles.includes('bendahara')) {
-    items = items.filter(d => d.target === 'bendahara' || d.target === 'school' || d.sharedById === userData.id);
-  } else if (roles.includes('ops')) {
-    items = items.filter(d => d.target === 'ops' || d.target === 'school' || d.sharedById === userData.id);
-  } else {
-    items = items.filter(d => d.target === 'school' || d.target === 'guru' || d.sharedById === userData.id);
+  let items = [];
+  try {
+    items = allShared || [];
+    if (filter === 'school') items = items.filter(d => d.sharedById !== userData.id && d.target === 'school');
+    if (filter === 'mine') items = items.filter(d => d.sharedById === userData.id);
+    
+    if (roles.includes('kepsek')) {
+      // keep all
+    } else if (roles.includes('bendahara')) {
+      items = items.filter(d => d.target === 'bendahara' || d.target === 'school' || d.sharedById === userData.id);
+    } else if (roles.includes('ops')) {
+      items = items.filter(d => d.target === 'ops' || d.target === 'school' || d.sharedById === userData.id);
+    } else {
+      items = items.filter(d => d.target === 'school' || d.target === 'guru' || d.sharedById === userData.id);
+    }
+  } catch (e) {
+    console.warn("Error rendering shared docs", e);
+    items = [];
   }
   
   if (items.length === 0) {
@@ -1190,8 +1196,15 @@ async function loadNotifications() {
       document.getElementById('notifDot')?.classList.add('show');
       const listEl = document.getElementById('notifList');
       if (listEl) listEl.innerHTML = items.slice(0, 8).map(n => `<div class="notif-item"><div style="font-size:12px;font-weight:600;color:var(--text)">${n.title}</div><div style="font-size:11px;color:var(--muted)">${n.message}</div></div>`).join('');
+    } else {
+      document.getElementById('notifDot')?.classList.remove('show');
+      const listEl = document.getElementById('notifList');
+      if (listEl) listEl.innerHTML = `<div class="notif-item" style="color:var(--muted);text-align:center;">Belum ada notifikasi</div>`;
     }
-  } catch (e) { }
+  } catch (e) {
+    const listEl = document.getElementById('notifList');
+    if (listEl) listEl.innerHTML = `<div class="notif-item" style="color:var(--danger);text-align:center;">Gagal memuat notifikasi</div>`;
+  }
 }
 
 async function checkUpdate() {
@@ -1408,3 +1421,16 @@ function copyAiResult(elId) { const el = document.getElementById(elId); if (el) 
 function saveAiResult(elId, tipe) { showToast('info', 'Petunjuk', 'Salin teks lalu tempel di editor Anda'); }
 window.copyAiResult = copyAiResult;
 window.saveAiResult = saveAiResult;
+
+window.renderShared = renderShared; // Wajib diekspos agar onclick="()=>renderShared('all')" berjalan
+
+// Tutup notif panel jika diklik di luar
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('notifPanel');
+  const btn = document.getElementById('notifBtn') || e.target.closest('.notif-bell');
+  if (panel && panel.classList.contains('show')) {
+    if (!panel.contains(e.target) && (!btn || !btn.contains(e.target))) {
+      panel.classList.remove('show');
+    }
+  }
+});

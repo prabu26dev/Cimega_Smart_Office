@@ -263,7 +263,7 @@ function createWindow() {
       sandbox:          false,      // Diperlukan agar require() bekerja di preload.js
       webSecurity:      true,       // ✅ AMAN: aktifkan Same-Origin Policy (sebelumnya false!)
       allowRunningInsecureContent: false, // ✅ Blokir mixed content
-      devTools:         false,      // ✅ AMAN: tutup DevTools di production
+      devTools:         true,      // ✅ Debug mode
       preload: path.join(__dirname, 'preload.js'),
     },
     show: false,
@@ -299,9 +299,9 @@ function createWindow() {
   });
 
   // SECURITY: Jika DevTools tetap berhasil dibuka secara paksa, tutup lagi secara otomatis
-  mainWindow.webContents.on('devtools-opened', () => {
-    mainWindow.webContents.closeDevTools();
-  });
+  // mainWindow.webContents.on('devtools-opened', () => {
+  //   mainWindow.webContents.closeDevTools();
+  // });
 
   // Proactively broadcast music state to the new window when it finishes loading
   mainWindow.webContents.on('did-finish-load', () => {
@@ -717,12 +717,13 @@ app.on('web-contents-created', (event, contents) => {
         'Content-Security-Policy': [
           [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.jsdelivr.net https://unpkg.com",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
-            "img-src 'self' data: blob: https://*.supabase.co https://firebasestorage.googleapis.com",
-            "connect-src 'self' https://*.firebaseio.com https://*.firestore.googleapis.com https://*.googleapis.com https://*.supabase.co wss://*.firebaseio.com http://localhost:3001",
+            "img-src 'self' data: blob: https://*.supabase.co https://firebasestorage.googleapis.com https://cdn.jsdelivr.net https://unpkg.com",
+            "connect-src 'self' https://*.firebaseio.com https://*.firestore.googleapis.com https://*.googleapis.com https://*.supabase.co wss://*.firebaseio.com wss://*.supabase.co http://localhost:3001 https://cdn.jsdelivr.net https://unpkg.com",
             "media-src 'self' blob: https://*.supabase.co",
+            "worker-src blob: 'self'",
             "object-src 'none'",
             "frame-src 'none'",
             "base-uri 'self'"
