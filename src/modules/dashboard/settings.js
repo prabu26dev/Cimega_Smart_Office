@@ -1309,6 +1309,8 @@ async function initApp() {
       updateDoc, deleteDoc, onSnapshot, query, where, orderBy,
       serverTimestamp, Timestamp
     };
+    window.db = db;
+    window._userData = userData;
 
     console.log('✅ Settings: Firebase ready →', firebaseConfig.projectId);
 
