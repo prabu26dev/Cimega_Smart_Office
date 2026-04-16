@@ -680,9 +680,9 @@
         <label class="role-cb" data-role="fasilitator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="fasilitator"/>  🌱 Fasilitator Kokurikuler</label>
       </div>
     </div>
-    <div style="display:flex;gap:12px">
-      <div class="form-group" style="flex:1"><label class="form-label">Wali Kelas <span style="font-weight:400;color:var(--muted)">(Opsional)</span></label><input class="form-control" id="userWaliKelas" placeholder="Misal: Kelas 1A"/></div>
-      <div class="form-group" style="flex:1"><label class="form-label">Guru Mapel <span style="font-weight:400;color:var(--muted)">(Opsional)</span></label><input class="form-control" id="userMapel" placeholder="Misal: PAI"/></div>
+    <div class="form-group">
+      <label class="form-label">Wali Kelas <span style="font-weight:400;color:var(--muted)">(Opsional)</span></label>
+      <input class="form-control" id="userWaliKelas" placeholder="Misal: Kelas 1A"/>
     </div>
     <!-- Sekolah readonly, terisi otomatis dari konteks sekolah yang dipilih -->
     <div class="form-group">
@@ -1019,7 +1019,6 @@ function openModalUser(){
   document.getElementById('userStatus').value='aktif';
   document.getElementById('userExpired').value='';
   document.getElementById('userWaliKelas').value='';
-  document.getElementById('userMapel').value='';
   document.getElementById('userSekolah').value=_activeSchoolName;
   document.getElementById('userSchoolId').value=npsn;
   
@@ -1058,7 +1057,6 @@ function editUser(id){
   document.getElementById('userStatus').value=d.status||'aktif';
   document.getElementById('userExpired').value=d.expired?fmtDateInput(d.expired):'';
   document.getElementById('userWaliKelas').value=d.wali_kelas||'';
-  document.getElementById('userMapel').value=d.guru_mapel||'';
   document.getElementById('userSekolah').value=d.sekolah||_activeSchoolName;
   document.getElementById('userSchoolId').value=d.school_id||'';
 
@@ -1082,7 +1080,6 @@ async function saveUser(){
   const status = document.getElementById('userStatus').value;
   const expiredStr = document.getElementById('userExpired').value;
   const wali_kelas = document.getElementById('userWaliKelas').value.trim();
-  const guru_mapel = document.getElementById('userMapel').value.trim();
   const roles = getCheckedRoles('rolesCheckboxes');
 
   if(!nama || !username){showToast('warn','Peringatan','Nama dan username wajib diisi!');return;}
@@ -1093,7 +1090,7 @@ async function saveUser(){
     const role = roles[0];
     const payload = { 
       id, nama, username, roles, role, sekolah, school_id, status, 
-      wali_kelas, guru_mapel,
+      wali_kelas,
       updatedAt: serverTimestamp() 
     };
     if(password) payload.password = password;
