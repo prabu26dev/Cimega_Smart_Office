@@ -692,6 +692,140 @@
       font-size: 10px;
       flex-shrink: 0;
     }
+
+    /* ═══════════════════════════════════════════════
+       MAINTENANCE / APP LOCK BANNER
+    ═══════════════════════════════════════════════ */
+    .maintenance-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(2, 11, 24, 0.97);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 0;
+      animation: fadeIn 0.6s ease;
+    }
+
+    .maintenance-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .maint-card {
+      background: linear-gradient(135deg, rgba(4, 20, 45, 0.98) 0%, rgba(8, 30, 60, 0.98) 100%);
+      border: 1px solid rgba(255, 170, 0, 0.3);
+      border-radius: 20px;
+      padding: 50px 60px;
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 0 80px rgba(255, 170, 0, 0.08), 0 30px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .maint-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #ffaa00, transparent);
+      border-radius: 20px 20px 0 0;
+    }
+
+    .maint-icon-wrap {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 170, 0, 0.08);
+      border: 1px solid rgba(255, 170, 0, 0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 24px;
+      animation: spin 4s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .maint-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffaa00;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .maint-subtitle {
+      font-size: 13px;
+      color: rgba(224, 244, 255, 0.7);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+
+    .maint-message-box {
+      background: rgba(255, 170, 0, 0.06);
+      border: 1px solid rgba(255, 170, 0, 0.2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .maint-message-label {
+      font-size: 9px;
+      font-family: 'Orbitron', sans-serif;
+      color: #ffaa00;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      opacity: 0.8;
+    }
+
+    .maint-message-text {
+      font-size: 13px;
+      color: #e0f4ff;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    .maint-footer {
+      font-size: 11px;
+      color: rgba(224, 244, 255, 0.35);
+      letter-spacing: 0.5px;
+    }
+
+    .maint-footer strong {
+      color: rgba(0, 229, 255, 0.5);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+    }
   </style>
 </head>
 
@@ -701,6 +835,46 @@
     <div class="init-spinner"></div>
     <div class="init-text">Initializing Systems...</div>
   </div>
+
+
+  <!-- MAINTENANCE OVERLAY -->
+  <div class="maintenance-overlay" id="maintenanceOverlay" onclick="dismissMaintenance(event)">
+    <div class="maint-card" onclick="event.stopPropagation()">
+      <!-- Tombol Tutup -->
+      <button onclick="dismissMaintenance(null)"
+        style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;line-height:1"
+        onmouseover="this.style.background='rgba(255,255,255,0.14)';this.style.color='#fff'"
+        onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.5)'">✕</button>
+
+      <div class="maint-icon-wrap">🔧</div>
+      <div class="maint-title">Sistem Dalam Pemeliharaan</div>
+      <div class="maint-subtitle">
+        Layanan <strong style="color:var(--cyan)">Cimega Smart Office</strong> saat ini sedang berada dalam proses<br>
+        pemeliharaan dan peningkatan kualitas sistem.
+      </div>
+      <div class="maint-message-box">
+        <div class="maint-message-label">📢 Keterangan dari Administrator</div>
+        <div class="maint-message-text" id="maintMessageText">Sistem sedang dalam pembaruan. Mohon tunggu sebentar.
+        </div>
+      </div>
+      <div class="maint-footer">
+        Mohon bersabar dan coba kembali beberapa saat lagi.<br>
+        Kami mohon maaf atas ketidaknyamanan ini.<br><br>
+        <strong>CIMEGA SMART OFFICE &bull; SISTEM ADMINISTRASI DIGITAL</strong>
+      </div>
+      <div style="margin-top:20px; font-size:10px; color:rgba(255,255,255,0.2); text-align:center">
+        Klik di luar area ini atau tombol ✕ untuk menutup pesan ini
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function dismissMaintenance(e) {
+      if (e && e.target !== document.getElementById('maintenanceOverlay')) return;
+      document.getElementById('maintenanceOverlay').classList.remove('active');
+    }
+  </script>
+
 
   <div class="glow-bg"></div>
   <div class="scanline"></div>
@@ -1040,6 +1214,24 @@
       try {
         const { collection, query, where, getDocs, getDoc, doc } = window._fbFs;
 
+        // ── SECURITY CHECK 0: App Lock (Maintenance Mode) ─────────
+        // Admin (username='admin') selalu diizinkan masuk, tidak pernah terblokir.
+        if (username !== 'admin') {
+          try {
+            const lockDoc = await getDoc(doc(db, 'appConfig', 'appLock'));
+            if (lockDoc.exists() && lockDoc.data().locked === true) {
+              const lockData = lockDoc.data();
+              const overlay = document.getElementById('maintenanceOverlay');
+              const msgEl = document.getElementById('maintMessageText');
+              if (msgEl) msgEl.textContent = lockData.message || 'Sistem sedang dalam pembaruan. Mohon tunggu sebentar.';
+              if (overlay) overlay.classList.add('active');
+              btn.disabled = false;
+              btn.innerHTML = 'LOGIN';
+              return;
+            }
+          } catch (lockErr) { console.warn('App lock check skipped:', lockErr.message); }
+        }
+
         // 1. Fetch User Profile
         const q = query(collection(db, 'users'), where('username', '==', username));
         const snap = await getDocs(q);
@@ -1111,17 +1303,17 @@
         try {
           const { query, collection, where, getDocs } = window._fbFs;
           let snapSch;
-          
+
           // ★ PRIMARY NPSN LOOKUP ★
           const qSchId = query(collection(db, 'sekolah'), where('npsn', '==', schoolId));
           snapSch = await getDocs(qSchId);
-          
+
           // ★ FALLBACK IDENTITY LOOKUP ★
           if (snapSch.empty && data.sekolah) {
             const qSchName = query(collection(db, 'sekolah'), where('nama', '==', data.sekolah));
             snapSch = await getDocs(qSchName);
           }
-          
+
           if (!snapSch.empty) {
             const schData = snapSch.docs[0].data();
             officialSchoolName = schData.nama || officialSchoolName;
@@ -1196,6 +1388,31 @@
     };
 
     initApp();
+
+    // ── REAL-TIME APP LOCK LISTENER ────────────────────────────────────
+    // Tunggu sampai Firebase siap, lalu pasang listener untuk status kunci
+    (async function setupLockListener() {
+      let attempts = 0;
+      const waitForFb = setInterval(() => {
+        attempts++;
+        if (attempts > 20) { clearInterval(waitForFb); return; }
+        if (!window._fbFs || !window.db) return;
+        clearInterval(waitForFb);
+
+        const { doc, onSnapshot } = window._fbFs;
+        onSnapshot(doc(window.db, 'appConfig', 'appLock'), (snap) => {
+          const overlay = document.getElementById('maintenanceOverlay');
+          const msgEl = document.getElementById('maintMessageText');
+          if (!overlay) return;
+          if (snap.exists() && snap.data().locked === true) {
+            if (msgEl) msgEl.textContent = snap.data().message || 'Sistem sedang dalam pembaruan. Mohon tunggu sebentar.';
+            overlay.classList.add('active');
+          } else {
+            overlay.classList.remove('active');
+          }
+        }, (err) => { console.warn('Lock listener failed:', err.message); });
+      }, 500);
+    })();
 
     // UI EFFECT: Particles
     (function () {

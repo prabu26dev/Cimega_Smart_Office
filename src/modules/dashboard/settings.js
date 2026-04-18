@@ -315,7 +315,8 @@ function buildSidebar() {
   }
 
   html += `<div class="nav-section">Kolaborasi</div>
-<div class="nav-item" onclick="navTo(this,'chat','CHAT SEKOLAH',()=>window.CimegaChat.init(db,'page-chat',{tab:'school'}))"><span class="nav-icon">💬</span>Chat Sekolah</div>`;
+<div class="nav-item" onclick="navTo(this,'chat','CHAT SEKOLAH',()=>window.CimegaChat.init(db,'page-chat',{tab:'school'}))"><span class="nav-icon">💬</span>Chat Sekolah</div>
+<div class="nav-item" onclick="navTo(this,'sharing','BERBAGI DOKUMEN',()=>window.CimegaSharing.init())"><span class="nav-icon">📤</span>Berbagi Dokumen</div>`;
 
   if (roles.includes('kepsek')) {
     html += `<div class="nav-item" onclick="navTo(this,'chat','FORUM KEPSEK',()=>window.CimegaChat.init(db,'page-chat',{tab:'kepsek'}))"><span class="nav-icon">🏛️</span>Forum Kepsek</div>`;
@@ -382,9 +383,8 @@ function setupUser() {
   if (elSidebarSekolah) elSidebarSekolah.textContent = userData.sekolah || '-';
 
   const logoText = document.getElementById('sidebarLogoText');
-  if (logoText && userData.sekolah) {
-    const shortName = userData.sekolah.split(' ')[0].toUpperCase();
-    logoText.innerHTML = `${shortName}<span>OFFICE</span>`;
+  if (logoText) {
+    logoText.innerHTML = `SDN CIMEGA<span>SMART OFFICE</span>`;
   }
 
   // Advanced Branding: Dynamic AI Greeting
@@ -1652,15 +1652,16 @@ async function initApp() {
 
 // ★ INITIALIZATION ★
 (function () {
-        // Urgent Reveal: Hide overlay immediately to prevent hanging UI
+        // Instant Reveal: Hide overlay immediately to prevent hanging UI
         const overlay = document.getElementById('boot-overlay');
         if (overlay) {
           overlay.style.opacity = '0';
           overlay.style.visibility = 'hidden';
-          setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 600);
+          // Clean up DOM after fade
+          setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 400);
         }
 
-        // Start Application Services
+        // Start Application Services in background
         CimegaMusic.init();
         initApp().catch(e => console.error('InitApp Failed:', e));
       })();

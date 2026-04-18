@@ -15,6 +15,18 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,sans-serif;background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:12px}
 
+    /* LOCK CARD */
+    .lock-status-badge { display:inline-flex; align-items:center; gap:8px; padding:6px 14px; border-radius:20px; font-size:11px; font-weight:700; font-family:'Orbitron',sans-serif; letter-spacing:1px; }
+    .lock-status-badge.locked { background:rgba(255,68,102,0.15); color:#ff4466; border:1px solid rgba(255,68,102,0.4); }
+    .lock-status-badge.unlocked { background:rgba(0,255,136,0.1); color:#00ff88; border:1px solid rgba(0,255,136,0.3); }
+    .lock-pulse { width:8px; height:8px; border-radius:50%; animation: lockPulse 1.5s infinite; }
+    .lock-pulse.locked { background:#ff4466; }
+    .lock-pulse.unlocked { background:#00ff88; }
+    @keyframes lockPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)} }
+    #modalLockConfirm { display:none; position:fixed; inset:0; z-index:1000; background:rgba(2,11,24,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center; }
+    #modalLockConfirm.show { display:flex; }
+    .lock-modal-inner { background:var(--card); border:1px solid rgba(255,68,102,0.3); border-radius:16px; padding:30px; max-width:500px; width:90%; }
+
     /* AKORDION SEKOLAH (SEMUA USER) */
     .sch-group-header {
       background:rgba(0,229,255,0.08);color:var(--cyan);padding:12px 14px;border:1px solid var(--border);border-radius:8px;
@@ -166,7 +178,7 @@
     .users-view-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
 
     /* KONTEN */
-    .konten-layout{display:grid;grid-template-columns:230px 1fr;gap:16px}
+    .konten-layout{display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:start}
     .kat-list{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px;height:fit-content;position:sticky;top:0;max-height:calc(100vh - 160px);overflow-y:auto}
     .kat-list::-webkit-scrollbar{width:3px}.kat-list::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
     .kat-header{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 8px}
@@ -252,6 +264,7 @@
 
     <div class="nav-section">Manajemen Administrasi</div>
     <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">🗂️</span>Kelola Administrasi</div>
+    <div class="nav-item" onclick="showPage('oversight',this)"><span class="nav-icon">👁️</span>Pengawasan Administrasi</div>
 
     <div class="nav-section">Sistem</div>
 
@@ -292,12 +305,65 @@
 
     <!-- PAGE: DASHBOARD -->
     <div class="page active" id="page-dashboard">
-      <div class="stats-row">
-        <div class="stat-card cyan"><div class="stat-card-icon">🏫</div><div class="stat-card-num" id="statSekolah">0</div><div class="stat-card-label">Sekolah Terdaftar</div></div>
-        <div class="stat-card blue"><div class="stat-card-icon">👥</div><div class="stat-card-num" id="statGuru">0</div><div class="stat-card-label">Total Pengguna</div></div>
-        <div class="stat-card gold"><div class="stat-card-icon">💰</div><div class="stat-card-num" id="statBendahara">0</div><div class="stat-card-label">Bendahara Aktif</div></div>
-
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+        <div style="font-family:'Orbitron',sans-serif;font-size:14px;color:var(--text);letter-spacing:1px;font-weight:700">RINGKASAN SISTEM</div>
+        <button id="btnRefreshDash" class="btn btn-primary" onclick="forceRefreshDashboard()" style="display:flex; align-items:center; gap:6px; padding:6px 14px; font-size:11px">
+          <span id="refreshIconDash" style="font-size:14px">🔄</span> Segarkan Data
+        </button>
       </div>
+
+      <div class="stats-row" style="margin-bottom:16px">
+        <div class="stat-card cyan" style="flex:1"><div class="stat-card-icon">🏫</div><div class="stat-card-num" id="statSekolah">0</div><div class="stat-card-label">Sekolah Terdaftar</div></div>
+        <div class="stat-card blue" style="flex:1"><div class="stat-card-icon">👥</div><div class="stat-card-num" id="statTotalUsers">0</div><div class="stat-card-label">Total Pengguna</div></div>
+      </div>
+
+      <!-- ROLE STATS GRID -->
+      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px;letter-spacing:1px">📊 DISTRIBUSI PERAN PENGGUNA</div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px; margin-bottom:24px">
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">🏛️</div><div class="stat-card-num" style="font-size:16px; color:var(--cyan)" id="stat_kepsek">0</div><div class="stat-card-label" style="font-size:10px">Kepala Sekolah</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">👨‍🏫</div><div class="stat-card-num" style="font-size:16px; color:var(--cyan)" id="stat_guru">0</div><div class="stat-card-label" style="font-size:10px">Guru Kelas</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">🕌</div><div class="stat-card-num" style="font-size:16px; color:var(--cyan)" id="stat_guru_pai">0</div><div class="stat-card-label" style="font-size:10px">Guru PAI</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">🏃</div><div class="stat-card-num" style="font-size:16px; color:var(--cyan)" id="stat_guru_pjok">0</div><div class="stat-card-label" style="font-size:10px">Guru PJOK</div></div>
+        
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">🎯</div><div class="stat-card-num" style="font-size:16px; color:var(--gold)" id="stat_koordinator">0</div><div class="stat-card-label" style="font-size:10px">Koor. Kokurikuler</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">🌱</div><div class="stat-card-num" style="font-size:16px; color:var(--gold)" id="stat_fasilitator">0</div><div class="stat-card-label" style="font-size:10px">Fasil. Kokurikuler</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">🎭</div><div class="stat-card-num" style="font-size:16px; color:var(--gold)" id="stat_ekskul">0</div><div class="stat-card-label" style="font-size:10px">Pembina Ekskul</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">♿</div><div class="stat-card-num" style="font-size:16px; color:var(--gold)" id="stat_gpk">0</div><div class="stat-card-label" style="font-size:10px">Koor. Inklusi (GPK)</div></div>
+        
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">📚</div><div class="stat-card-num" style="font-size:16px; color:var(--success)" id="stat_pustakawan">0</div><div class="stat-card-label" style="font-size:10px">Pustakawan</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">💰</div><div class="stat-card-num" style="font-size:16px; color:var(--success)" id="stat_bendahara">0</div><div class="stat-card-label" style="font-size:10px">Bendahara</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">💻</div><div class="stat-card-num" style="font-size:16px; color:var(--success)" id="stat_ops">0</div><div class="stat-card-label" style="font-size:10px">OPS</div></div>
+        <div class="stat-card" style="padding:15px 12px; border-color:var(--border); display:flex; flex-direction:column; align-items:center"><div class="stat-card-icon" style="font-size:18px; margin-bottom:6px">🗂️</div><div class="stat-card-num" style="font-size:16px; color:var(--success)" id="stat_tu">0</div><div class="stat-card-label" style="font-size:10px">Tata Usaha</div></div>
+      </div>
+
+      <!-- LOCK CONTROL CENTER -->
+      <div class="update-card" id="lockControlCard" style="margin-bottom:16px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+          <div style="font-family:'Orbitron',sans-serif; font-size:11px; color:var(--cyan); letter-spacing:1px">🔐 KONTROL AKSES APLIKASI</div>
+          <div id="lockStatusBadge" class="lock-status-badge unlocked">
+            <div class="lock-pulse unlocked" id="lockPulse"></div>
+            <span id="lockStatusText">AKSES TERBUKA</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center">
+          <div>
+            <p style="font-size:12px; color:var(--muted); line-height:1.6; margin:0">
+              Kendalikan akses masuk ke aplikasi secara menyeluruh. Saat terkunci, <strong>hanya Admin</strong> yang dapat masuk &mdash; seluruh pengguna biasa akan ditolak dan menerima notifikasi pemeliharaan.
+            </p>
+            <div id="lockMetaInfo" style="margin-top:12px; font-size:11px; color:var(--muted); display:none">
+              <span style="color:var(--danger)">&#9632;</span> Dikunci oleh: <span id="lockByText" style="color:#fff">—</span>
+              <span style="margin:0 8px; opacity:0.3">|</span>
+              Sejak: <span id="lockSinceText" style="color:#fff">—</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <button id="btnLockApp" class="btn" style="width:100%; background:linear-gradient(135deg,#ff2244,#cc0033); color:#fff; border:none; font-weight:700; font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:1px; display:none" onclick="openLockModal()">🔒 KUNCI APLIKASI</button>
+            <button id="btnUnlockApp" class="btn" style="width:100%; background:linear-gradient(135deg,#00cc66,#009944); color:#fff; border:none; font-weight:700; font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:1px; display:none" onclick="unlockApp()">🔓 BUKA KUNCI APLIKASI</button>
+          </div>
+        </div>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="update-card">
           <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:12px">📋 LOG AKTIVITAS TERBARU</div>
@@ -440,10 +506,32 @@
       </div>
     </div>
 
+    <!-- PAGE: PENGAWASAN ADMINISTRASI -->
+    <div class="page" id="page-oversight">
+      <div class="section-header">
+        <div class="section-title">👁️ Pengawasan <span>Administrasi</span></div>
+        <div style="display:flex; gap:10px; align-items:center">
+          <div style="background:rgba(0,229,255,0.05); border:1px solid rgba(0,229,255,0.2); padding:5px 15px; border-radius:10px; display:flex; align-items:center; gap:10px">
+            <span style="font-size:10px; color:var(--muted); font-family:'Orbitron'">DATA TERPANTAU:</span>
+            <span id="oversightCounter" style="color:var(--cyan); font-family:'Orbitron'; font-weight:800">0</span>
+          </div>
+          <button class="btn btn-danger" onclick="ModulOversight.clearLogs()">🗑️ Bersihkan Administrasi</button>
+        </div>
+      </div>
 
-
-
-
+      <div class="update-card">
+        <p style="font-size:12px; color:var(--muted); margin-bottom:20px; line-height:1.6">
+          Halaman ini menampilkan seluruh dokumen administrasi yang telah disimpan dan dibagikan oleh pengguna.
+          Klik <strong>Cek Detail</strong> untuk melihat isi lengkap dokumen, atau gunakan tombol <strong>Simpan Bukti Pengawasan</strong> untuk mengarsipkan dokumen tersebut secara lokal ke PC Anda.
+        </p>
+        <div id="oversightTableContainer" style="min-height:200px">
+          <div style="text-align:center; padding:40px; color:var(--muted)">
+            <div class="spinner" style="margin:0 auto 14px; width:30px; height:30px"></div>
+            Menghubungkan ke database pengawasan...
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- PAGE: KONTEN / ADMINISTRASI -->
     <div class="page" id="page-konten">
@@ -455,13 +543,13 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:20px; border-color:var(--cyan);">
+      <div class="card" style="margin-bottom:16px; border-color:var(--cyan);">
         <div class="card-body" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <div style="font-family:'Orbitron'; font-size:11px; color:var(--cyan); margin-bottom:5px;">SINKRONISASI CLOUD</div>
             <p style="font-size:11px; color:var(--muted); margin:0;">Pastikan data kategori dan daftar administrasi selalu sinkron dengan database cloud (Supabase).</p>
           </div>
-          <div style="display:flex; gap:8px;">
+          <div>
             <button class="btn btn-primary" onclick="totalSync()" id="btnTotalSync">🔄 Sinkronkan ke Cloud</button>
           </div>
         </div>
@@ -479,7 +567,6 @@
             <button class="btn btn-ghost active" id="tabBtnAdm" onclick="switchAdmTab('adm')">📄 Daftar Administrasi</button>
             <button class="btn btn-ghost" id="tabBtnTmp" onclick="switchAdmTab('tmp')">🤖 Template AI Asisten</button>
           </div>
-          
           <div id="tabContentAdm">
             <div class="search-wrap" style="margin-bottom:15px">
               <input type="text" class="search-input" placeholder="Cari administrasi di kategori ini..." oninput="filterKonten(this.value)">
@@ -488,7 +575,6 @@
               <div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>
             </div>
           </div>
-
           <div id="tabContentTmp" style="display:none">
             <div class="search-wrap" style="margin-bottom:15px">
               <input type="text" class="search-input" placeholder="Cari template AI..." oninput="filterTemplates(this.value)">
@@ -807,7 +893,7 @@
 <script src="../../shared/updater.js"></script>
 <!-- Modul Admin -->
 <script src="../../modules/admin/data_master.js"></script>
-<script src="../../modules/admin/oversight.js"></script>
+<script src="../../services/oversight.js"></script>
 
 <script>
 'use strict';
@@ -938,7 +1024,7 @@ function showPage(page,navEl){
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',oversight:'PENGAWASAN DOKUMEN GLOBAL',konten:'KELOLA KONTEN',musik:'KELOLA MUSIK',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',oversight:'PENGAWASAN ADMINISTRASI',konten:'KELOLA KONTEN',musik:'KELOLA MUSIK',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
   if(page==='guru')       loadSchoolCards();
   if(page==='institusi')  if(window.AdminInstitusi) window.AdminInstitusi.init();
@@ -975,20 +1061,58 @@ function switchAdmTab(tab) {
 // ════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════
+async function forceRefreshDashboard() {
+  const btn = document.getElementById('btnRefreshDash');
+  const icon = document.getElementById('refreshIconDash');
+  if (btn) btn.disabled = true;
+  if (icon) {
+    icon.style.display = 'inline-block';
+    icon.style.animation = 'spin 1s linear infinite';
+  }
+  
+  await loadDashboard();
+  
+  if (icon) icon.style.animation = 'none';
+  if (btn) btn.disabled = false;
+  if (window.showToast) showToast('success', 'Selesai', 'Data dashboard telah diperbarui dari server.');
+}
+
 async function loadDashboard(){
   const{collection,getDocs,query,orderBy,limit}=window._fb;
   try{
-    const[skolSnap,usrSnap,konSnap]=await Promise.all([
+    const[skolSnap,usrSnap]=await Promise.all([
       getDocs(collection(db,'sekolah')),
-      getDocs(collection(db,'users')),
-      getDocs(collection(db,'konten')),
+      getDocs(collection(db,'users'))
     ]);
-    document.getElementById('statSekolah').textContent=skolSnap.size;
-    document.getElementById('statGuru').textContent=usrSnap.size;
-    document.getElementById('statKonten').textContent=konSnap.size;
-    let bendaharaAktif=0;
-    usrSnap.forEach(d=>{const data=d.data();const roles=data.roles||[data.role];if(roles.includes('bendahara')&&data.status==='aktif')bendaharaAktif++;});
-    document.getElementById('statBendahara').textContent=bendaharaAktif;
+    
+    // Update main stats
+    document.getElementById('statSekolah').textContent = skolSnap.size;
+    document.getElementById('statTotalUsers').textContent = usrSnap.size;
+    
+    // Reset role counters
+    const roleCounts = {
+      kepsek: 0, guru: 0, guru_pai: 0, guru_pjok: 0, 
+      koordinator: 0, fasilitator: 0, ekskul: 0, gpk: 0,
+      pustakawan: 0, bendahara: 0, ops: 0, tu: 0
+    };
+    
+    // Count all distinct roles mapping dynamically across all users
+    usrSnap.forEach(d => {
+      const data = d.data();
+      const roles = data.roles || (data.role ? [data.role] : []);
+      roles.forEach(r => {
+        if (roleCounts[r] !== undefined) {
+          roleCounts[r]++;
+        }
+      });
+    });
+
+    // Write counts to UI
+    for (const roleId in roleCounts) {
+      const el = document.getElementById(`stat_${roleId}`);
+      if (el) el.textContent = roleCounts[roleId];
+    }
+
     try{
       const logSnap=await getDocs(query(collection(db,'adminLog'),orderBy('time','desc'),limit(5)));
       const logItems=[];
@@ -2287,5 +2411,138 @@ if (document.readyState === 'loading') {
 
 
 
+  <div class="modal-overlay" id="modalOversightDetail">
+    <div class="modal" style="max-width:900px; padding:0; overflow:hidden">
+      <div style="background:linear-gradient(90deg, #111, #1a1a1a); padding:20px 25px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+        <div>
+          <h3 id="ovTitle" style="font-family:'Orbitron',sans-serif; font-size:16px; color:var(--cyan); margin-bottom:4px">Judul Dokumen</h3>
+          <p id="ovMeta" style="font-size:11px; color:var(--muted); margin:0">Meta info</p>
+        </div>
+        <button class="modal-close" onclick="closeModal('modalOversightDetail')">✕</button>
+      </div>
+      <div id="ovContent" class="document-viewer" style="padding:40px 60px; height:600px; overflow-y:auto; background:#fff; color:#333; font-family:'Times New Roman', Times, serif; font-size:16px; line-height:1.6">
+        <!-- Content here -->
+      </div>
+      <div style="padding:15px; background:var(--dark2); border-top:1px solid var(--border); text-align:right">
+        <button class="btn btn-primary" onclick="closeModal('modalOversightDetail')">Tutup Pratinjau</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KONFIRMASI KUNCI APLIKASI -->
+  <div id="modalLockConfirm">
+    <div class="lock-modal-inner">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px">
+        <div style="width:44px;height:44px;background:rgba(255,68,102,0.12);border:1px solid rgba(255,68,102,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🔒</div>
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:14px;color:#ff4466;font-weight:700">KUNCI AKSES APLIKASI</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">Seluruh pengguna non-admin akan ditolak aksesnya</div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label class="form-label" style="font-size:11px">📢 Pesan untuk Pengguna <span style="color:var(--muted);font-weight:400">(ditampilkan di halaman login)</span></label>
+        <textarea id="lockMessageInput" class="form-control" rows="4" placeholder="Contoh: Sistem sedang dalam pemeliharaan rutin dan peningkatan performa. Kami memperkirakan layanan akan kembali normal dalam 30 menit ke depan."></textarea>
+      </div>
+      <div style="background:rgba(255,170,0,0.06);border:1px solid rgba(255,170,0,0.2);border-radius:10px;padding:12px;margin-bottom:20px;font-size:11px;color:var(--warn);line-height:1.6">
+        ⚠️ <strong>Perhatian:</strong> Akun Administrator tidak akan terpengaruh dan tetap dapat masuk ke sistem seperti biasa.
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="document.getElementById('modalLockConfirm').classList.remove('show')">Batal</button>
+        <button class="btn" style="background:linear-gradient(135deg,#ff2244,#cc0033);color:#fff;font-weight:700" onclick="lockApp()">🔒 Ya, Kunci Sekarang</button>
+      </div>
+    </div>
+  </div>
+
 </body>
-</html>
+
+<script>
+// ════════════════════════════════════════════════════════
+// APP LOCK SYSTEM
+// ════════════════════════════════════════════════════════
+function openLockModal() {
+  document.getElementById('lockMessageInput').value = '';
+  document.getElementById('modalLockConfirm').classList.add('show');
+}
+
+async function lockApp() {
+  const message = document.getElementById('lockMessageInput').value.trim()
+    || 'Sistem sedang dalam pemeliharaan dan peningkatan kualitas layanan. Kami mohon maaf atas ketidaknyamanan ini. Mohon coba kembali beberapa saat lagi.';
+  try {
+    const { doc, setDoc, serverTimestamp } = window._fb;
+    const db = window._fb.db;
+    await setDoc(doc(db, 'appConfig', 'appLock'), {
+      locked: true, message,
+      lockedAt: serverTimestamp(), lockedBy: 'Administrator'
+    });
+    document.getElementById('modalLockConfirm').classList.remove('show');
+    if (window.showToast) showToast('warn', '🔒 Aplikasi Dikunci', 'Seluruh pengguna non-admin tidak dapat masuk.');
+  } catch(e) {
+    if (window.showToast) showToast('error', 'Gagal', e.message);
+  }
+}
+
+async function unlockApp() {
+  if (!confirm('Buka kunci aplikasi? Seluruh pengguna dapat masuk kembali ke sistem.')) return;
+  try {
+    const { doc, setDoc, serverTimestamp } = window._fb;
+    const db = window._fb.db;
+    await setDoc(doc(db, 'appConfig', 'appLock'), {
+      locked: false, message: '', unlockedAt: serverTimestamp(), lockedBy: ''
+    });
+    if (window.showToast) showToast('success', '🔓 Aplikasi Dibuka', 'Pengguna kini dapat masuk kembali ke sistem.');
+  } catch(e) {
+    if (window.showToast) showToast('error', 'Gagal', e.message);
+  }
+}
+
+function watchLockStatus() {
+  const { doc, onSnapshot } = window._fb;
+  const db = window._fb.db;
+  onSnapshot(doc(db, 'appConfig', 'appLock'), (snap) => {
+    const badge     = document.getElementById('lockStatusBadge');
+    const pulse     = document.getElementById('lockPulse');
+    const text      = document.getElementById('lockStatusText');
+    const btnLock   = document.getElementById('btnLockApp');
+    const btnUnlock = document.getElementById('btnUnlockApp');
+    const meta      = document.getElementById('lockMetaInfo');
+    const byText    = document.getElementById('lockByText');
+    const sinceEl   = document.getElementById('lockSinceText');
+    const card      = document.getElementById('lockControlCard');
+    if (!badge) return;
+    const isLocked = snap.exists() && snap.data().locked === true;
+    if (isLocked) {
+      badge.className = 'lock-status-badge locked';
+      pulse.className = 'lock-pulse locked';
+      text.textContent = 'SISTEM TERKUNCI';
+      btnLock.style.display = 'none';
+      btnUnlock.style.display = 'block';
+      if (meta) meta.style.display = 'block';
+      if (card) { card.style.borderColor = 'rgba(255,68,102,0.3)'; card.style.background = 'rgba(255,68,102,0.02)'; }
+      const d = snap.data();
+      if (byText) byText.textContent = d.lockedBy || 'Administrator';
+      if (sinceEl && d.lockedAt) sinceEl.textContent = new Date(d.lockedAt.toDate()).toLocaleString('id-ID');
+    } else {
+      badge.className = 'lock-status-badge unlocked';
+      pulse.className = 'lock-pulse unlocked';
+      text.textContent = 'AKSES TERBUKA';
+      btnLock.style.display = 'block';
+      btnUnlock.style.display = 'none';
+      if (meta) meta.style.display = 'none';
+      if (card) { card.style.borderColor = ''; card.style.background = ''; }
+    }
+  }, (err) => console.warn('Lock status listener:', err.message));
+}
+
+// Pasang listener setelah Firebase siap
+(function() {
+  let t = 0;
+  const iv = setInterval(() => {
+    if (++t > 30) { clearInterval(iv); return; }
+    if (!window._fb?.db) return;
+    clearInterval(iv);
+    watchLockStatus();
+  }, 400);
+})();
+</script>
+
+</html>
