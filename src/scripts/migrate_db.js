@@ -172,7 +172,7 @@ const SEP = '─'.repeat(60);
 // ── Main migration function ──────────────────────────────────────
 async function startMigration() {
   console.log('\n' + SEP);
-  console.log('  CIMEGA SMART OFFICE v2.0 — Firestore Migration Script');
+  console.log('  CIMEGA SMART OFFICE v1.0 — Firestore Migration Script');
   console.log(SEP);
   console.log(`  Target Project : ${TARGET_PROJECT_ID}`);
   console.log(`  Mode           : ${DRY_RUN ? '🟡 DRY RUN (simulasi)' : '🔴 LIVE (menulis ke Firestore)'}`);
