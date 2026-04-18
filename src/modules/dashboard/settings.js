@@ -1,14 +1,11 @@
-'use strict';
-// ══════════════════════════════════════════
-// DASHBOARD — CIMEGA SMART OFFICE
-// Versi: Role Bendahara Integrated
-// ══════════════════════════════════════════
+// ── CIMEGA SMART OFFICE: DASHBOARD CORE ───────────────────────────
 
 let db, userData;
 let pageHistory = [], currentKat = '', currentDocId = '', currentDocName = '';
 let allShared = [], allApprovals = [], currentShareDocId = '';
 let pageSettings = { size: 'A4', margin: 'Normal', orientation: 'Portrait' };
 let _kontenCache = {}, _menuDataDynamic = [];
+let _activeDocData = null; // Menyimpan metadata dokumen yang sedang dibuka
 
 userData = JSON.parse(localStorage.getItem('cimega_user') || '{}');
 console.log('Settings: User data loaded', userData);
@@ -17,11 +14,11 @@ if (!userData?.role || userData.role === 'admin') {
   console.warn('Settings: User role invalid or admin, redirecting...');
   // Only redirect if NOT in a dev environment OR if it's clear we have no data
   if (!userData?.nama) {
-     window.location.href = '../login/login.html';
+    window.location.href = '../login/login.html';
   }
 }
 
-// Normalize roles
+// ★ IDENTITY NORMALIZATION ★
 if (!userData.roles) {
   userData.roles = userData.role ? [userData.role.toLowerCase().trim().replace(/[\s-]/g, '_')] : ['guru'];
 } else if (!Array.isArray(userData.roles)) {
@@ -40,46 +37,85 @@ function filterAiTabsByRole() {
   // This function is defined to satisfy calls in loadKontenDynamic.
 }
 
-// ── Kategori meta ──────────────────────────
-const katMeta = {
-  adm_guru:     { icon: '📚', title: 'Administrasi Guru & Pembelajaran', desc: 'Modul Ajar, ATP, CP, Penilaian, Jurnal' },
-  naskah_soal:  { icon: '📝', title: 'Naskah Soal & Bank Evaluasi',      desc: 'Kisi-Kisi, Soal HOTS, Rubrik, Analisis Butir' },
-  adm_kepsek:   { icon: '🏛️', title: 'Administrasi Kepala Sekolah',      desc: 'Tugas Pokok, Supervisi, Manajerial, Humas' },
-  kosp:         { icon: '📋', title: 'Kurikulum Operasional (KOSP)',      desc: 'Karakteristik, Visi Misi, Perencanaan' },
-  adm_umum:     { icon: '🏫', title: 'Administrasi Umum Sekolah',         desc: 'SK, Inventaris, Jadwal, Tata Tertib' },
-  keuangan:     { icon: '💰', title: 'Keuangan & BOS',                    desc: 'Laporan BOS, RKAS, BKU, LPJ, Nota' },
-  evaluasi:     { icon: '📊', title: 'Evaluasi & Pelaporan Sekolah',      desc: 'EDS, Akreditasi, Supervisi, Monev' },
-  perpus:       { icon: '📖', title: 'Administrasi Perpustakaan Lengkap', desc: 'Keanggotaan, Peminjaman, Keuangan' },
-  tata_usaha:   { icon: '✉️', title: 'Tata Usaha & Surat Menyurat',       desc: 'SK, Surat Dinas, Arsip, Agenda' },
-  adm_gpk:      { icon: '♿', title: 'Program Inklusif & Pembelajaran GPK', desc: 'PPI, Asesmen Kebutuhan, Laporan Perkembangan' },
-  adm_ekskul:   { icon: '🎭', title: 'Ekstrakurikuler & Pembinaan Siswa', desc: 'Program Ekskul, Absensi, Prestasi' },
-  kokurikuler:  { icon: '🎯', title: 'Program Kokurikuler & P5',          desc: 'Projek P5, Dokumentasi, Laporan Kokurikuler' },
-  adm_uks_pjok: { icon: '⚽', title: 'UKS, Kesehatan & Kebugaran (PJOK)',   desc: 'Data Kesehatan, Program UKS, Kebugaran Siswa' },
-};
+// ── 1. CATEGORY METADATA ─────────────────────────────────────────
+let katMeta = {};
 
-// Kategori per role — urutan standar global
-// Catatan: visibleTo dari Firestore akan menjadi sumber kebenaran utama.
-// Ini hanya fallback jika Firestore belum diisi.
+// ★ GLOBAL API BRIDGE ★
+const _api = window.cimegaConfig || window.cimegaAPI;
+
+// ── 2. GLOBAL EXPORTS & EARLY BINDING ────────────────────────────
+window.showPage = showPage;
+window.goBack = goBack;
+window.openDocList = openDocList;
+window.openDoc = openDoc;
+window.navTo = navTo;
+window.navToMenu = navToMenu;
+window.doLogout = doLogout;
+window.generateWithAI = generateWithAI;
+
+// ── 3. SYSTEM AUTOLOADER (Unified Bridge) ────────────────────────
+async function bootSystemAutoloader() {
+  console.log('🚀 Autoloader: Memulai sinkronisasi template di latar belakang...');
+  try {
+    // 1. Load Modul Jalur Logic (.js)
+    const moduleFiles = await _api.listFiles('src/modules', true);
+    for (const file of moduleFiles) {
+      if (file.endsWith('.js') && !file.includes('settings.js') && !file.includes('admin/')) {
+        if (document.querySelector(`script[src*="${file}"]`)) continue;
+        const script = document.createElement('script');
+        script.src = `../../modules/${file}`;
+        document.head.appendChild(script);
+      }
+    }
+
+    // 2. Load Jalur Template (.html)
+    const pageFiles = await _api.listFiles('src/pages', true);
+    const templateStore = document.getElementById('universal-template-store');
+    if (!templateStore) return;
+
+    // Filter relevant templates to prevent scanning generated documents
+    const templateFiles = pageFiles.filter(f => f.endsWith('.html') && !['dashboard/', 'login/', 'admin/', 'bgm/', 'docs/'].some(p => f.includes(p)));
+
+    // Load templates in parallel
+    await Promise.all(templateFiles.slice(0, 25).map(async (file) => {
+      try {
+        const res = await _api.readFile(`src/pages/${file}`);
+        if (res.success) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(res.data, 'text/html');
+          const content = doc.querySelector('.content') || doc.body;
+          if (content) {
+            const wrapper = document.createElement('div');
+            wrapper.id = `template-${file.replace(/\//g, '-').replace('.html', '')}`;
+            wrapper.className = 'autoloader-template';
+            wrapper.innerHTML = content.innerHTML;
+            templateStore.appendChild(wrapper);
+          }
+        }
+      } catch (e) { }
+    }));
+    console.log(`✅ Autoloader: Selesai memuat ${templateFiles.length} template.`);
+  } catch (err) {
+    console.warn('⚠️ Autoloader Partial Failure:', err.message);
+  }
+}
+// ── 4. ROLE-BASED CATEGORY MAPPING (Fallback) ────────────────────
 const katByRole = {
-  guru:        ['adm_guru', 'naskah_soal', 'kosp', 'evaluasi', 'perpus'],
-  guru_pai:    ['adm_guru', 'naskah_soal', 'kosp', 'evaluasi'],
-  guru_pjok:   ['adm_guru', 'naskah_soal', 'kosp', 'evaluasi', 'adm_uks_pjok'],
-  kepsek:      ['adm_guru', 'naskah_soal', 'adm_kepsek', 'kosp', 'adm_umum', 'keuangan', 'evaluasi', 'perpus', 'tata_usaha', 'adm_gpk', 'adm_ekskul', 'kokurikuler', 'adm_uks_pjok'],
-  bendahara:   ['keuangan', 'evaluasi'],
-  ops:         ['adm_umum', 'kosp', 'keuangan', 'evaluasi', 'perpus', 'tata_usaha'],
-  tu:          ['adm_umum', 'tata_usaha'],
-  pustakawan:  ['perpus', 'evaluasi'],
-  gpk:         ['adm_gpk', 'evaluasi'],
-  ekskul:      ['adm_ekskul', 'evaluasi'],
-  koordinator: ['kokurikuler', 'adm_guru', 'evaluasi'],
-  fasilitator: ['kokurikuler', 'adm_guru', 'evaluasi'],
+  guru: [],
+  guru_pai: [],
+  guru_pjok: [],
+  kepsek: [],
+  bendahara: [],
+  ops: [],
+  tu: [],
+  pustakawan: [],
+  gpk: [],
+  ekskul: [],
+  koordinator: [],
+  fasilitator: [],
 };
 
-const KAT_ORDER = [
-  'adm_guru', 'naskah_soal', 'adm_kepsek', 'kosp',
-  'adm_umum', 'keuangan', 'evaluasi', 'perpus',
-  'tata_usaha', 'adm_gpk', 'adm_ekskul', 'kokurikuler', 'adm_uks_pjok'
-];
+const KAT_ORDER = [];
 
 function getOrderedKats(roles) {
   const merged = new Set();
@@ -87,7 +123,7 @@ function getOrderedKats(roles) {
   return KAT_ORDER.filter(k => merged.has(k));
 }
 
-// ── Load konten dari Firestore (Real-time) ──────────
+// ── 5. DATA SYNCHRONIZATION (Firestore) ──────────────────────────
 let _kontenUnsub = null;
 let _katUnsub = null;
 
@@ -95,7 +131,7 @@ function loadKontenDynamic() {
   const { collection, onSnapshot, query, orderBy, where } = window._fb;
   const roles = userData.roles || ['guru'];
   const sekolah = userData.sekolah;
-  
+
   if (_kontenUnsub) _kontenUnsub();
   if (_katUnsub) _katUnsub();
   if (_chatUnsub) _chatUnsub();
@@ -108,13 +144,13 @@ function loadKontenDynamic() {
     if (katLoaded && kontenLoaded) refreshDashboardUI();
   };
 
-  // 1. Listen Kategori — simpan visibleTo agar sidebar mengikuti konfigurasi admin
+  // ★ CATEGORY LISTENER ★
   _katUnsub = onSnapshot(query(collection(db, 'kategori'), orderBy('urutan', 'asc')), snap => {
     snap.forEach(d => {
       const data = d.data();
-      katMeta[d.id] = { 
-        icon: data.icon || '📄', 
-        title: data.nama, 
+      katMeta[d.id] = {
+        icon: data.icon || '📄',
+        title: data.nama,
         desc: data.deskripsi || '',
         urutan: data.urutan || 99,
         visibleTo: data.visibleTo || [] // Simpan konfigurasi visibleTo dari Firestore
@@ -123,9 +159,9 @@ function loadKontenDynamic() {
     katLoaded = true;
     console.log(`Settings: Kategori loaded (${snap.size} items)`);
     tryRefresh();
-  }, err => { 
-    console.warn("Kat Listener error:", err); 
-    katLoaded = true; tryRefresh(); 
+  }, err => {
+    console.warn("Kat Listener error:", err);
+    katLoaded = true; tryRefresh();
   });
 
   // 2. Listen Konten
@@ -172,12 +208,17 @@ function refreshDashboardUI() {
 
   const ordered = allKatIds.filter(katId => {
     const vt = katMeta[katId].visibleTo;
-    if (!vt || vt.length === 0) return true; // Tidak ada restriksi = dapat dilihat semua
-    return roles.some(r => vt.includes(r));
+    if (!vt || vt.length === 0) return true;
+
+    // Role Normalization for filtering
+    return roles.some(r => {
+      const nr = r.toLowerCase().trim();
+      return vt.some(v => v.toLowerCase().trim() === nr);
+    });
   });
 
   _menuDataDynamic = [];
-  
+
   // 1. Tambahkan kategori yang ada di katMeta
   ordered.forEach(katId => {
     const meta = katMeta[katId];
@@ -218,11 +259,11 @@ function refreshDashboardUI() {
   });
 
   buildSidebar();
-  
+
   // UI Sync
   if (document.getElementById('page-beranda')?.classList.contains('active')) loadBeranda();
   if (document.getElementById('page-menu')?.classList.contains('active')) renderMenuGrid(_menuDataDynamic);
-  
+
   filterAiTabsByRole();
 }
 
@@ -274,88 +315,116 @@ function buildSidebar() {
   }
 
   html += `<div class="nav-section">Kolaborasi</div>
-<div class="nav-item" onclick="navTo(this,'shared','DOKUMEN BERSAMA',()=>renderShared('all'))"><span class="nav-icon">📤</span>Dok. Bersama</div>
-<div class="nav-item" onclick="navTo(this,'chat','CHAT SEKOLAH',()=>window.CimegaChat.init(db,'page-chat'))"><span class="nav-icon">💬</span>Chat Sekolah</div>`;
+<div class="nav-item" onclick="navTo(this,'chat','CHAT SEKOLAH',()=>window.CimegaChat.init(db,'page-chat',{tab:'school'}))"><span class="nav-icon">💬</span>Chat Sekolah</div>`;
 
   if (roles.includes('kepsek')) {
-    html += `<div class="nav-section">Pantauan & Validasi</div>
-    <div class="nav-item" onclick="navTo(this,'monitor','MONITOR GURU',loadMonitor)"><span class="nav-icon">👁️</span>Monitor Guru</div>
-    <div class="nav-item" onclick="navTo(this,'validasi','VALIDASI DOKUMEN',()=>loadApprovals('pending'))"><span class="nav-icon">✅</span>Validasi Dok.<span class="nav-badge" id="approvalBadge" style="display:none">!</span></div>
-    <div class="nav-item" onclick="navTo(this,'rekap','REKAP DOKUMEN',loadRekap)"><span class="nav-icon">📊</span>Rekap Dokumen</div>`;
-  }
-  
-  if (roles.includes('guru') || roles.includes('bendahara') || roles.includes('ops')) {
-     html += `<div class="nav-item" onclick="navTo(this,'approval-guru','DIKIRIM KE KEPSEK',loadMySubmissions)"><span class="nav-icon">📬</span>Kiriman Saya<span class="nav-badge" id="submBadge" style="display:none">!</span></div>`;
+    html += `<div class="nav-item" onclick="navTo(this,'chat','FORUM KEPSEK',()=>window.CimegaChat.init(db,'page-chat',{tab:'kepsek'}))"><span class="nav-icon">🏛️</span>Forum Kepsek</div>`;
   }
 
   html += `<div class="nav-section">Fitur AI</div>
-<div class="nav-item" onclick="navTo(this,'ai','AI ASISTEN',()=>window.CimegaAIChatbot.renderTo('aiPanel-chat'))"><span class="nav-icon">✨</span>AI Asisten</div>
-<div class="nav-section">Lainnya</div>
-<div class="nav-item" onclick="navTo(this,'profil','PROFIL SAYA',loadProfil)"><span class="nav-icon">👤</span>Profil Saya</div>`;
-  
+  <div class="nav-item" onclick="navTo(this,'ai','AI ASISTEN',()=>window.CimegaAIChatbot.renderTo('aiPanel-chat'))"><span class="nav-icon">✨</span>AI Asisten</div>`;
+
+  html += `<div class="nav-section">Lainnya</div>
+  <div class="nav-item" onclick="navTo(this,'profil','PROFIL SAYA',loadProfil)"><span class="nav-icon">👤</span>Profil Saya</div>`;
+
+  // ★ SIDEBAR FOOTER & PROFIL ★
   const sidebar = document.getElementById('sidebarNav');
   if (sidebar) sidebar.innerHTML = html;
 }
 function navTo(el, pageId, title, fn) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (el) el.classList.add('active');
-  pageHistory = [];
+  // Senior Optimization: Reset history to Beranda when switching major sections
+  // This prevents infinite breadcrumb growth while keeping the back button useful within modules
+  pageHistory = [{ id: 'beranda', title: 'BERANDA' }];
   showPage(pageId, title);
   if (fn) fn();
 }
 function navToMenu(el, menuId) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (el) el.classList.add('active');
-  pageHistory = [];
-  renderMenuGrid(_menuDataDynamic, menuId);
-  showPage('menu', 'ADMINISTRASI');
+  pageHistory = [{ id: 'beranda', title: 'BERANDA' }];
+  
+  if (menuId) {
+    // Jika ada ID kategori, renderMenuGrid akan otomatis memanggil openDocList
+    renderMenuGrid(_menuDataDynamic, menuId);
+  } else {
+    // Jika tidak ada ID, tampilkan halaman utama pemilihan kategori
+    renderMenuGrid(_menuDataDynamic);
+    showPage('menu', 'ADMINISTRASI');
+  }
 }
 
 // ── setupUser ──────────────────────────────
 function setupUser() {
-  const roles = userData.roles || ['guru'];
-  
+  // Advanced Resilience: Normalize roles and expand specialized roles to base roles
+  let rawRoles = userData.roles || (userData.role ? [userData.role] : ['guru']);
+  if (!Array.isArray(rawRoles)) rawRoles = [rawRoles];
+
+  const normalized = rawRoles.map(r => String(r).toLowerCase().trim().replace(/[-\s]/g, '_'));
+
+  // Rule-based expansion: ensures specialized roles inherit base permissions
+  const expanded = new Set(normalized);
+  normalized.forEach(r => {
+    if (r.startsWith('guru_')) expanded.add('guru');
+    if (r === 'tata_usaha') expanded.add('tu');
+    if (r === 'operator' || r.includes('ops')) expanded.add('ops');
+  });
+
+  localStorage.setItem('cimega_user_roles_cached', JSON.stringify([...expanded]));
+  userData.roles = [...expanded]; // Store in memory
+
   // Sidebar Identity
   const elSidebarNama = document.getElementById('sidebarNama');
   if (elSidebarNama) elSidebarNama.textContent = userData.nama || '-';
-  
+
   const elSidebarSekolah = document.getElementById('sidebarSekolah');
   if (elSidebarSekolah) elSidebarSekolah.textContent = userData.sekolah || '-';
 
+  const logoText = document.getElementById('sidebarLogoText');
+  if (logoText && userData.sekolah) {
+    const shortName = userData.sekolah.split(' ')[0].toUpperCase();
+    logoText.innerHTML = `${shortName}<span>OFFICE</span>`;
+  }
+
+  // Advanced Branding: Dynamic AI Greeting
+  const aiGreeting = document.getElementById('aiInitialGreeting');
+  if (aiGreeting) aiGreeting.textContent = `Halo! Saya asisten AI untuk kurikulum dan administrasi ${userData.sekolah || 'sekolah Anda'}. Silakan tanya apa saja. 😊`;
+
   const roleMap = {
-    guru:        { cls: 'role-guru',      label: '👨‍🏫 Guru Kelas' },
-    guru_pai:    { cls: 'role-guru',      label: '🕌 Guru PAI' },
-    guru_pjok:   { cls: 'role-guru',      label: '🏃 Guru PJOK' },
-    kepsek:      { cls: 'role-kepsek',    label: '🏛️ Kepala Sekolah' },
-    bendahara:   { cls: 'role-bendahara', label: '💰 Bendahara' },
-    ops:         { cls: 'role-ops',       label: '💻 Operator' },
-    tu:          { cls: 'role-ops',       label: '🗂️ Tata Usaha' },
-    pustakawan:  { cls: 'role-guru',      label: '📚 Pustakawan' },
-    gpk:         { cls: 'role-guru',      label: '♿ GPK Inklusif' },
-    ekskul:      { cls: 'role-guru',      label: '🎭 Pembina Ekskul' },
-    koordinator: { cls: 'role-kepsek',   label: '🎯 Koordinator Kokurikuler' },
-    fasilitator: { cls: 'role-guru',      label: '🌱 Fasilitator Kokurikuler' },
+    guru: { cls: 'role-guru', label: '👨‍🏫 Guru Kelas' },
+    guru_pai: { cls: 'role-guru', label: '🕌 Guru PAI' },
+    guru_pjok: { cls: 'role-guru', label: '🏃 Guru PJOK' },
+    kepsek: { cls: 'role-kepsek', label: '🏛️ Kepala Sekolah' },
+    bendahara: { cls: 'role-bendahara', label: '💰 Bendahara' },
+    ops: { cls: 'role-ops', label: '💻 Operator Sekolah' },
+    tu: { cls: 'role-ops', label: '🗂️ Tata Usaha' },
+    pustakawan: { cls: 'role-guru', label: '📚 Pustakawan' },
+    gpk: { cls: 'role-guru', label: '♿ Guru GPK Inklusif' },
+    ekskul: { cls: 'role-guru', label: '🎭 Pembina Ekskul' },
+    koordinator: { cls: 'role-kepsek', label: '🎯 Koordinator P5' },
+    fasilitator: { cls: 'role-guru', label: '🌱 Fasilitator P5' },
   };
-  
+
   const rb = document.getElementById('sidebarRole');
   if (rb) {
     // Prioritaskan specialist role jika ada guru_pai/guru_pjok bersama guru kelas
-    let activeRoles = [...roles];
+    let activeRoles = [...userData.roles];
     if (activeRoles.includes('guru_pai') || activeRoles.includes('guru_pjok')) {
       activeRoles = activeRoles.filter(r => r !== 'guru');
     }
 
     if (activeRoles.length === 1) {
-      const r = roleMap[activeRoles[0]] || { cls: 'role-guru', label: activeRoles[0] };
+      const r = roleMap[activeRoles[0]] || { cls: 'role-guru', label: activeRoles[0].toUpperCase() };
       rb.className = 'user-role-badge ' + r.cls;
       rb.textContent = r.label;
     } else {
       rb.className = 'user-role-badge role-guru';
-      rb.textContent = activeRoles.map(r => roleMap[r]?.label || r).join(' · ');
+      rb.textContent = activeRoles.map(r => roleMap[r]?.label || r.toUpperCase()).join(' · ');
     }
   }
 
-  // Display Teaching Assignments (Specialists)
+  // ★ IDENTITY DISCOVERY & ASSIGNMENTS ★
   const elSidebarAssignment = document.getElementById('sidebarAssignment');
   if (elSidebarAssignment) {
     if (userData.teaching_assignments) {
@@ -363,7 +432,7 @@ function setupUser() {
       let texts = [];
       if (phases?.length) texts.push(...phases);
       if (classes?.length) texts.push('Klompok: ' + classes.join(', '));
-      
+
       if (texts.length) {
         elSidebarAssignment.innerHTML = `📍 ${texts.join(' · ')}`;
         elSidebarAssignment.style.display = 'block';
@@ -380,15 +449,15 @@ function setupUser() {
 
   // Topbar & Branding
   const elSchoolName = document.getElementById('schoolName');
-  if (elSchoolName) elSchoolName.textContent = userData.sekolah || 'SDN Cimega';
-  
-  const elSchoolAddr = document.getElementById('schoolAddr');
-  if (elSchoolAddr && userData.alamat) elSchoolAddr.textContent = userData.alamat;
+  if (elSchoolName) elSchoolName.textContent = userData.sekolah || 'Institusi Belum Terdaftar';
 
-  // Beranda Welcome Card
+  const elSchoolAddr = document.getElementById('schoolAddr');
+  if (elSchoolAddr) elSchoolAddr.textContent = userData.alamat || 'Alamat Belum Diatur';
+
+  // ★ WELCOME SEQUENCE & TIME ★
   const elWelcomeName = document.getElementById('welcomeName');
   if (elWelcomeName) elWelcomeName.textContent = 'Selamat Datang, ' + (userData.nama || 'User') + '!';
-  
+
   const elWelcomeSub = document.getElementById('welcomeSub');
   if (elWelcomeSub) elWelcomeSub.textContent = userData.sekolah || 'Sistem Administrasi Digital';
 
@@ -401,12 +470,11 @@ function setupUser() {
   }
 }
 
-// ── Menu Grid ──────────────────────────────
+// ── 6. MENU GRID RENDERING ───────────────────────────────────────
 function renderMenuGrid(menus, targetKatId = null) {
   const grid = document.getElementById('menuGrid');
   if (!grid) return;
 
-  // Jika targetKatId disediakan, langsung buka daftar dokumen
   if (targetKatId) {
     const found = menus.find(m => m.id === targetKatId);
     if (found) {
@@ -416,55 +484,77 @@ function renderMenuGrid(menus, targetKatId = null) {
   }
 
   const isBendahara = (userData.roles || []).includes('bendahara');
-  grid.innerHTML = menus.map(m => `
-  <div class="menu-card${isBendahara && m.id === 'keuangan' ? ' keuangan-highlight' : ''}"
-    onclick="openDocList('${m.id}')">
-    <div class="menu-card-count">${m.items.length}</div>
-    <div class="menu-card-icon">${m.icon}</div>
-    <div class="menu-card-title">${m.title}</div>
-    <div class="menu-card-desc">${m.desc}</div>
-  </div>`).join('');
+  grid.innerHTML = menus.map(m => {
+    const isBendCategory = m.id.startsWith('bend_');
+    return `
+    <div class="menu-card${isBendCategory ? ' keuangan-highlight' : ''}"
+      onclick="openDocList('${m.id}')">
+      <div class="menu-card-count">${m.items.length}</div>
+      <div class="menu-card-icon">${m.icon}</div>
+      <div class="menu-card-title">${m.title}</div>
+      <div class="menu-card-desc">${m.desc}</div>
+    </div>`;
+  }).join('');
 }
 
-// ── Doc list ───────────────────────────────
+// ── 7. DOCUMENT LIST NAVIGATION ──────────────────────────────────
 function openDocList(katId) {
-  const menu = _menuDataDynamic.find(m => m.id === katId);
-  if (!menu) { console.warn('openDocList: kategori tidak ditemukan →', katId); return; }
-  const katTitle = menu.title;
-  const items = menu.items;
-  currentKat = katId;
-  pageHistory.push({ id: 'menu', title: 'ADMINISTRASI' });
-  const icons = ['📄', '📝', '📋', '🗒️', '📃', '📑', '🗃️'];
-  const titleEl = document.getElementById('doclistTitle');
-  if (titleEl) titleEl.innerHTML = `<span>${katTitle.split(' ').slice(0, 3).join(' ')}</span>`;
-  const subEl = document.getElementById('doclistSub');
-  if (subEl) subEl.textContent = katTitle + ' · ' + items.length + ' dokumen';
-  const grid = document.getElementById('docGrid');
-  if (grid) {
-    if (items.length === 0) {
-      grid.innerHTML = `
-        <div style="text-align:center;padding:60px 20px;color:var(--muted)">
-          <div style="font-size:48px;margin-bottom:16px">📄</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">${katTitle}</div>
-          <div style="font-size:12px;line-height:1.6">Belum ada dokumen tersedia untuk kategori ini.<br>
-          Hubungi administrator untuk menambahkan dokumen.</div>
-        </div>`;
-    } else {
-      grid.innerHTML = items.map((name, i) => `
-  <div class="doc-item" onclick="openDoc('${katId}','${name.replace(/'/g, "\\'")}')">
-    <div class="doc-item-icon">${icons[i % icons.length]}</div>
-    <div style="flex:1;min-width:0">
-      <div class="doc-item-name">${name}</div>
-      <div class="doc-item-meta">${katTitle}</div>
-    </div>
-    <span style="color:var(--muted);font-size:11px">▶</span>
-  </div>`).join('');
+  try {
+    const menu = _menuDataDynamic.find(m => m.id === katId);
+    if (!menu) {
+      console.warn('openDocList: kategori tidak ditemukan →', katId);
+      showToast('error', 'Kategori Kosong', 'Kategori ini tidak ditemukan atau belum disinkronkan.');
+      return;
     }
+    const katTitle = menu.title;
+    const items = menu.items;
+    currentKat = katId;
+    pageHistory.push({ id: 'menu', title: 'ADMINISTRASI' });
+    const titleEl = document.getElementById('doclistTitle');
+    if (titleEl) {
+      const displayTitle = katTitle.split(' ').slice(0, 3).join(' ');
+      titleEl.innerHTML = `<span>${displayTitle}</span>`;
+    }
+
+    const subEl = document.getElementById('doclistSub');
+    if (subEl) subEl.textContent = katTitle + ' · ' + items.length + ' dokumen';
+
+    const grid = document.getElementById('docGrid');
+    if (grid) {
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+            <div style="font-size:48px;margin-bottom:16px">📄</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px">${katTitle}</div>
+            <div style="font-size:12px;line-height:1.6">Belum ada dokumen tersedia untuk kategori ini.<br>
+            Hubungi administrator untuk menambahkan dokumen.</div>
+          </div>`;
+      } else {
+        const icons = ['📄', '📝', '📋', '🗒️', '📃', '📑', '🗃️'];
+        grid.innerHTML = items.map((name, i) => {
+          // ★ TEMPLATE GENERATION ★
+          const safeName = name.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+          const jsName = name.replace(/'/g, "\\'");
+          return `
+            <div class="doc-item" onclick="openDoc('${katId}', '${jsName}')">
+              <div class="doc-item-icon">${icons[i % icons.length]}</div>
+              <div style="flex:1;min-width:0">
+                <div class="doc-item-name">${safeName}</div>
+                <div class="doc-item-meta">${katTitle}</div>
+              </div>
+              <span style="color:var(--muted);font-size:11px">▶</span>
+            </div>`;
+        }).join('');
+      }
+    }
+    showPage('doclist', 'DAFTAR DOKUMEN');
+  } catch (err) {
+    console.error('openDocList Error:', err);
+    showToast('error', 'Keamanan Navigasi', 'Terjadi kesalahan saat membuka daftar dokumen.');
   }
-  showPage('doclist', 'DAFTAR DOKUMEN');
 }
 
-// ── Buka dokumen ───────────────────────────
+// ── 8. DOCUMENT VIEWER & EDITOR ──────────────────────────────────
 async function openDoc(katId, docName) {
   currentKat = katId; currentDocName = docName; currentDocId = '';
   pageHistory.push({ id: 'doclist', title: 'DAFTAR DOKUMEN' });
@@ -474,32 +564,149 @@ async function openDoc(katId, docName) {
   if (metaEl) metaEl.textContent = katId + ' · ' + pageSettings.size + ' ' + pageSettings.orientation;
   const infoEl = document.getElementById('pageInfoLabel');
   if (infoEl) infoEl.textContent = pageSettings.size + ' | ' + pageSettings.margin + ' | ' + pageSettings.orientation;
+  
   const contentEl = document.getElementById('docContent');
+  const formContainer = document.getElementById('docFormContainer');
+  
   if (contentEl) {
     contentEl.contentEditable = 'false';
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) saveBtn.style.display = 'none';
     const editBtn = document.getElementById('editBtn');
     if (editBtn) editBtn.textContent = '✏️ Edit';
+    
+    // Tampilkan loading state
     contentEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><div class="spinner"></div></div>';
+    if (formContainer) formContainer.style.display = 'none';
+    
     showPage('docview', docName);
+    
     try {
       const { collection, query, where, getDocs } = window._fb;
-      const snap = await getDocs(query(collection(db, 'konten'), where('kategori', '==', katId), where('nama', '==', docName)));
+      const q = query(
+        collection(db, 'konten'),
+        where('kategori', '==', katId),
+        where('nama', '==', docName.trim())
+      );
+      const snap = await getDocs(q);
+      
       if (!snap.empty) {
         const d = snap.docs[0]; currentDocId = d.id;
         const data = d.data();
+        _activeDocData = data; // Cache data aktif
+        
         const savedContent = data.savedContentByUser?.[userData.id] || data.savedContent || null;
-        contentEl.innerHTML = savedContent || data.template?.replace(/\n/g, '<br/>') ||
-          `<div style="color:var(--muted);text-align:center;padding:36px"><div style="font-size:36px;margin-bottom:12px">📄</div><div style="font-size:13px;color:var(--text);margin-bottom:6px">${docName}</div><div>Template belum diisi admin. Klik <strong>Edit</strong> untuk mulai menulis.</div></div>`;
+        
+        // ★ LOGIKA GENERATOR UI DINAMIS ★
+        if (data.components && data.components.length > 0 && !savedContent) {
+          // Jika belum pernah disimpan DAN punya komponen, tampilkan FORM
+          renderDynamicForm(data.components);
+          if (formContainer) formContainer.style.display = 'block';
+          contentEl.style.display = 'none';
+          document.getElementById('docToolbar').style.display = 'none';
+        } else {
+          // Tampilkan Editor Biasa
+          if (formContainer) formContainer.style.display = 'none';
+          contentEl.style.display = 'block';
+          document.getElementById('docToolbar').style.display = 'flex';
+          contentEl.innerHTML = savedContent || data.template?.replace(/\n/g, '<br/>') || 
+            `<div style="color:var(--muted);text-align:center;padding:36px"><div style="font-size:36px;margin-bottom:12px">📄</div><div style="font-size:13px;color:var(--text);margin-bottom:6px">${docName}</div><div>Template belum diisi admin. Klik <strong>Edit</strong> untuk mulai menulis.</div></div>`;
+        }
       } else {
         contentEl.innerHTML = `<div style="color:var(--muted);text-align:center;padding:36px"><div style="font-size:36px;margin-bottom:12px">📄</div><div>Konten belum tersedia dari admin.</div></div>`;
       }
-    } catch (e) { contentEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px">Gagal memuat.</div>'; }
+    } catch (e) { 
+      console.error('openDoc Error:', e);
+      contentEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px">Gagal memuat dokumen.</div>'; 
+    }
   }
 }
 
-// ── Edit & Save ────────────────────────────
+// ── 8.1 DYNAMIC UI RENDERER ───────────────────────────────────────
+function renderDynamicForm(components) {
+  const formContent = document.getElementById('docFormContent');
+  if (!formContent) return;
+  
+  formContent.innerHTML = components.map(c => `
+    <div class="form-group-ai">
+      <label>${c.label}</label>
+      <textarea id="ai-input-${c.id}" placeholder="Masukkan data untuk ${c.label}..." class="ai-form-input"></textarea>
+    </div>
+  `).join('');
+}
+
+async function generateWithAI() {
+  if (!_activeDocData || !_activeDocData.ai_prompt) {
+    showToast('error', 'Gagal', 'Prompt AI tidak ditemukan untuk administrasi ini.');
+    return;
+  }
+  
+  const genBtn = document.getElementById('btnGenerateAI');
+  const formContent = document.getElementById('docFormContent');
+  const components = _activeDocData.components;
+  
+  // 1. Kumpulkan data dari form
+  const values = {};
+  let isFilled = false;
+  components.forEach(c => {
+    const el = document.getElementById(`ai-input-${c.id}`);
+    values[c.id] = el ? el.value.trim() : '';
+    if (values[c.id]) isFilled = true;
+  });
+  
+  if (!isFilled) {
+    showToast('warn', 'Input Kosong', 'Mohon isi setidaknya satu kolom pengaturan administrasi.');
+    return;
+  }
+  
+  // 2. Pre-processing Prompt (Variable Replacement)
+  let finalPrompt = _activeDocData.ai_prompt;
+  for (const key in values) {
+    finalPrompt = finalPrompt.replace(new RegExp(`{{${key}}}`, 'g'), values[key] || '(Data tidak diisi)');
+  }
+  
+  // 3. Eksekusi AI
+  try {
+    genBtn.disabled = true;
+    genBtn.innerHTML = '<span>⏳</span> PROSES OLEH AI...';
+    showToast('info', 'AI Bekerja', 'Mohon tunggu, AI sedang menyusun dokumen legalitas Anda...');
+    
+    const res = await window.CimegaAI.ask({
+      system: "Anda adalah Spesialis Administrasi Sekolah 2025/2026. Susun dokumen dengan rapi, gunakan bahasa formal, dan gunakan format HTML dasar (h3, p, strong) untuk struktur dokumen.",
+      messages: [{ role: 'user', content: finalPrompt }]
+    });
+    
+    if (res.success && res.text) {
+      // 4. Update UI
+      const contentEl = document.getElementById('docContent');
+      const formContainer = document.getElementById('docFormContainer');
+      const toolbar = document.getElementById('docToolbar');
+      
+      // Bersihkan teks markdown jika ada
+      const cleanedText = res.text.replace(/```html|```/g, '').trim();
+      
+      contentEl.innerHTML = cleanedText;
+      contentEl.style.display = 'block';
+      toolbar.style.display = 'flex';
+      if (formContainer) formContainer.style.display = 'none';
+      
+      showToast('success', 'Generasi Selesai', 'Dokumen berhasil disusun oleh AI.');
+      
+      // Aktifkan mode edit otomatis agar user bisa merapikan
+      toggleEdit();
+    } else {
+      showToast('error', 'Gagal Generasi', res.error || 'Terjadi gangguan pada jalur AI.');
+    }
+  } catch (err) {
+    console.error('generateWithAI Error:', err);
+    showToast('error', 'Sistem Sibuk', 'Gagal menghubungi asisten AI.');
+  } finally {
+    genBtn.disabled = false;
+    genBtn.innerHTML = '<span>✨</span> GENERASI DATA AI';
+  }
+}
+
+// ── 9. CONTENT EDITING & PERSISTENCE ──────────────────────────────
 function toggleEdit() {
   const ce = document.getElementById('docContent');
   if (!ce) return;
@@ -532,7 +739,7 @@ async function saveDoc() {
 }
 function fmt(cmd) { document.execCommand(cmd, false, null); }
 
-// ── Download & Print ───────────────────────
+// ── 10. DOCUMENT DISTRIBUTION (Print/Download) ───────────────────
 function downloadDoc() {
   const contentEl = document.getElementById('docContent');
   if (!contentEl) return;
@@ -562,7 +769,7 @@ function printDoc() {
   w.document.close(); setTimeout(() => { w.print(); w.close(); }, 400);
 }
 
-// ── Page settings ──────────────────────────
+// ── 11. PAGE CONFIGURATION ──────────────────────────────────────
 function setPageSize(s) {
   pageSettings.size = s;
   ['A4', 'F4'].forEach(k => document.getElementById('ps' + k)?.classList.toggle('active', k === s));
@@ -582,36 +789,36 @@ function setOrientation(o) {
 function createSharedDoc() {
   const docName = prompt("Masukkan Nama Dokumen / File Baru:");
   if (!docName) return;
-  
-  currentKat = 'umum'; 
-  currentDocName = docName; 
+
+  currentKat = 'umum';
+  currentDocName = docName;
   currentDocId = ''; // Tidak di-save ke konten, hanya untuk dishare
-  
+
   pageHistory.push({ id: 'shared', title: 'DOKUMEN BERSAMA' });
-  
+
   const titleEl = document.getElementById('docviewTitle');
   if (titleEl) titleEl.textContent = docName;
   const metaEl = document.getElementById('docviewMeta');
   if (metaEl) metaEl.textContent = 'Dokumen Baru Kustom · ' + pageSettings.size + ' ' + pageSettings.orientation;
-  
+
   const contentEl = document.getElementById('docContent');
   if (contentEl) {
     contentEl.innerHTML = '<div style="padding:20px;color:var(--text);"><p>Mulai ketik dokumen Anda di sini, atau paste (Ctrl+V) teks/gambar dari luar...</p></div>';
     contentEl.contentEditable = 'true';
-    
+
     // Hide save disabled message
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) saveBtn.style.display = 'none';
-    
+
     const editBtn = document.getElementById('editBtn');
     if (editBtn) editBtn.textContent = '✕ Selesai Edit';
-    
+
     showPage('docview', docName);
     setTimeout(() => contentEl.focus(), 300);
   }
 }
 
-// ── SHARE DOKUMEN ──────────────────────────
+// ── 12. DOCUMENT SHARING SYSTEM ──────────────────────────────────
 function openShareModal() {
   if (!currentDocName) {
     showToast('warn', 'Petunjuk', '💡 Buka dokumen dari menu Administrasi terlebih dahulu, lalu klik tombol 📤 Bagikan di halaman dokumen.');
@@ -676,6 +883,7 @@ function filterShared(f) {
   });
   renderShared(f);
 }
+// ★ SHARED DOCS FILTERING ★
 function renderShared(filter) {
   const gridEl = document.getElementById('sharedDocsGrid');
   if (!gridEl) return;
@@ -685,7 +893,7 @@ function renderShared(filter) {
     items = allShared || [];
     if (filter === 'school') items = items.filter(d => d.sharedById !== userData.id && d.target === 'school');
     if (filter === 'mine') items = items.filter(d => d.sharedById === userData.id);
-    
+
     if (roles.includes('kepsek')) {
       // keep all
     } else if (roles.includes('bendahara')) {
@@ -699,7 +907,7 @@ function renderShared(filter) {
     console.warn("Error rendering shared docs", e);
     items = [];
   }
-  
+
   if (items.length === 0) {
     const msg = filter === 'school' ? 'Belum ada dokumen dari rekan' : filter === 'mine' ? 'Anda belum membagikan dokumen' : 'Belum ada dokumen bersama';
     gridEl.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);grid-column:1/-1">
@@ -896,9 +1104,21 @@ async function loadApprovals(statusFilter = 'pending') {
   if (!listEl) return;
   listEl.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
   try {
-    const snap = await getDocs(query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah), where('target', '==', 'approval'), where('status', '==', statusFilter), orderBy('sharedAt', 'desc')));
+    const snap = await getDocs(query(collection(db, 'shared_docs'),
+      where('sekolah', '==', userData.sekolah),
+      where('target', '==', 'approval'),
+      where('status', '==', statusFilter)
+    ));
     allApprovals = [];
     snap.forEach(d => allApprovals.push({ id: d.id, ...d.data() }));
+
+    // Manual Sort (Bypass Index)
+    allApprovals.sort((a, b) => {
+      const ta = a.sharedAt?.seconds || (a.sharedAt instanceof Date ? a.sharedAt.getTime() / 1000 : 0);
+      const tb = b.sharedAt?.seconds || (b.sharedAt instanceof Date ? b.sharedAt.getTime() / 1000 : 0);
+      return tb - ta;
+    });
+
     if (statusFilter === 'pending') {
       const badge = document.getElementById('approvalBadge');
       if (badge) { badge.style.display = allApprovals.length > 0 ? '' : 'none'; badge.textContent = allApprovals.length; }
@@ -943,7 +1163,39 @@ async function loadRekap() {
     const sharedSnap = await getDocs(query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah)));
     const allDocs = [];
     sharedSnap.forEach(d => allDocs.push({ id: d.id, ...d.data() }));
-    let html = '<div class="card"><div class="card-header"><div class="card-title">📊 REKAP PER PENGGUNA</div></div><div class="card-body">';
+
+    // Tally Stats for Rekap
+    const stats = {
+      total: allDocs.length,
+      pending: allDocs.filter(d => d.status === 'pending').length,
+      approved: allDocs.filter(d => d.status === 'approved').length,
+      rejected: allDocs.filter(d => d.status === 'rejected').length
+    };
+
+    let html = `
+    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:20px;">
+      <div class="stat-card" style="background:rgba(0,229,255,0.05)">
+        <div style="font-size:10px; color:var(--muted)">TOTAL SHARED</div>
+        <div style="font-size:20px; font-weight:700; color:var(--cyan); font-family:'Orbitron'">${stats.total}</div>
+      </div>
+      <div class="stat-card" style="background:rgba(255,200,0,0.05)">
+        <div style="font-size:10px; color:var(--muted)">PENDING</div>
+        <div style="font-size:20px; font-weight:700; color:#ffcc00; font-family:'Orbitron'">${stats.pending}</div>
+      </div>
+      <div class="stat-card" style="background:rgba(0,255,100,0.05)">
+        <div style="font-size:10px; color:var(--muted)">DISETUJUI</div>
+        <div style="font-size:20px; font-weight:700; color:var(--success); font-family:'Orbitron'">${stats.approved}</div>
+      </div>
+      <div class="stat-card" style="background:rgba(255,50,50,0.05)">
+        <div style="font-size:10px; color:var(--muted)">DITOLAK</div>
+        <div style="font-size:20px; font-weight:700; color:var(--danger); font-family:'Orbitron'">${stats.rejected}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">📊 RINCIAN PER KONTRIBUTOR</div></div>
+      <div class="card-body">`;
+
     guruSnap.forEach(gDoc => {
       const g = gDoc.data();
       const roles = g.roles || [g.role];
@@ -963,7 +1215,7 @@ function loadBeranda() {
   const roles = userData.roles || ['guru'];
   const isBendahara = roles.includes('bendahara');
   const isKepsek = roles.includes('kepsek');
-  
+
   // Re-sync basic info
   setupUser();
 
@@ -1063,16 +1315,16 @@ async function addAdminLog(aksi, detail) {
   } catch (e) { console.warn('Gagal mencatat log admin:', e); }
 }
 
-window.toggleUserPass = function(id) {
+window.toggleUserPass = function (id) {
   const el = document.getElementById(id);
-  if(!el) return;
+  if (!el) return;
   const btn = el.nextElementSibling;
   if (el.type === 'password') {
     el.type = 'text';
-    if(btn) btn.textContent = '🔒';
+    if (btn) btn.textContent = '🔒';
   } else {
     el.type = 'password';
-    if(btn) btn.textContent = '👁️';
+    if (btn) btn.textContent = '👁️';
   }
 };
 
@@ -1096,23 +1348,23 @@ async function changePassword() {
     const userRef = doc(db, 'users', userData.id);
     const snap = await getDoc(userRef);
     if (!snap.exists()) return;
-    
+
     const data = snap.data();
     if (data.password !== oldPass) {
       showToast('error', 'Gagal', 'Password lama Anda salah.');
       return;
     }
 
-    await updateDoc(userRef, { 
+    await updateDoc(userRef, {
       password: newPass,
-      updatedAt: serverTimestamp() 
+      updatedAt: serverTimestamp()
     });
 
     // KIRIM NOTIF/LOG KE ADMIN (Sesuai permintaan USER: perlihatkan password baru)
     await addAdminLog('KEAMANAN (Update)', `User ${userData.nama} (@${userData.username}) mengganti password sendiri menjadi: ${newPass}`);
 
     showToast('success', 'Berhasil', 'Password Anda telah diperbarui.');
-    
+
     // Reset form
     document.getElementById('oldPassUser').value = '';
     document.getElementById('newPassUser').value = '';
@@ -1126,12 +1378,12 @@ async function uploadAvatar() {
   const fileInput = document.getElementById('avatarUploadInput');
   const statusEl = document.getElementById('avatarUploadStatus');
   const btn = document.getElementById('btnUploadAvatar');
-  
+
   if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
     showToast('warn', 'Pilih File', 'Silakan pilih foto terlebih dahulu');
     return;
   }
-  
+
   const file = fileInput.files[0];
   if (file.size > 2 * 1024 * 1024) {
     showToast('warn', 'File Terlalu Besar', 'Maksimal ukuran foto adalah 2MB');
@@ -1142,29 +1394,29 @@ async function uploadAvatar() {
     showToast('error', 'Supabase', 'Koneksi penyimpanan tidak tersedia');
     return;
   }
-  
+
   btn.disabled = true;
   btn.textContent = '⏳ Mengunggah...';
   statusEl.textContent = 'Mengunggah foto ke Supabase...';
-  
+
   try {
     const ext = file.name.split('.').pop();
     const safeName = `avatar_${userData.id}_${Date.now()}.${ext}`;
-    
+
     const { error: uploadErr } = await window._supabase.storage
       .from('user-profiles')
       .upload(`avatars/${safeName}`, file, { upsert: true, contentType: file.type });
-      
+
     if (uploadErr) throw new Error(uploadErr.message);
-    
+
     const { data: urlData } = window._supabase.storage.from('user-profiles').getPublicUrl(`avatars/${safeName}`);
-    
+
     const { doc, updateDoc, serverTimestamp } = window._fb;
-    await updateDoc(doc(db, 'users', userData.id), { 
-      avatarUrl: urlData.publicUrl, 
-      updatedAt: serverTimestamp() 
+    await updateDoc(doc(db, 'users', userData.id), {
+      avatarUrl: urlData.publicUrl,
+      updatedAt: serverTimestamp()
     });
-    
+
     // Log ke admin
     await addAdminLog('PROFIL', `User ${userData.nama} memperbarui foto profil.`);
 
@@ -1227,7 +1479,15 @@ function fmtDate(ts) {
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
-function doLogout() { if (confirm('Keluar dari aplikasi?')) { localStorage.removeItem('cimega_user'); window.location.href = '../login/login.html'; } }
+function doLogout() {
+  if (confirm('Keluar dari aplikasi?')) {
+    // TOTAL SESSION WIPE (Advanced Security)
+    localStorage.clear();
+    sessionStorage.clear();
+    if (window.cimegaAPI?.clearCache) window.cimegaAPI.clearCache();
+    window.location.href = '../login/login.html';
+  }
+}
 
 // ── AI ASISTEN Logic ───────────────────────
 let _chatHistory = [];
@@ -1271,7 +1531,7 @@ function appendChat(role, text) {
   el.appendChild(div); el.scrollTop = el.scrollHeight;
 }
 async function sendChat() {
-  const input = document.getElementById('chatInput');
+  const input = document.getElementById('aiChatInput');
   const text = input?.value.trim(); if (!text) return;
   input.value = ''; appendChat('user', text);
   _chatHistory.push({ role: 'user', content: text });
@@ -1330,6 +1590,14 @@ async function initApp() {
     // ── Setup user dan render sidebar awal SEGERA setelah Firebase siap ──
     // Ini memastikan sidebar tidak kosong bahkan sebelum data Firestore tiba
     setupUser();
+
+    // ── TRIGGER AUTOLOADER ─────────────────────────────────────────────
+    // NON-BLOCKING: Jangan await di sini agar dashboard langsung tampil
+    bootSystemAutoloader();
+
+    // ── INITIALIZE MODULES ─────────────────────────────────────────────
+    if (window.CimegaSharing) window.CimegaSharing.init();
+
     buildSidebar();
     loadBeranda();
 
@@ -1342,95 +1610,172 @@ async function initApp() {
       await CimegaUpdater.init({ owner: 'prabu26dev', repo: 'Cimega_Smart_Office' });
       CimegaUpdater.startChecking(db);
     } catch (e) { }
-    if (userData.roles.includes('kepsek')) {
-      const snap = await getDocs(query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah), where('target', '==', 'approval'), where('status', '==', 'pending')));
-      if (!snap.empty) { const b = document.getElementById('approvalBadge'); if (b) { b.style.display = ''; b.textContent = snap.size; } }
-    }
-    if (userData.roles.includes('bendahara')) {
-      const snap = await getDocs(query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah), where('target', '==', 'bendahara'), where('status', '==', 'pending')));
-      if (!snap.empty) { const b = document.getElementById('submBadge'); if (b) { b.style.display = ''; b.textContent = snap.size; } }
+    try {
+      if (userData.roles.includes('kepsek')) {
+        const qKepsek = query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah || ''), where('target', '==', 'approval'), where('status', '==', 'pending'));
+        const snap = await getDocs(qKepsek);
+        if (!snap.empty) { const b = document.getElementById('approvalBadge'); if (b) { b.style.display = ''; b.textContent = snap.size; } }
+      }
+      if (userData.roles.includes('bendahara')) {
+        const qBendahara = query(collection(db, 'shared_docs'), where('sekolah', '==', userData.sekolah || ''), where('target', '==', 'bendahara'), where('status', '==', 'pending'));
+        const snap = await getDocs(qBendahara);
+        if (!snap.empty) { const b = document.getElementById('submBadge'); if (b) { b.style.display = ''; b.textContent = snap.size; } }
+      }
+    } catch (bgError) {
+      console.warn('Dashboard background sync skipped (non-critical):', bgError.message);
     }
 
     // ── Inisialisasi Supabase ──────────────────────────────
     try {
       const sbCfg = window.cimegaConfig?.supabase || await window.cimegaAPI?.getSupabaseConfig();
-      if(sbCfg?.url && typeof supabase !== 'undefined') {
+      if (sbCfg?.url && typeof supabase !== 'undefined') {
         window._supabase = supabase.createClient(sbCfg.url, sbCfg.key);
         console.log('✅ Settings: Supabase Ready');
       }
-    } catch(e) { console.warn('Supabase init failed:', e.message); }
-
-  } catch (e) { console.error('initApp error', e); }
-}
-
-CimegaMusic.init();
-initApp();
-
-// EXPOSE TO GLOBAL (Essential for inline event listeners in dashboard.html)
-window.navTo = navTo;
-window.navToMenu = navToMenu;
-window.goBack = goBack;
-window.goBackToList = goBackToList;
-window.toggleEdit = toggleEdit;
-window.saveDoc = saveDoc;
-window.fmt = fmt;
-window.downloadDoc = downloadDoc;
-window.printDoc = printDoc;
-window.setPageSize = setPageSize;
-window.setMargin = setMargin;
-window.setOrientation = setOrientation;
-window.openShareModal = openShareModal;
-window.doShare = doShare;
-window.loadShared = loadShared;
-window.openSharedDocDetail = openSharedDocDetail;
-window.submitComment = submitComment;
-window.downloadSharedDoc = downloadSharedDoc;
-window.loadLaporanKeu = loadLaporanKeu;
-window.loadMySubmissions = loadMySubmissions;
-window.loadMonitor = loadMonitor;
-window.loadGuruDocs = loadGuruDocs;
-window.openSharedDocKepsek = openSharedDocKepsek;
-window.loadApprovals = loadApprovals;
-window.filterApproval = filterApproval;
-window.approveDoc = approveDoc;
-window.rejectDoc = rejectDoc;
-window.loadRekap = loadRekap;
-window.loadBeranda = loadBeranda;
-window.loadProfil = loadProfil;
-window.changePassword = changePassword;
-window.uploadAvatar = uploadAvatar;
-window.toggleNotif = toggleNotif;
-window.doUpdate = doUpdate;
-window.doLogout = doLogout;
-window.switchAiTab = switchAiTab;
-window.sendChat = sendChat;
-window.sendSchoolChat = () => window.CimegaChat?.send?.();
-window.generateDocAI = generateDocAI;
-window.openDocAiModal = () => openModal('modalDocAi');
-window.openDoc = openDoc;
-window.openDocList = openDocList;
-window.filterShared = (f) => {
-  // Bisa dipanggil dengan string filter ('all','school','mine') atau dari event
-  const filter = typeof f === 'string' ? f : 'all';
-  ['all', 'school', 'mine'].forEach(k => {
-    document.getElementById('sf' + k.charAt(0).toUpperCase() + k.slice(1))?.classList.toggle('active', k === filter);
-  });
-  renderShared(filter);
-};
-function copyAiResult(elId) { const el = document.getElementById(elId); if (el) navigator.clipboard.writeText(el.textContent || '').then(() => showToast('success', 'Tersalin', 'Teks berhasil disalin')); }
-function saveAiResult(elId, tipe) { showToast('info', 'Petunjuk', 'Salin teks lalu tempel di editor Anda'); }
-window.copyAiResult = copyAiResult;
-window.saveAiResult = saveAiResult;
-
-window.renderShared = renderShared; // Wajib diekspos agar onclick="()=>renderShared('all')" berjalan
-
-// Tutup notif panel jika diklik di luar
-document.addEventListener('click', function(e) {
-  const panel = document.getElementById('notifPanel');
-  const btn = document.getElementById('notifBtn') || e.target.closest('.notif-bell');
-  if (panel && panel.classList.contains('show')) {
-    if (!panel.contains(e.target) && (!btn || !btn.contains(e.target))) {
-      panel.classList.remove('show');
+    } catch (e) {
+      console.warn('Supabase initialization skipped or failed:', e);
+    }
+  } catch (err) {
+    console.error('initApp Critical Error:', err);
+    if (typeof showToast === 'function') {
+      showToast('error', 'Sistem Gagal', 'Gagal memuat modul dashboard. Terjadi kesalahan pada sinkronisasi inti.');
+    }
+    // Attempt reveal anyway to prevent permanent white screen
+    const overlay = document.getElementById('boot-overlay');
+    if (overlay) {
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'hidden';
+      setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 600);
     }
   }
-});
+}
+
+// ★ INITIALIZATION ★
+(function () {
+        // Urgent Reveal: Hide overlay immediately to prevent hanging UI
+        const overlay = document.getElementById('boot-overlay');
+        if (overlay) {
+          overlay.style.opacity = '0';
+          overlay.style.visibility = 'hidden';
+          setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 600);
+        }
+
+        // Start Application Services
+        CimegaMusic.init();
+        initApp().catch(e => console.error('InitApp Failed:', e));
+      })();
+
+      // EXPOSE TO GLOBAL (Essential for inline event listeners in dashboard.html)
+      // EXPOSE TO GLOBAL (Essential for inline event listeners in dashboard.html & admin.html)
+      window.navTo = navTo;
+      window.navToMenu = navToMenu;
+      window.goBack = goBack;
+      window.goBackToList = goBackToList;
+      window.toggleEdit = toggleEdit;
+      window.saveDoc = saveDoc;
+      window.fmt = fmt;
+      window.downloadDoc = downloadDoc;
+      window.printDoc = printDoc;
+      window.setPageSize = setPageSize;
+      window.setMargin = setMargin;
+      window.setOrientation = setOrientation;
+      window.openShareModal = openShareModal;
+      window.doShare = doShare;
+      window.loadShared = loadShared;
+      window.openSharedDocDetail = openSharedDocDetail;
+      window.submitComment = submitComment;
+      window.downloadSharedDoc = downloadSharedDoc;
+      window.loadLaporanKeu = loadLaporanKeu;
+      window.loadMySubmissions = loadMySubmissions;
+      window.loadMonitor = loadMonitor;
+      window.loadGuruDocs = loadGuruDocs;
+      window.openSharedDocKepsek = openSharedDocKepsek;
+      window.loadApprovals = loadApprovals;
+      window.filterApproval = filterApproval;
+      window.approveDoc = approveDoc;
+      window.rejectDoc = rejectDoc;
+      window.loadRekap = loadRekap;
+      window.loadBeranda = loadBeranda;
+      window.loadProfil = loadProfil;
+      window.changePassword = changePassword;
+      window.uploadAvatar = uploadAvatar;
+      window.toggleNotif = toggleNotif;
+      window.doUpdate = doUpdate;
+      window.doLogout = doLogout;
+      window.switchAiTab = switchAiTab;
+      window.sendChat = sendChat;
+      window.sendSchoolChat = () => window.CimegaChat?.send?.();
+      window.generateDocAI = generateDocAI;
+      window.openDocAiModal = () => openModal('modalDocAi');
+      window.openDoc = openDoc;
+      window.openDocList = openDocList;
+      window.filterShared = (f) => {
+        const filter = typeof f === 'string' ? f : 'all';
+        ['all', 'school', 'mine'].forEach(k => {
+          document.getElementById('sf' + k.charAt(0).toUpperCase() + k.slice(1))?.classList.toggle('active', k === filter);
+        });
+        renderShared(filter);
+      };
+      window.copyAiResult = (id) => { const el = document.getElementById(id); if (el) navigator.clipboard.writeText(el.textContent || '').then(() => showToast('success', 'Tersalin', 'Teks berhasil disalin')); };
+      window.saveAiResult = (id, t) => { showToast('info', 'Petunjuk', 'Salin teks lalu tempel di editor Anda'); };
+      window.renderShared = renderShared;
+      window.loadLog = loadLog;
+      window.loadUpdateHistory = loadUpdateHistory;
+      window.loadSekolahDropdown = loadSekolahDropdown;
+
+      // ── 20. ADMIN HELPERS (Restored) ───────────────────────────
+      async function loadLog() {
+        const { collection, query, orderBy, getDocs } = window._fb;
+        const container = document.getElementById('logItemsContainer');
+        if (!container) return;
+        try {
+          const snap = await getDocs(query(collection(db, 'logs'), orderBy('timestamp', 'desc')));
+          container.innerHTML = snap.docs.map(d => {
+            const log = d.data();
+            return `<div class="log-item">
+        <span class="log-time">${log.timestamp?.toDate().toLocaleString('id-ID') || '-'}</span>
+        <span class="log-user">${log.user || 'System'}</span>
+        <span class="log-msg">${log.message}</span>
+      </div>`;
+          }).join('');
+          if (snap.empty) container.innerHTML = '<div class="empty-message">Belum ada log.</div>';
+        } catch (e) { console.error('loadLog error', e); }
+      }
+
+      async function loadUpdateHistory() {
+        const { collection, query, orderBy, getDocs } = window._fb;
+        const container = document.getElementById('updateHistoryContainer');
+        if (!container) return;
+        try {
+          const snap = await getDocs(query(collection(db, 'updates'), orderBy('version', 'desc')));
+          container.innerHTML = snap.docs.map(d => {
+            const up = d.data();
+            return `<div class="update-item">
+        <strong>${up.version}</strong> - ${up.title} (${up.date})
+        <ul>${(up.changes || []).map(c => `<li>${c}</li>`).join('')}</ul>
+      </div>`;
+          }).join('');
+          if (snap.empty) container.innerHTML = '<div class="empty-message">Belum ada riwayat update.</div>';
+        } catch (e) { console.error('loadUpdateHistory error', e); }
+      }
+
+      async function loadSekolahDropdown() {
+        const { collection, getDocs } = window._fb;
+        const selects = [document.getElementById('schoolSelect'), document.getElementById('filterSchool')];
+        try {
+          const snap = await getDocs(collection(db, 'sekolah'));
+          const html = '<option value="">-- Pilih Sekolah --</option>' + snap.docs.map(d => `<option value="${d.id}">${d.id}</option>`).join('');
+          selects.forEach(s => { if (s) s.innerHTML = html; });
+        } catch (e) { console.error('loadSekolahDropdown error', e); }
+      }
+
+      // ★ SYSTEM LISTENERS ★
+      document.addEventListener('click', function (e) {
+        const panel = document.getElementById('notifPanel');
+        const btn = document.getElementById('notifBtn') || e.target.closest('.notif-bell');
+        if (panel && panel.classList.contains('show')) {
+          if (!panel.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            panel.classList.remove('show');
+          }
+        }
+      });

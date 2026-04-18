@@ -15,13 +15,9 @@
 const admin = require('firebase-admin');
 
 async function seedInitialTemplates(db) {
-  // ── TEMPLATE ADMIN: Dikelola via Admin Panel (Tombol SINKRON) ──
-  // Seeder template telah dinonaktifkan. Admin menggunakan:
-  //   Admin Panel → Kelola Administrasi → SINKRON SEKARANG
-  //   Admin Panel → Template AI → SINKRON TEMPLATE AI
-  // Kedua tombol mendorong data dari admin_master_data.js (75 template)
-  // ke Firestore dan Supabase secara real-time.
-  // Template dikelola via Admin Panel — skip seeder
+  // ── SEED DATA INTI ──
+  // Template dan kategori sekarang dikelola penuh melalui Admin Panel.
+  // Seeder ini dikosongkan untuk memastikan kondisi "Clean Slate".
 
   // ── SEED MUSIK DEFAULT (Hanya jika koleksi app_music kosong) ──
   try {

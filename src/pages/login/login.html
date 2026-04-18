@@ -711,7 +711,7 @@
     <img class="logo-img" src="../../../assets_images/Logo SDN Cimega.png" alt="Logo"
       onerror="this.style.opacity='0'" />
     <div class="brand-name">CIMEGA<br /><span>SMART OFFICE</span></div>
-    <div class="brand-sub">Digital School Administration</div>
+    <div class="brand-sub">Unified Smart Office System</div>
 
     <div class="stats-grid">
       <div class="stat-box">
@@ -1101,31 +1101,56 @@
           }
         }
 
-        // 4. Retrieve School Cryptography Keys
-        const schoolId = data.school_id || 'NPSN_MIGRATE_2026';
+        // ── 4. INSTITUTIONAL METADATA RESOLUTION ──
+        const schoolId = data.school_id;
+        if (!schoolId) throw new Error('INSTITUTION_ID_MISSING');
         let schoolSecretKey = '';
-        try {
-          const instDoc = await getDoc(doc(db, 'institutions', schoolId));
-          if (instDoc.exists()) schoolSecretKey = instDoc.data().school_secret_key || '';
-        } catch (e) { console.warn('Key handover failed', e); }
+        let officialSchoolName = data.sekolah || 'SDN Cimega';
+        let officialAddress = '';
 
-        // 5. Build Session — SECURITY: school_key TIDAK masuk localStorage
-        //    Hanya metadata non-sensitif yang disimpan.
-        //    school_key dikirim ke sessionStore via preload bridge (in-memory only).
+        try {
+          const { query, collection, where, getDocs } = window._fbFs;
+          let snapSch;
+          
+          // ★ PRIMARY NPSN LOOKUP ★
+          const qSchId = query(collection(db, 'sekolah'), where('npsn', '==', schoolId));
+          snapSch = await getDocs(qSchId);
+          
+          // ★ FALLBACK IDENTITY LOOKUP ★
+          if (snapSch.empty && data.sekolah) {
+            const qSchName = query(collection(db, 'sekolah'), where('nama', '==', data.sekolah));
+            snapSch = await getDocs(qSchName);
+          }
+          
+          if (!snapSch.empty) {
+            const schData = snapSch.docs[0].data();
+            officialSchoolName = schData.nama || officialSchoolName;
+            officialAddress = schData.alamat || '';
+            schoolSecretKey = schData.school_secret_key || '';
+          } else {
+            // ★ LEGACY COMPATIBILITY ★
+            const instDoc = await getDoc(doc(db, 'institutions', schoolId));
+            if (instDoc.exists()) schoolSecretKey = instDoc.data().school_secret_key || '';
+          }
+        } catch (e) { console.warn('School metadata handover failed', e); }
+
+        // ── 5. SESSION CONSTRUCTION ──
         const roles = data.roles || (data.role ? [data.role] : []);
         const sessionData = {
           id: userDoc.id,
           nama: data.nama,
           role: data.role,
           roles: roles,
-          sekolah: data.sekolah,
+          sekolah: officialSchoolName,
+          alamat: officialAddress,
           school_id: schoolId,
+          // Extra redundancy for future modules
+          school_safe_id: window.CimegaUtils?.getSafetySchoolID({ school_id: schoolId, sekolah: officialSchoolName, id: userDoc.id }),
           username: data.username
-          // ⚠️ school_key TIDAK disimpan di sini — disimpan in-memory via API
         };
         localStorage.setItem('cimega_user', JSON.stringify(sessionData));
 
-        // REMEMBER ME LOGIC
+        // ★ AUTHENTICATION PERSISTENCE ★
         const rememberMe = document.getElementById('rememberMe').checked;
         if (rememberMe) {
           localStorage.setItem('cimega_remembered', JSON.stringify({ u: username, p: password }));
@@ -1133,8 +1158,7 @@
           localStorage.removeItem('cimega_remembered');
         }
 
-        // Simpan school_key di sessionStorage (dibersihkan saat tab ditutup)
-        // dan via cimegaAPI.setSessionKey agar tersedia lintas window via IPC
+        // ★ SECURITY BINDING & HANDOVER ★
         if (schoolSecretKey) {
           sessionStorage.setItem('_ck', btoa(schoolSecretKey)); // base64 only, bukan enkripsi
           const api = window.cimegaConfig || window.cimegaAPI;
@@ -1160,6 +1184,9 @@
 
         if (err.message === 'ID_NOT_FOUND' || err.message === 'PASSKEY_MISMATCH') {
           if (errTxt) errTxt.textContent = 'ID atau Passkey tidak valid.';
+          if (errBox) errBox.classList.add('show');
+        } else if (err.message === 'INSTITUTION_ID_MISSING') {
+          if (errTxt) errTxt.textContent = 'Akun Anda belum tertaut ke institusi sekolah yang valid.';
           if (errBox) errBox.classList.add('show');
         } else if (err.message !== 'STATUS_DISABLED' && err.message !== 'SUBSCRIPTION_EXPIRED') {
           if (errTxt) errTxt.textContent = 'Gagal terhubung ke pusat data.';

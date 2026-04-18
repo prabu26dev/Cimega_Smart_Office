@@ -30,9 +30,9 @@ function parsePrompt(template, params) {
   return prompt;
 }
 
-// ── 2. ENDPOINT SSE (GENERATE ADMIN) ─────────────────────────
+// ── 2. ENDPOINT SSE (GENERATE DOCUMENT) ─────────────────────────
 
-app.get('/api/generate-admin', async (req, res) => {
+app.get('/api/generate-docs', async (req, res) => {
   // SSE Headers
   res.setHeader('Content-Type',  'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -70,12 +70,12 @@ app.get('/api/generate-admin', async (req, res) => {
     const model  = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const systemInstruction = `
-      Kamu adalah CIMEGA AI ADMIN GENERATOR. 
+      Kamu adalah CIMEGA SMART GENERATOR. 
       TUGAS: ${dynamicPrompt}
       ATURAN:
       1. Jawab HANYA dalam format JSON valid.
       2. JANGAN sertakan markdown code block (\`\`\`json).
-      3. Gunakan Bahasa Indonesia praktis sesuai Kurikulum Merdeka.
+      3. Gunakan bahasa formal dan profesional.
       4. Ikuti struktur komponen yang diminta: ${JSON.stringify(templateData.components)}
     `;
 

@@ -1,8 +1,4 @@
-/**
- * CIMEGA SMART OFFICE - Shared Utilities
- * 
- * General helper functions for the application
- */
+// ── CIMEGA SMART OFFICE: SHARED UTILITIES ────────────────────────
 
 window.CimegaUtils = {
   /**
@@ -62,6 +58,19 @@ window.CimegaUtils = {
     const d = datePayload.toDate ? datePayload.toDate() : new Date(datePayload);
     if (isNaN(d.getTime())) return '';
     return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  },
+
+  /**
+   * Generates a unique, URL-safe identifier for the school to ensure isolation.
+   * Priority: school_id (NPSN) > sekolah (Slugified Name) > id (User ID)
+   */
+  getSafetySchoolID: function(userData) {
+    if (!userData) return 'Global';
+    if (userData.school_id) return userData.school_id;
+    if (userData.sekolah) {
+      return userData.sekolah.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+    }
+    return userData.id || 'Unknown';
   }
 };
 

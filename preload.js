@@ -124,6 +124,10 @@ try {
     onDownloadProgress:     (cb)   => ipcRenderer.on('update-download-progress', (_e, d) => cb(d)),
     removeDownloadListener: ()     => ipcRenderer.removeAllListeners('update-download-progress'),
 
+    // ── SYSTEM: Dynamic Resource Discovery (Autoloader) ─────────
+    listFiles: (p, rec = false) => ipcRenderer.invoke('system:list-files', { subPath: p, recursive: rec }),
+    readFile:  (p)              => ipcRenderer.invoke('system:read-file', { subPath: p }),
+
     // ── SECURITY: In-Memory Session Key (school_key tidak di localStorage) ──
     setSessionKey:   (key) => ipcRenderer.invoke('session-set-key', key),
     getSessionKey:   ()    => ipcRenderer.invoke('session-get-key'),

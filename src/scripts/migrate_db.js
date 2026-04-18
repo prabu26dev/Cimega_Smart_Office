@@ -32,7 +32,7 @@ const fs = require('fs');
 
 // ── Konfigurasi ──────────────────────────────────────────────────
 const TARGET_PROJECT_ID = 'cimega-smart-office'; // ← Sesuaikan jika berbeda
-const DEFAULT_SCHOOL_ID = 'NPSN_MIGRATE_2026';   // Fallback school_id untuk data lama
+const DEFAULT_SCHOOL_ID = '';   // Fallback kosong agar admin input manual
 const DRY_RUN = process.env.DRY_RUN === 'true';
 const TARGET_COL = process.env.COL || null; // Opsional: filter 1 koleksi saja
 
@@ -113,35 +113,7 @@ const COLLECTION_MIGRATORS = {
     return Object.keys(updates).length > 0 ? updates : null;
   },
 
-  // ────────── KONTEN ─────────────────────────────────────────────
-  konten: (data) => {
-    const updates = {};
 
-    if (!data.school_id) updates.school_id = DEFAULT_SCHOOL_ID;
-    if (!data.status) updates.status = 'aktif';
-
-    // Hapus field usang dari arsitektur lama
-    if ('isGlobal' in data) {
-      // Firestore Admin SDK menggunakan FieldValue.delete() untuk hapus field
-      updates.isGlobal = admin.firestore.FieldValue.delete();
-    }
-
-    return Object.keys(updates).length > 0 ? updates : null;
-  },
-
-  // ────────── KATEGORI ───────────────────────────────────────────
-  kategori: (data) => {
-    const updates = {};
-
-    if (!data.school_id) updates.school_id = DEFAULT_SCHOOL_ID;
-
-    // Validasi role kategori
-    if (data.role && !VALID_ROLES.has(data.role)) {
-      updates.role = 'guru'; // fallback
-    }
-
-    return Object.keys(updates).length > 0 ? updates : null;
-  },
 
   // ────────── APP_MUSIC ──────────────────────────────────────────
   app_music: (data) => {
@@ -171,20 +143,7 @@ const COLLECTION_MIGRATORS = {
     return Object.keys(updates).length > 0 ? updates : null;
   },
 
-  // ────────── ADMIN_TEMPLATES ────────────────────────────────────
-  admin_templates: (data) => {
-    const updates = {};
 
-    // Pastikan structure komponen ada
-    if (!data.components && data.template) {
-      updates.components = []; // admin bisa isi via panel
-    }
-    if (!data.role && data.roles && data.roles.length > 0) {
-      updates.role = data.roles[0]; // ambil role pertama sebagai primary
-    }
-
-    return Object.keys(updates).length > 0 ? updates : null;
-  },
 
   // ────────── CHATS ──────────────────────────────────────────────
   chats: (data) => {

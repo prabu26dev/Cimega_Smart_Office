@@ -248,10 +248,13 @@
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-section">Manajemen Terpadu</div>
     <div class="nav-item active" style="color:var(--gold)" onclick="showPage('master',this)"><span class="nav-icon">📦</span>Data Master</div>
-    <div class="nav-item" onclick="showPage('cloud',this)"><span class="nav-icon">☁️</span>Cimega Cloud Drive</div>
-    <div class="nav-item" onclick="showPage('oversight',this)"><span class="nav-icon">🛡️</span>Pengawasan Dokumen</div>
+
+
+    <div class="nav-section">Manajemen Administrasi</div>
+    <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">🗂️</span>Kelola Administrasi</div>
+
     <div class="nav-section">Sistem</div>
-    <div class="nav-item" onclick="showPage('konten',this)"><span class="nav-icon">📁</span>Kelola Administrasi</div>
+
     <div class="nav-item" onclick="showPage('musik',this)"><span class="nav-icon">🎵</span>Kelola Musik</div>
     <div class="nav-item" onclick="showPage('update',this)"><span class="nav-icon">🔄</span>Update Aplikasi</div>
     <div class="nav-item" onclick="showPage('notifikasi',this)"><span class="nav-icon">🔔</span>Notifikasi<span class="nav-badge" id="notifBadge" style="display:none">!</span></div>
@@ -293,7 +296,7 @@
         <div class="stat-card cyan"><div class="stat-card-icon">🏫</div><div class="stat-card-num" id="statSekolah">0</div><div class="stat-card-label">Sekolah Terdaftar</div></div>
         <div class="stat-card blue"><div class="stat-card-icon">👥</div><div class="stat-card-num" id="statGuru">0</div><div class="stat-card-label">Total Pengguna</div></div>
         <div class="stat-card gold"><div class="stat-card-icon">💰</div><div class="stat-card-num" id="statBendahara">0</div><div class="stat-card-label">Bendahara Aktif</div></div>
-        <div class="stat-card green"><div class="stat-card-icon">📄</div><div class="stat-card-num" id="statKonten">0</div><div class="stat-card-label">Konten Dokumen</div></div>
+
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="update-card">
@@ -312,81 +315,7 @@
       </div>
     </div>
 
-    <!-- PAGE: KELOLA ADMINISTRASI (TERPADU) -->
-    <div class="page" id="page-konten">
-      <div class="section-header">
-        <div class="section-title">Pusat Kontrol <span>Administrasi & Template AI</span></div>
-        <div style="display:flex;gap:8px" id="admActionBtns">
-          <button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
-          <button class="btn btn-primary" onclick="openModalKonten()">📄 + Administrasi</button>
-        </div>
-      </div>
 
-      <!-- TABS -->
-      <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:10px">
-        <button class="rf-btn active" id="tabBtnAdm" onclick="switchAdmTab('adm')">📁 Administrasi & Kategori</button>
-        <button class="rf-btn" id="tabBtnTmp" onclick="switchAdmTab('tmp')">🤖 Template AI</button>
-      </div>
-
-      <!-- TAB 1: ADMINISTRASI -->
-      <div id="tabContentAdm">
-        <div class="konten-layout" style="margin-bottom:30px">
-          <div class="kat-list" id="kategoriList">
-            <div class="kat-header">
-              <span class="kat-header-label">Kategori</span>
-            </div>
-            <div id="katItemsContainer">
-              <div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Memuat...</div>
-            </div>
-          </div>
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <div style="font-size:12px;color:var(--muted)" id="kontenListLabel"></div>
-              <button class="btn btn-ghost btn-sm" onclick="openModalKonten()" id="btnTambahKontenKat" style="display:none">📄 + Tambah Dokumen</button>
-            </div>
-            <div class="content-list" id="kontenList">
-              <div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section: Sinkronisasi Master -->
-        <div class="card" style="border-color:var(--cyan); background:rgba(0,229,255,0.02); border-radius:13px; border:1px solid rgba(0,229,255,0.2); overflow:hidden">
-          <div class="card-header" style="background:rgba(0,229,255,0.05); padding:15px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between">
-            <div class="card-title" style="font-family:'Orbitron',sans-serif; font-size:12px; color:#fff">🔄 SINKRONISASI MASTER — Kategori & Administrasi</div>
-          </div>
-          <div class="card-body" style="padding:20px">
-            <p style="font-size:12px;color:var(--muted);margin-bottom:14px; max-width:700px; line-height:1.7">
-              Klik <strong style="color:var(--cyan)">Sinkron Sekarang</strong> untuk menimpa seluruh Kategori dan Konten Administrasi di Firestore & Supabase dengan data master terbaru.
-              Semua akun pengguna di setiap role akan otomatis menerima kategori sesuai jabatan yang telah ditentukan.
-            </p>
-            <div style="background:rgba(255,170,0,0.06); border:1px solid rgba(255,170,0,0.2); border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:11px; color:var(--warn)">
-              ⚠️ <strong>Peringatan:</strong> Tombol ini akan <strong>MENIMPA</strong> data existing di Firestore. Pastikan sudah backup terlebih dahulu jika diperlukan.
-            </div>
-            <button class="btn btn-primary" id="btnSyncAdm" onclick="masterSync('adm')" style="background:linear-gradient(135deg,#003399,#0055ff); border:1px solid rgba(0,229,255,0.4); padding:12px 28px; font-size:13px; font-family:'Orbitron',sans-serif; letter-spacing:1px; box-shadow:0 0 20px rgba(0,102,255,0.3)">
-              🔄 SINKRON SEKARANG
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 2: TEMPLATES -->
-      <div id="tabContentTmp" style="display:none">
-        <div class="module-header" style="margin-bottom:15px; display:flex; align-items:center; justify-content:space-between">
-            <h2 class="module-title" style="font-size:12px; color:var(--muted)">Konfigurasi AI Assistant — Prompt Template per Role</h2>
-            <div style="display:flex; gap:8px">
-              <button class="btn btn-primary" id="btnSyncTmp" onclick="masterSync('tmp')" style="background:linear-gradient(135deg,#003399,#0055ff); border:1px solid rgba(0,229,255,0.4); font-family:'Orbitron',sans-serif; letter-spacing:1px; font-size:11px; box-shadow:0 0 16px rgba(0,102,255,0.3)">
-                🔄 SINKRON TEMPLATE AI
-              </button>
-              <button class="btn btn-ghost btn-sm" onclick="openModalTemplate()">🤖 + Buat Template AI</button>
-            </div>
-        </div>
-        <div style="background:rgba(0,229,255,0.04); border:1px solid rgba(0,229,255,0.15); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:11px; color:var(--muted)">
-          ℹ️ Klik <strong style="color:var(--cyan)">Sinkron Template AI</strong> untuk menimpa semua prompt AI ke Firestore & Supabase dari modul master (Guru Kelas, PAI, PJOK). Template ini akan langsung tersedia di semua akun sesuai role.
-        </div>
-        <div id="templateList" class="content-list"></div>
-      </div>
-    </div>
 
     <!-- PAGE: KELOLA MUSIK -->
     <div class="page" id="page-musik">
@@ -512,80 +441,60 @@
     </div>
 
 
-    <!-- PAGE: PENGAWASAN DOKUMEN -->
-    <div class="page" id="page-oversight">
+
+
+
+
+    <!-- PAGE: KONTEN / ADMINISTRASI -->
+    <div class="page" id="page-konten">
       <div class="section-header">
-        <div class="section-title">🛡️ Pengawasan <span>Dokumen Global</span></div>
-        <div style="display:flex;gap:10px">
-          <select class="form-control" id="oversightColFilter" style="width:180px; font-size:11px" onchange="window.ModulOversight.loadData()">
-            <option value="all">Semua Koleksi</option>
-            <option value="perencanaan">Academic (Modul Ajar)</option>
-            <option value="arsip_makro">Arsip Institusi (RKT/RKJM)</option>
-            <option value="asesmen">Penilaian & Asesmen</option>
-            <option value="pelaksanaan">Jurnal Pelaksanaan</option>
-            <option value="keuangan">Keuangan (SPJ/BKU)</option>
-          </select>
-          <button class="btn btn-ghost" onclick="window.ModulOversight.loadData()">🔄 Refresh</button>
-        </div>
-      </div>
-      
-      <div class="update-card" style="margin-bottom:20px; border-color:var(--danger)">
-        <p style="font-size:11px; color:var(--muted); line-height:1.5">
-          <strong style="color:var(--danger)">MODE PENGAWASAN AKTIF:</strong> Anda melihat seluruh dokumen yang dihasilkan secara real-time dari seluruh sekolah. Gunakan fitur ini untuk audit keamanan atau pemulihan data.
-        </p>
-      </div>
-
-      <div class="card" style="background:var(--card); border:1px solid var(--border); border-radius:13px; padding:10px">
-        <div id="gridWrapperOversight"></div>
-      </div>
-    </div>
-
-    <!-- PAGE: CLOUD DRIVE -->
-    <div class="page" id="page-cloud">
-      <div class="section-header">
-        <div class="section-title">☁️ Cimega <span>Cloud Drive</span></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="window.ModulCloudDrive.openUpload()">📤 Unggah File Baru</button>
-        </div>
-      </div>
-      
-      <div class="card" style="margin-bottom:20px; border-color:var(--purple); background:rgba(170,85,255,0.02)">
-        <div class="card-body">
-            <p style="font-size:12px; color:var(--muted)">
-                Ruang penyimpanan cloud institusi bertenaga Supabase. File yang diunggah di sini terisolasi untuk sekolah Anda tetapi dapat diawasi oleh admin pusat.
-            </p>
+        <div class="section-title">Kelola <span>Administrasi Terpadu</span></div>
+        <div style="display:flex;gap:10px" id="admActionBtns">
+          <button class="btn btn-ghost btn-sm" onclick="openModalKategori()">🗂 + Kategori</button>
+          <button class="btn btn-primary" onclick="openModalKonten()">📄 + Administrasi</button>
         </div>
       </div>
 
-      <div class="card" style="padding:15px">
-        <div id="gridWrapperCloud"></div>
+      <div class="card" style="margin-bottom:20px; border-color:var(--cyan);">
+        <div class="card-body" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-family:'Orbitron'; font-size:11px; color:var(--cyan); margin-bottom:5px;">SINKRONISASI CLOUD</div>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Pastikan data kategori dan daftar administrasi selalu sinkron dengan database cloud (Supabase).</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" onclick="totalSync()" id="btnTotalSync">🔄 Sinkronkan ke Cloud</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Upload Drawer -->
-      <div id="uploadDrawer" style="display:none; position:fixed; right:0; top:0; bottom:0; width:350px; background:var(--dark2); border-left:1px solid var(--border); z-index:100; box-shadow:-10px 0 30px rgba(0,0,0,0.5); padding:20px; animation: slideRight 0.3s ease-out">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-            <h3 style="font-family:'Orbitron',sans-serif; font-size:14px; color:var(--cyan)">UPLOAD FILE</h3>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('uploadDrawer').style.display='none'">✕</button>
+      <div class="konten-layout">
+        <div class="kat-list" id="kategoriList">
+          <div class="kat-header"><div class="kat-header-label">KATEGORI</div></div>
+          <div id="katItems">
+            <div class="empty-state" style="padding:10px; font-size:11px;">Belum ada kategori</div>
+          </div>
         </div>
-        <div id="dropZone" style="border:2px dashed var(--border); border-radius:12px; height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; cursor:pointer; transition:all 0.2s" onclick="document.getElementById('fileInput').click()">
-            <div style="font-size:40px">📤</div>
-            <div style="font-size:11px; color:var(--muted)">Klik atau Drag file ke sini</div>
-            <input type="file" id="fileInput" style="display:none" onchange="window.ModulCloudDrive.handleFileSelect(event)">
-        </div>
-        <div id="uploadProgressContainer" style="margin-top:20px; display:none">
-            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:5px">
-                <span id="fileNameProgress" style="color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px">File.pdf</span>
-                <span id="pctProgress" style="color:var(--cyan)">0%</span>
+        <div class="main-konten">
+          <div style="display:flex;gap:10px;margin-bottom:15px">
+            <button class="btn btn-ghost active" id="tabBtnAdm" onclick="switchAdmTab('adm')">📄 Daftar Administrasi</button>
+            <button class="btn btn-ghost" id="tabBtnTmp" onclick="switchAdmTab('tmp')">🤖 Template AI Asisten</button>
+          </div>
+          
+          <div id="tabContentAdm">
+            <div class="search-wrap" style="margin-bottom:15px">
+              <input type="text" class="search-input" placeholder="Cari administrasi di kategori ini..." oninput="filterKonten(this.value)">
             </div>
-            <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden">
-                <div id="barProgress" style="width:0%; height:100%; background:var(--cyan); transition:width 0.1s"></div>
+            <div id="kontenList" class="content-list">
+              <div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>
             </div>
-        </div>
-        <div style="margin-top:30px; border-top:1px solid var(--border); padding-top:20px">
-            <p style="font-size:10px; color:var(--muted); line-height:1.5">
-                Maksimal ukuran file: <strong>5MB</strong>.<br>
-                Format yang diizinkan: PDF, DOCX, XLSX, JPG, PNG.
-            </p>
+          </div>
+
+          <div id="tabContentTmp" style="display:none">
+            <div class="search-wrap" style="margin-bottom:15px">
+              <input type="text" class="search-input" placeholder="Cari template AI..." oninput="filterTemplates(this.value)">
+            </div>
+            <div id="templateList" class="content-list"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -642,12 +551,18 @@
     <div style="background:rgba(255,208,0,0.05); border:1px dashed var(--gold); border-radius:10px; padding:12px; margin-top:10px;">
       <div style="font-family:'Orbitron',sans-serif; font-size:10px; color:var(--gold); margin-bottom:8px;">🔐 SHARED SECURITY KEYS (SAAS)</div>
       <div class="form-group" style="margin-bottom:8px;">
-        <label class="form-label" style="font-size:10px; color:var(--muted);">School Secret Key (AES-256)</label>
-        <input class="form-control" id="sekolahSecretKey" style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="form-label" style="font-size:10px; color:var(--muted);">School Secret Key (AES-256)</label>
+          <span style="font-size:10px; color:var(--gold); cursor:pointer;" onclick="genKey('sekolahSecretKey', 32)">🔄 Generate</span>
+        </div>
+        <input class="form-control" id="sekolahSecretKey" style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;" placeholder="Input manual atau klik Generate"/>
       </div>
       <div class="form-group" style="margin:0;">
-        <label class="form-label" style="font-size:10px; color:var(--muted);">Emergency Backup Key</label>
-        <input class="form-control" id="sekolahBackupKey" style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;"/>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="form-label" style="font-size:10px; color:var(--muted);">Emergency Backup Key</label>
+          <span style="font-size:10px; color:var(--gold); cursor:pointer;" onclick="genKey('sekolahBackupKey', 16)">🔄 Generate</span>
+        </div>
+        <input class="form-control" id="sekolahBackupKey" style="background:rgba(255,208,0,0.02); color:var(--text); font-size:10px;" placeholder="Input manual atau klik Generate"/>
       </div>
       <div style="font-size:9px; color:var(--muted); margin-top:6px;">⚠️ Kunci ini dihasilkan secara otomatis dan mutlak diperlukan untuk dekripsi data chat/dokumen.</div>
     </div>
@@ -688,10 +603,10 @@
         <label class="role-cb" data-role="guru_pjok"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="guru_pjok"/>    🏃 Guru PJOK</label>
         <label class="role-cb" data-role="kepsek"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="kepsek"/>       🏛️ Kepala Sekolah</label>
         <label class="role-cb" data-role="bendahara"     onclick="toggleRoleCb(this,event)"><input type="checkbox" value="bendahara"/>    💰 Bendahara</label>
-        <label class="role-cb" data-role="ops"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>          💻 Operator</label>
+        <label class="role-cb" data-role="ops"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ops"/>          💻 Operator Sekolah</label>
         <label class="role-cb" data-role="tu"            onclick="toggleRoleCb(this,event)"><input type="checkbox" value="tu"/>           🗂️ Tata Usaha</label>
         <label class="role-cb" data-role="pustakawan"    onclick="toggleRoleCb(this,event)"><input type="checkbox" value="pustakawan"/>   📚 Pustakawan</label>
-        <label class="role-cb" data-role="gpk"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="gpk"/>          ♿ GPK (Inklusif)</label>
+        <label class="role-cb" data-role="gpk"           onclick="toggleRoleCb(this,event)"><input type="checkbox" value="gpk"/>          ♿ Guru GPK Inklusif</label>
         <label class="role-cb" data-role="ekskul"        onclick="toggleRoleCb(this,event)"><input type="checkbox" value="ekskul"/>       🎭 Pembina Ekskul</label>
         <label class="role-cb" data-role="koordinator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="koordinator"/>  🎯 Koordinator Kokurikuler</label>
         <label class="role-cb" data-role="fasilitator"   onclick="toggleRoleCb(this,event)"><input type="checkbox" value="fasilitator"/>  🌱 Fasilitator Kokurikuler</label>
@@ -765,19 +680,7 @@
       <div class="form-group">
         <label class="form-label">Kategori</label>
         <select id="tmpKategori" class="form-control">
-          <option value="adm_guru">📚 Administrasi Guru & Pembelajaran</option>
-          <option value="naskah_soal">📝 Naskah Soal & Bank Evaluasi</option>
-          <option value="adm_kepsek">🏛️ Administrasi Kepala Sekolah</option>
-          <option value="kosp">📖 Kurikulum Operasional (KOSP)</option>
-          <option value="adm_umum">🏢 Administrasi Umum Sekolah</option>
-          <option value="keuangan">💰 Keuangan & BOS</option>
-          <option value="evaluasi">📊 Evaluasi & Pelaporan</option>
-          <option value="perpus">📕 Administrasi Perpustakaan</option>
-          <option value="tata_usaha">✉️ Tata Usaha & Surat Menyurat</option>
-          <option value="adm_gpk">♿ Program Inklusif (GPK)</option>
-          <option value="adm_ekskul">🎭 Ekstrakurikuler</option>
-          <option value="kokurikuler">🎯 Kokurikuler & P5</option>
-          <option value="adm_uks_pjok">⚽ UKS, Kesehatan & PJOK</option>
+          <option value="">-- Baru --</option>
         </select>
       </div>
     </div>
@@ -905,7 +808,7 @@
 <!-- Modul Admin -->
 <script src="../../modules/admin/data_master.js"></script>
 <script src="../../modules/admin/oversight.js"></script>
-<script src="../../modules/admin/cloud_drive.js"></script>
+
 <script>
 'use strict';
 // ══════════════════════════════════════════
@@ -920,15 +823,7 @@ let _currentKat='', _currentKatEl=null;
 let _activeSchoolName='', _activeSchoolId='';
 
 // kontenKategori diisi dari Firestore; fallback hardcoded hanya jika Firestore kosong
-let kontenKategori={
-  adm_guru:  'Administrasi Guru & Pembelajaran',
-  adm_kepsek:'Administrasi Kepala Sekolah',
-  kosp:      'Kurikulum Operasional Satuan Pendidikan',
-  adm_umum:  'Administrasi Umum Sekolah',
-  keuangan:  'Keuangan & BOS',
-  evaluasi:  'Evaluasi & Pelaporan',
-  perpus:    'Administrasi Perpustakaan',
-};
+let kontenKategori={};
 let kontenKategoriMeta={}; // {id:{nama,icon,urutan,visibleTo,deskripsi}}
 
 // ── Clock ──────────────────────────────────
@@ -1043,13 +938,12 @@ function showPage(page,navEl){
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',oversight:'PENGAWASAN DOKUMEN GLOBAL',cloud:'CIMEGA CLOUD DRIVE',konten:'KELOLA KONTEN',musik:'KELOLA MUSIK',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
+  const titles={dashboard:'DASHBOARD',guru:'KELOLA PENGGUNA',institusi:'KELOLA INSTITUSI',master:'DATA MASTER SINKRONISASI',oversight:'PENGAWASAN DOKUMEN GLOBAL',konten:'KELOLA KONTEN',musik:'KELOLA MUSIK',update:'UPDATE APLIKASI',notifikasi:'NOTIFIKASI',log:'LOG AKTIVITAS',pengaturan:'PENGATURAN'};
   document.getElementById('pageTitle').textContent=titles[page]||page.toUpperCase();
   if(page==='guru')       loadSchoolCards();
   if(page==='institusi')  if(window.AdminInstitusi) window.AdminInstitusi.init();
   if(page==='master')     if(window.AdminMaster) window.AdminMaster.init();
   if(page==='oversight')  if(window.ModulOversight) window.ModulOversight.init();
-  if(page==='cloud')      if(window.ModulCloudDrive) window.ModulCloudDrive.init();
   if(page==='konten'){
     loadKategoriList();
     loadTemplates();
@@ -1128,7 +1022,7 @@ function openModalUser(){
   
   const sd = document.getElementById('userSekolahDisplay');
   sd.outerHTML = `<input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>`;
-  document.getElementById('userSekolahDisplay').value = `${_activeSchoolName} (${npsn})`;
+  document.getElementById('userSekolahDisplay').value = _activeSchoolName;
   
   setCheckedRoles('rolesCheckboxes',[]);
   setCheckedAssignments(null);
@@ -1167,7 +1061,7 @@ function editUser(id){
 
   const sd = document.getElementById('userSekolahDisplay');
   sd.outerHTML = `<input class="form-control" id="userSekolahDisplay" readonly style="background:rgba(0,229,255,0.02);color:var(--cyan);cursor:default"/>`;
-  document.getElementById('userSekolahDisplay').value = `${d.sekolah || _activeSchoolName} (${d.school_id || 'N/A'})`;
+  document.getElementById('userSekolahDisplay').value = d.sekolah || _activeSchoolName;
   
   setCheckedRoles('rolesCheckboxes',d.roles||[d.role]);
   setCheckedAssignments(d.teaching_assignments || null);
@@ -1243,8 +1137,8 @@ function openModalSekolah(schoolId){
     document.getElementById('sekolahAlamat').value=d.alamat||'';
     document.getElementById('sekolahKepsek').value=d.kepsek||'';
     document.getElementById('sekolahStatus').value=d.status||'aktif';
-    document.getElementById('sekolahSecretKey').value=d.school_secret_key||'— Belum Digenerate —';
-    document.getElementById('sekolahBackupKey').value=d.emergency_backup_key||'— Belum Digenerate —';
+    document.getElementById('sekolahSecretKey').value=d.school_secret_key||'';
+    document.getElementById('sekolahBackupKey').value=d.emergency_backup_key||'';
     document.getElementById('modalSekolahTitle').textContent='Edit Institusi Sekolah';
   } else {
     document.getElementById('sekolahId').value='';
@@ -1253,8 +1147,8 @@ function openModalSekolah(schoolId){
     document.getElementById('sekolahAlamat').value='';
     document.getElementById('sekolahKepsek').value='';
     document.getElementById('sekolahStatus').value='aktif';
-    document.getElementById('sekolahSecretKey').value='Auto-Generated';
-    document.getElementById('sekolahBackupKey').value='Auto-Generated';
+    document.getElementById('sekolahSecretKey').value='';
+    document.getElementById('sekolahBackupKey').value='';
     document.getElementById('modalSekolahTitle').textContent='Tambah Institusi Sekolah';
   }
   openModal('modalSekolah');
@@ -1271,23 +1165,21 @@ async function saveSekolah(){
 
   if(!nama || !npsn){showToast('warn','Peringatan','Nama dan NPSN wajib diisi!');return;}
   
-  try{
-    let schoolKey = '', backupKey = '';
-    if(!editId) {
-       const keyArray = new Uint8Array(32);
-       window.crypto.getRandomValues(keyArray);
-       schoolKey = btoa(String.fromCharCode(...keyArray));
-       backupKey = 'BACKUP_' + schoolKey.slice(0, 8);
+    try{
+    const schoolKey = document.getElementById('sekolahSecretKey').value.trim();
+    const backupKey = document.getElementById('sekolahBackupKey').value.trim();
+
+    if(!schoolKey || !backupKey){
+      showToast('error','Keamanan','School Secret Key & Backup Key wajib diisi untuk keamanan enkripsi!');
+      return;
     }
 
     const payload = { 
       id, nama, npsn, alamat, kepsek, status, 
+      school_secret_key: schoolKey,
+      emergency_backup_key: backupKey,
       updatedAt: serverTimestamp() 
     };
-    if(schoolKey) {
-      payload.school_secret_key = schoolKey;
-      payload.emergency_backup_key = backupKey;
-    }
 
     // Firestore Upsert
     await setDoc(doc(db, 'sekolah', id), payload, { merge: true });
@@ -1303,6 +1195,13 @@ async function saveSekolah(){
     await loadSekolahDropdown();
     loadDashboard();
   }catch(e){showToast('error','Error',e.message);}
+}
+
+function genKey(elId, len) {
+  const keyArray = new Uint8Array(len);
+  window.crypto.getRandomValues(keyArray);
+  const key = btoa(String.fromCharCode(...keyArray)).slice(0, len);
+  document.getElementById(elId).value = key;
 }
 
 // ════════════════════════════════════════════
@@ -1326,9 +1225,9 @@ async function loadTemplates(){
     };
     const ROLE_LABELS = {
       guru:'Guru Kelas', guru_pai:'Guru PAI', guru_pjok:'Guru PJOK',
-      kepsek:'Kepala Sekolah', bendahara:'Bendahara', ops:'Operator',
-      tu:'Tata Usaha', pustakawan:'Pustakawan', gpk:'GPK/Inklusi',
-      ekskul:'Pembina Ekskul', koordinator:'Koordinator', fasilitator:'Fasilitator'
+      kepsek:'Kepala Sekolah', bendahara:'Bendahara', ops:'Operator Sekolah',
+      tu:'Tata Usaha', pustakawan:'Pustakawan', gpk:'Guru GPK Inklusif',
+      ekskul:'Pembina Ekskul', koordinator:'Koordinator P5', fasilitator:'Fasilitator P5'
     };
     snap.forEach(d => {
       const data = d.data();
@@ -1876,273 +1775,205 @@ function fmtDate(ts){if(!ts)return'-';const d=ts.toDate?ts.toDate():new Date(ts)
 function fmtDateInput(ts){if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);return d.toISOString().split('T')[0];}
 function doLogout(){if(confirm('Keluar dari admin panel?')){localStorage.removeItem('cimega_user');window.location.href='../login/login.html';}}
 
-// ════════════════════════════════════════════
-// IMPORT DOKUMEN DEFAULT
-// Pembagian visibleTo per kategori:
-//   adm_guru   → guru, kepsek
-//   adm_kepsek → kepsek
-//   kosp       → kepsek
-//   adm_umum   → guru, kepsek, ops
-//   keuangan   → bendahara, kepsek, ops
-//   evaluasi   → guru, kepsek, bendahara, ops
-//   perpus     → guru, kepsek, ops
-// ════════════════════════════════════════════
-const DEFAULT_DOKUMEN = [
-  // ── Administrasi Guru & Pembelajaran ── visibleTo: guru, kepsek
-  { kategori:'adm_guru', nama:'RPP (Rencana Pelaksanaan Pembelajaran) – Deep Learning',        visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Modul Ajar – Kurikulum Merdeka (KEMENDIKDASMEN)',               visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Modul Ajar – Kurikulum Berbasis Cinta (KEMENAG)',               visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'TP (Tujuan Pembelajaran)',                                       visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'ATP (Alur Tujuan Pembelajaran)',                                 visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'PROTA (Program Tahunan)',                                        visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'PROMES (Program Semester)',                                      visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Proyek Kokulikuler – Kurikulum Merdeka',                        visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Analisis Soal',                                                  visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Kisi-Kisi Soal',                                                 visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Lembar Soal dan Kunci Jawaban',                                  visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Daftar Hadir Siswa',                                             visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Asesmen Sumatif Akhir Jenjang (ASAJ)',                          visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Sumatif Tengah Semester (STS)',                                  visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Sumatif Akhir Semester (SAT)',                                   visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Rekap Nilai Siswa',                                              visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'RPP (Rencana Pelaksanaan Pembelajaran) – Kurikulum 2013',       visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Silabus',                                                        visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'KKM (Kriteria Ketuntasan Minimal)',                              visibleTo:['guru','kepsek'] },
-  { kategori:'adm_guru', nama:'Jurnal Mengajar',                                                visibleTo:['guru','kepsek'] },
 
-  // ── Administrasi Kepala Sekolah ── visibleTo: kepsek only
-  { kategori:'adm_kepsek', nama:'Satuan Pendidikan',                                            visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Administrasi Kepala Sekolah',                                  visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Tugas Pokok dan Fungsi Kepala Sekolah',                       visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Administrasi Manajerial',                                      visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Administrasi Supervisi Akademik',                              visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Administrasi Kurikulum',                                       visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Administrasi Kesiswaan',                                       visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Administrasi Keuangan (Kepsek)',                               visibleTo:['kepsek'] },
-  { kategori:'adm_kepsek', nama:'Administrasi Hubungan Masyarakat',                             visibleTo:['kepsek'] },
 
-  // ── KOSP ── visibleTo: kepsek only
-  { kategori:'kosp', nama:'Karakteristik Satuan Pendidikan',                                    visibleTo:['kepsek'] },
-  { kategori:'kosp', nama:'Visi, Misi, dan Tujuan Satuan Pendidikan',                          visibleTo:['kepsek'] },
-  { kategori:'kosp', nama:'Pengorganisasian Pembelajaran',                                       visibleTo:['kepsek'] },
-  { kategori:'kosp', nama:'Perencanaan Pembelajaran',                                            visibleTo:['kepsek'] },
-  { kategori:'kosp', nama:'Perencanaan Projek Penguatan Profil 8 Dimensi Lulusan',             visibleTo:['kepsek'] },
-  { kategori:'kosp', nama:'Pendekatan Pembelajaran',                                             visibleTo:['kepsek'] },
-  { kategori:'kosp', nama:'Asesmen (KOSP)',                                                      visibleTo:['kepsek'] },
-  { kategori:'kosp', nama:'Pengelolaan Kurikulum',                                               visibleTo:['kepsek'] },
 
-  // ── Administrasi Umum Sekolah ── visibleTo: guru, kepsek, ops
-  // (guru merangkap ops, wali kelas, panitia ujian perlu dokumen ini)
-  { kategori:'adm_umum', nama:'SK Pembagian Tugas Mengajar',                                    visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Panitia Ujian (UTS, UAS, PAT, PAS, ANBK, USBN)',            visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Wali Kelas',                                                  visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Ekstrakurikuler',                                              visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Tim Kurikulum',                                               visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Pengurus OSIS',                                               visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Tim BOS',                                                     visibleTo:['kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Panitia MPLS',                                                visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'SK Operator Sekolah',                                            visibleTo:['kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Surat Keputusan Kenaikan Kelas',                                visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Surat Keputusan Kelulusan Siswa',                               visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Daftar Inventaris Barang (Buku Induk Barang)',                  visibleTo:['kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Jadwal Pelajaran',                                               visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Struktur Organisasi Sekolah',                                    visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Kalender Pendidikan',                                            visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Tata Tertib Sekolah',                                            visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Tata Tertib Guru dan Siswa',                                    visibleTo:['guru','kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Buku Tamu Kegiatan Sekolah',                                    visibleTo:['kepsek','ops'] },
-  { kategori:'adm_umum', nama:'Notulen Rapat Dewan Guru',                                      visibleTo:['guru','kepsek','ops'] },
 
-  // ── Keuangan & BOS ── visibleTo: bendahara, kepsek, ops
-  // (guru merangkap bendahara otomatis mendapat akses via role bendahara)
-  { kategori:'keuangan', nama:'Laporan BOS Triwulan',                                           visibleTo:['bendahara','kepsek','ops'] },
-  { kategori:'keuangan', nama:'RKAS (Rencana Kegiatan dan Anggaran Sekolah)',                  visibleTo:['bendahara','kepsek','ops'] },
-  { kategori:'keuangan', nama:'BKU (Buku Kas Umum)',                                            visibleTo:['bendahara','kepsek'] },
-  { kategori:'keuangan', nama:'Nota Pembelian Barang',                                          visibleTo:['bendahara','kepsek','ops'] },
-  { kategori:'keuangan', nama:'Laporan Realisasi BOS',                                          visibleTo:['bendahara','kepsek','ops'] },
-  { kategori:'keuangan', nama:'Laporan LPJ Dana BOS',                                           visibleTo:['bendahara','kepsek','ops'] },
-  { kategori:'keuangan', nama:'Berita Acara Pembelian/Pengadaan Barang',                       visibleTo:['bendahara','kepsek','ops'] },
-  { kategori:'keuangan', nama:'Daftar Hadir Penerima Honor BOS',                               visibleTo:['bendahara','kepsek'] },
-
-  // ── Evaluasi & Pelaporan ── visibleTo: semua role
-  // (guru buat laporan kegiatan, bendahara buat LPJ, kepsek supervisi, ops bantu)
-  { kategori:'evaluasi', nama:'Evaluasi Diri Sekolah (EDS)',                                    visibleTo:['guru','kepsek','bendahara','ops'] },
-  { kategori:'evaluasi', nama:'Instrumen Akreditasi Sekolah',                                   visibleTo:['guru','kepsek','ops'] },
-  { kategori:'evaluasi', nama:'Laporan Kegiatan Sekolah (MPLS, HUT RI, Pramuka, dll.)',        visibleTo:['guru','kepsek','bendahara','ops'] },
-  { kategori:'evaluasi', nama:'LPJ Kegiatan (Laporan Pertanggungjawaban)',                     visibleTo:['guru','kepsek','bendahara','ops'] },
-  { kategori:'evaluasi', nama:'Laporan Monitoring & Evaluasi (Monev)',                          visibleTo:['guru','kepsek','ops'] },
-  { kategori:'evaluasi', nama:'Laporan Supervisi Kelas',                                        visibleTo:['guru','kepsek'] },
-  { kategori:'evaluasi', nama:'Berita Acara Rapat',                                             visibleTo:['guru','kepsek','bendahara','ops'] },
-  { kategori:'evaluasi', nama:'Berita Acara Penilaian',                                         visibleTo:['guru','kepsek'] },
-
-  // ── Administrasi Perpustakaan ── visibleTo: guru, kepsek, ops
-  // (pustakawan biasanya guru atau ops)
-  { kategori:'perpus', nama:'Administrasi Keanggotaan Perpustakaan',                           visibleTo:['guru','kepsek','ops'] },
-  { kategori:'perpus', nama:'Administrasi Kolektif Perpustakaan',                              visibleTo:['guru','kepsek','ops'] },
-  { kategori:'perpus', nama:'Administrasi Peminjaman Perpustakaan',                            visibleTo:['guru','kepsek','ops'] },
-  { kategori:'perpus', nama:'Administrasi Keuangan Perpustakaan',                              visibleTo:['guru','kepsek','ops'] },
-  { kategori:'perpus', nama:'Administrasi Umum Perpustakaan',                                  visibleTo:['guru','kepsek','ops'] },
-];
-
-function confirmImportDefault(){
-  document.getElementById('konfirmasiText').innerHTML =
-    `Import <strong style="color:var(--cyan)">${DEFAULT_DOKUMEN.length} dokumen default</strong> ke Firestore?<br>
-    <span style="font-size:11px;color:var(--muted)">Dokumen yang sudah ada dengan nama sama akan dilewati (tidak ditimpa).<br>
-    Pembagian akses sesuai peran: Guru, Kepsek, Bendahara, Operator.</span>`;
-  document.getElementById('konfirmasiBtn').textContent = '📥 Import Sekarang';
-  document.getElementById('konfirmasiBtn').className = 'btn btn-gold';
-  document.getElementById('konfirmasiBtn').onclick = () => {
-    closeModal('modalKonfirmasi');
-    importDefaultDokumen();
-  };
-  openModal('modalKonfirmasi');
-}
-
-async function importDefaultDokumen(){
-  const{collection,getDocs,addDoc,query,where,serverTimestamp}=window._fb;
-  showToast('info','Import Dimulai',`Memproses ${DEFAULT_DOKUMEN.length} dokumen...`);
-
-  let added=0, skipped=0, errors=0;
-
-  // Ambil semua nama yang sudah ada per kategori sekaligus
-  const existingByKat={};
-  try{
-    const snap=await getDocs(collection(db,'konten'));
-    snap.forEach(d=>{
-      const data=d.data();
-      if(!existingByKat[data.kategori]) existingByKat[data.kategori]=new Set();
-      existingByKat[data.kategori].add(data.nama);
-    });
-  }catch(e){}
-
-  for(const dok of DEFAULT_DOKUMEN){
-    const existing=existingByKat[dok.kategori]||new Set();
-    if(existing.has(dok.nama)){
-      skipped++;
-      continue;
-    }
-    try{
-      await addDoc(collection(db,'konten'),{
-        nama:      dok.nama,
-        kategori:  dok.kategori,
-        visibleTo: dok.visibleTo,
-        deskripsi: '',
-        template:  '',
-        createdAt: serverTimestamp(),
-        importedDefault: true,
-      });
-      added++;
-      // Update existing cache to avoid duplicate within batch
-      if(!existingByKat[dok.kategori]) existingByKat[dok.kategori]=new Set();
-      existingByKat[dok.kategori].add(dok.nama);
-    }catch(e){
-      errors++;
-      console.warn('Import error:', dok.nama, e);
-    }
-  }
-
-  addLog('Import','Import dokumen default: '+added+' ditambahkan, '+skipped+' dilewati');
-  showToast('success','Import Selesai ✅',
-    `${added} dokumen ditambahkan · ${skipped} dilewati · ${errors} error`);
-
-  // Reload konten jika sedang ada kategori aktif
-  if(_currentKat) loadKontenByKat(_currentKat);
-  loadDashboard();
-}
-
-// ════════════════════════════════════════════
-// KELOLA KONTEN — KATEGORI
-// ════════════════════════════════════════════
-
-// ════════════════════════════════════════════
-// KONTEN / ADMINISTRASI (Real-time with Cleanup Sync)
-// ════════════════════════════════════════════
+// ── KELOLA KONTEN — KATEGORI ─────────────────
 let _katUnsub = null;
 function loadKategoriList(){
   const { collection, query, orderBy, onSnapshot } = window._fb;
-  const list = document.getElementById('katItemsContainer');
-  if(!list) return;
+  const container = document.getElementById('katItems');
+  if(!container) return;
   if(_katUnsub) _katUnsub();
   
   _katUnsub = onSnapshot(query(collection(db,'kategori'), orderBy('urutan','asc')), snap => {
-    list.innerHTML = '';
-    kontenKategoriMeta = {};
     kontenKategori = {};
-    
+    kontenKategoriMeta = {};
+    let html = '';
     snap.forEach(d => {
-      const k = d.data();
-      kontenKategori[d.id] = k.nama;
-      kontenKategoriMeta[d.id] = { ...k, id: d.id };
-      const div = document.createElement('div');
-      div.className = `kat-item ${d.id === _currentKat ? 'active' : ''}`;
-      div.id = `kat-item-${d.id}`;
-      div.innerHTML = `
-        <button class="kat-item-btn" onclick="selectKat('${d.id}')">
-          <span class="kat-item-icon">${k.icon || '📁'}</span>
-          <span class="kat-item-name">${k.nama}</span>
-        </button>
-        <div class="kat-item-actions">
-           <button class="kat-act-btn" onclick="openModalKategori('${d.id}')">✏️</button>
-           <button class="kat-act-btn del" onclick="deleteKategori('${d.id}','${k.nama}')">🗑</button>
+      const data = d.data();
+      kontenKategori[d.id] = data.nama;
+      kontenKategoriMeta[d.id] = data;
+      const isActive = _currentKat === d.id;
+      html += `
+        <div class="kat-item ${isActive?'active':''}" id="kat-${d.id}">
+          <button class="kat-item-btn" onclick="selectKategori('${d.id}', this)">
+            <span class="kat-item-icon">${data.icon||'📄'}</span>
+            <span class="kat-item-name">${data.nama}</span>
+          </button>
+          <div class="kat-item-actions">
+            <button class="kat-act-btn" onclick="openModalKategori('${d.id}')">✏️</button>
+            <button class="kat-act-btn del" onclick="deleteKategori('${d.id}','${data.nama}')">🗑</button>
+          </div>
         </div>`;
-      list.appendChild(div);
     });
-    
+    container.innerHTML = html || '<div class="empty-state" style="padding:10px;font-size:11px;">Belum ada kategori</div>';
     rebuildKategoriSelect();
-    if (snap.empty) {
-       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:11px">Belum ada kategori.<br><button class="btn btn-ghost btn-sm" onclick="seedKategoriDefault()" style="margin-top:8px">↩ Seed Default</button></div>';
-    } else if (_currentKat && !kontenKategoriMeta[_currentKat]) {
-       _currentKat = '';
-       document.getElementById('kontenList').innerHTML = '<div class="empty-state"><div class="icon">🗂️</div><p>Pilih kategori di kiri</p></div>';
-    } else if (_currentKat) {
-       loadKontenByKat(_currentKat);
-    }
   });
 }
 
-function selectKat(id) {
+function selectKategori(id, el){
   _currentKat = id;
-  document.querySelectorAll('.kat-item').forEach(x => x.classList.remove('active'));
-  const target = document.getElementById('kat-' + id);
-  if(target) target.classList.add('active');
-  document.getElementById('btnTambahKontenKat').style.display = 'block';
-  const meta = kontenKategoriMeta[id];
-  document.getElementById('kontenListLabel').textContent = meta ? `📁 ${meta.nama}` : '';
-  loadKontenByKat(id);
+  document.querySelectorAll('.kat-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.parentElement.classList.add('active');
+  loadKonten(id);
 }
 
+// ── KELOLA KONTEN — DOKUMEN ─────────────────
 let _konUnsub = null;
-function loadKontenByKat(katId) {
+function loadKonten(katId){
   const { collection, query, where, orderBy, onSnapshot } = window._fb;
-  const list = document.getElementById('kontenList');
-  if(!list) return;
+  const container = document.getElementById('kontenList');
+  if(!container) return;
   if(_konUnsub) _konUnsub();
   
-  _konUnsub = onSnapshot(query(collection(db, 'konten'), where('kategori', '==', katId), orderBy('createdAt', 'asc')), snap => {
-    list.innerHTML = '';
+  _konUnsub = onSnapshot(query(collection(db,'konten'), where('kategori','==',katId), orderBy('nama','asc')), snap => {
+    let html = '';
     snap.forEach(d => {
-      const k = d.data();
-      const roles = (k.visibleTo || []).map(r => `<span class="badge badge-${r}">${r.toUpperCase()}</span>`).join(' ');
-      const item = document.createElement('div');
-      item.className = 'content-item';
-      item.id = `konten-item-${d.id}`;
-      item.innerHTML = `
-        <div class="content-item-icon">📄</div>
-        <div class="content-item-body">
-          <div class="content-item-name">${k.nama}</div>
-          <div class="content-item-cat">${k.deskripsi || 'Tidak ada deskripsi'}</div>
-          <div class="content-item-roles">${roles}</div>
-        </div>
-        <div class="content-item-actions">
-           <button class="btn btn-ghost btn-sm" onclick="editKonten('${d.id}')">✏️ Edit</button>
-           <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${k.nama.replace(/'/g,"\\'")}')">🗑</button>
+      const data = d.data();
+      html += `
+        <div class="content-item">
+          <div class="content-item-icon">📄</div>
+          <div class="content-item-body">
+            <div class="content-item-name">${data.nama}</div>
+            <div class="content-item-cat">${kontenKategori[katId]||katId}</div>
+            <div class="content-item-roles">
+              ${(data.visibleTo||[]).map(r => `<span class="badge badge-guru">${r}</span>`).join('')}
+            </div>
+          </div>
+          <div class="content-item-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openModalKonten('${d.id}')">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="konfirmasiHapus('konten','${d.id}','${data.nama}')">🗑</button>
+          </div>
         </div>`;
-      list.appendChild(item);
     });
-    
-    if (snap.empty) list.innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>Belum ada dokumen di kategori ini</p></div>';
-    loadDashboard();
+    container.innerHTML = html || '<div class="empty-state"><div class="icon">📄</div><p>Kategori ini masih kosong</p></div>';
   });
+}
+
+function filterKonten(q){
+  const items = document.querySelectorAll('#kontenList .content-item');
+  items.forEach(i => {
+    const text = i.textContent.toLowerCase();
+    i.style.display = text.includes(q.toLowerCase()) ? 'flex' : 'none';
+  });
+}
+
+function openModalKonten(editId){
+  const { doc, getDoc } = window._fb;
+  const modal = document.getElementById('modalKonten');
+  document.getElementById('kontenId').value = editId || '';
+  document.getElementById('kontenNama').value = '';
+  document.getElementById('kontenDeskripsi').value = '';
+  document.getElementById('kontenTemplate').value = '';
+  setCheckedRoles('kontenVisibleTo', ['guru','kepsek']);
+  rebuildKategoriSelect();
+  
+  if(editId){
+    getDoc(doc(db, 'konten', editId)).then(s => {
+      if(s.exists()){
+        const d = s.data();
+        document.getElementById('kontenNama').value = d.nama||'';
+        document.getElementById('kontenKategori').value = d.kategori||'';
+        document.getElementById('kontenDeskripsi').value = d.deskripsi||'';
+        document.getElementById('kontenTemplate').value = d.template||'';
+        setCheckedRoles('kontenVisibleTo', d.visibleTo||[]);
+      }
+    });
+  } else {
+    document.getElementById('kontenKategori').value = _currentKat;
+  }
+  openModal('modalKonten');
+}
+
+async function saveKonten(){
+  const { doc, setDoc, serverTimestamp } = window._fb;
+  const id = document.getElementById('kontenId').value || `konten_${Date.now()}`;
+  const nama = document.getElementById('kontenNama').value.trim();
+  const kategori = document.getElementById('kontenKategori').value;
+  const deskripsi = document.getElementById('kontenDeskripsi').value.trim();
+  const template = document.getElementById('kontenTemplate').value.trim();
+  const visibleTo = getCheckedRoles('kontenVisibleTo');
+
+  if(!nama || !kategori){ showToast('warn','Peringatan','Nama dan Kategori wajib diisi!'); return; }
+  try {
+    const payload = { id, nama, kategori, deskripsi, template, visibleTo, updatedAt: serverTimestamp() };
+    await setDoc(doc(db, 'konten', id), payload, { merge: true });
+    await syncToSupabase('konten', payload);
+    closeModal('modalKonten');
+    addLog('Konten', `Update administrasi: ${nama}`);
+    showToast('success','Tersimpan',`Dokumen "${nama}" telah diperbarui`);
+  } catch(e) { showToast('error','Error',e.message); }
+}
+
+// ── SINKRONISASI MANAJEMEN TERPADU (Push & Overwrite) ──
+async function totalSync(){
+  const btn = document.getElementById('btnTotalSync');
+  const oldText = btn.textContent;
+  btn.disabled = true; 
+  btn.textContent = '⏳ Sinkronisasi...';
+  
+  try {
+    if(!window._supabase) throw new Error('Supabase tidak aktif');
+    const { collection, getDocs } = window._fb;
+    let totalSynced = 0;
+
+    showToast('info','Sinkronisasi','Memulai sinkronisasi kategori...');
+    
+    // 1. Kategori
+    const katSnap = await getDocs(collection(db, 'kategori'));
+    for (const d of katSnap.docs) {
+      await syncToSupabase('kategori', { id: d.id, ...d.data() });
+      totalSynced++;
+    }
+
+    // 2. Konten / Administrasi
+    showToast('info','Sinkronisasi','Menyinkronkan dokumen administrasi...');
+    const konSnap = await getDocs(collection(db, 'konten'));
+    for (const d of konSnap.docs) {
+      await syncToSupabase('konten', { id: d.id, ...d.data() });
+      totalSynced++;
+    }
+
+    // 3. Template AI
+    showToast('info','Sinkronisasi','Menyinkronkan template AI...');
+    const tmpSnap = await getDocs(collection(db, 'admin_templates'));
+    for (const d of tmpSnap.docs) {
+      await syncToSupabase('admin_templates', { id: d.id, ...d.data() });
+      totalSynced++;
+    }
+
+    showToast('success','Sinkron Selesai',`Berhasil mengunggah ${totalSynced} data ke Cloud.`);
+    loadTemplates();
+  } catch(e) { 
+    showToast('error','Gagal Sinkron', e.message); 
+  } finally { 
+    btn.disabled = false; 
+    btn.textContent = oldText; 
+  }
+}
+
+// Fungsi internal yang masih bisa dipanggil sitem jika perlu individual push
+async function sinkronKategori(){ await totalSync(); }
+async function sinkronTemplates(){ await totalSync(); }
+async function masterSync(source){ 
+  if(source==='konten') { await totalSync(); return; }
+  // Untuk master users tetap individual
+  const btn = document.getElementById('btnSyncMaster');
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Sinkron...';
+  try {
+    const { collection, getDocs } = window._fb;
+    const snap = await getDocs(collection(db, 'users'));
+    let synced = 0;
+    for (const d of snap.docs) {
+      await syncToSupabase('users', { id: d.id, ...d.data() });
+      synced++;
+    }
+    showToast('success','Sinkron Selesai',`${synced} data users diperbarui di Cloud`);
+  } catch(e) { showToast('error','Gagal',e.message); }
+  finally { btn.disabled = false; btn.textContent = oldText; }
 }
 
 // ── Supabase Sync Helper ───────────────────
@@ -2292,222 +2123,9 @@ async function deleteKategori(id, nama) {
 }
 
 // ════════════════════════════════════════════
-// MASTER SYNC — Sinkronisasi Total ke Firestore & Supabase
-// Menggunakan window.CimegaMasterData sebagai sumber kebenaran.
-// Mode: 'adm' = Kategori & Konten  |  'tmp' = Template AI
-// ════════════════════════════════════════════
-async function masterSync(mode = 'adm') {
-  const { doc, setDoc, serverTimestamp } = window._fb;
-  const btnId = mode === 'adm' ? 'btnSyncAdm' : 'btnSyncTmp';
-  const btn = document.getElementById(btnId);
-  const origHTML = btn ? btn.innerHTML : '';
 
-  const setSyncState = (loading, msg = '') => {
-    if (!btn) return;
-    if (loading) {
-      btn.disabled = true;
-      btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span>${msg || 'SINKRONISASI...'}</span>`;
-    } else {
-      btn.disabled = false;
-      btn.innerHTML = origHTML;
-    }
-  };
 
-  if (!window.CimegaMasterData) {
-    showToast('error', 'Data Master Tidak Ditemukan',
-      'File admin_master_data.js belum termuat. Restart aplikasi.');
-    return;
-  }
 
-  if (!confirm(`⚠️ PERHATIAN!\n\nSemua data ${mode === 'adm' ? 'Kategori & Administrasi' : 'Template AI'} akan DITIMPA ke Firestore & Supabase dengan data master terbaru.\n\nLanjutkan?`)) return;
-
-  // ══════════════════════════════════
-  // MODE ADM: Sinkronisasi 80 Kategori (role-spesifik)
-  // ══════════════════════════════════
-  if (mode === 'adm') {
-    setSyncState(true, 'MENYINKRONKAN KATEGORI...');
-    const MASTER_KATEGORI = window.CimegaMasterData.KATEGORI;
-    try {
-      // Push ke Firestore (timpa penuh — no merge)
-      await Promise.all(MASTER_KATEGORI.map(k =>
-        setDoc(doc(db, 'kategori', k.id), {
-          nama: k.nama, icon: k.icon, urutan: k.urutan,
-          visibleTo: k.visibleTo, deskripsi: k.deskripsi || '',
-          updatedAt: serverTimestamp()
-        })
-      ));
-      showToast('success', 'Firestore ✓', `${MASTER_KATEGORI.length} kategori berhasil ditimpa`);
-
-      // Push ke Supabase (best-effort)
-      let sbOk = 0;
-      for (const k of MASTER_KATEGORI) {
-        try { await syncToSupabase('kategori', { ...k }); sbOk++; }
-        catch(e) { console.warn('SB skip:', k.id, e.message); }
-      }
-
-      await loadKategoriList();
-      addLog('MASTER SYNC', `Kategori: ${MASTER_KATEGORI.length} → Firestore ✓  Supabase: ${sbOk}/${MASTER_KATEGORI.length} ✓`);
-      showToast('success', '✅ SINKRON SELESAI',
-        `${MASTER_KATEGORI.length} kategori terdistribusi ke ${[...new Set(MASTER_KATEGORI.flatMap(k => k.visibleTo))].length} role!`);
-    } catch(e) {
-      showToast('error', 'Sinkron Gagal', e.message);
-      console.error('masterSync adm:', e);
-    } finally { setSyncState(false); }
-    return;
-  }
-
-  // ══════════════════════════════════════════════════════
-  // MODE TMP: Sinkronisasi SEMUA Template AI dari Master
-  // Data bersumber dari CimegaMasterData.TEMPLATES
-  // ══════════════════════════════════════════════════════
-  if (mode === 'tmp') {
-    setSyncState(true, 'MENYINKRONKAN TEMPLATE...');
-    const MASTER_TEMPLATES = window.CimegaMasterData.TEMPLATES;
-
-    if (!MASTER_TEMPLATES || MASTER_TEMPLATES.length === 0) {
-      showToast('warn', 'Data Kosong', 'CimegaMasterData.TEMPLATES kosong.');
-      setSyncState(false); return;
-    }
-
-    let fsOk = 0, sbOk = 0;
-    try {
-      for (const mod of MASTER_TEMPLATES) {
-        // Bangun payload lengkap:
-        const itemsJson = JSON.stringify(mod.items?.map(item => ({
-          id:         item.id,
-          nama:       item.nama,
-          icon:       item.icon,
-          components: item.components,
-          ai_prompt:  item.ai_prompt
-        })) || []);
-
-        const componentsJson = JSON.stringify(mod.items?.[0]?.components || []);
-
-        const payload = {
-          id:          mod.id,
-          nama:        mod.nama,
-          role:        mod.role,
-          kategori:    mod.kategori,
-          icon:        mod.icon || '📝',
-          desc:        mod.desc || '',
-          // Prompt ringkas dari fase pertama
-          ai_prompt:   mod.items?.[0]?.ai_prompt || '',
-          // Semua fase/items dalam 1 JSON
-          items:       itemsJson,
-          // Components fase pertama
-          components:  componentsJson,
-          syncedAt:    new Date().toISOString(),
-          updatedAt:   serverTimestamp()
-        };
-
-        // Firestore (timpa penuh)
-        await setDoc(doc(db, 'admin_templates', mod.id), payload);
-        fsOk++;
-
-        // Supabase (best-effort)
-        try { await syncToSupabase('admin_templates', payload); sbOk++; }
-        catch(sbErr) { console.warn('SB template skip:', mod.id, sbErr.message); }
-      }
-
-      loadTemplates();
-      addLog('MASTER SYNC', `Template AI: ${fsOk} template → Firestore ✓  Supabase: ${sbOk}/${fsOk} ✓`);
-      showToast('success', '✅ SINKRON TEMPLATE SELESAI',
-        `${fsOk} template AI (12 role) → Firestore ✓  Supabase: ${sbOk}/${fsOk}`);
-    } catch(e) {
-      showToast('error', 'Sinkron Template Gagal', e.message);
-      console.error('masterSync tmp:', e);
-    } finally { setSyncState(false); }
-    return;
-  }
-
-  // ══════════════════════════════════════════════════════
-  // MODE MASTER: Sinkronisasi Masal Sekolah & Users
-  // ══════════════════════════════════════════════════════
-  if (mode === 'master') {
-    setSyncState(true, 'MENYINKRONKAN DATA MASTER...');
-    const { collection, getDocs } = window._fb;
-    try {
-      // 1. Sinkron Sekolah
-      const skolSnap = await getDocs(collection(db, 'sekolah'));
-      let skolOk = 0;
-      for (const d of skolSnap.docs) {
-        try { await syncToSupabase('sekolah', { id: d.id, ...d.data() }); skolOk++; }
-        catch(e) { console.warn('SB Sekolah Skip:', d.id, e.message); }
-      }
-
-      // 2. Sinkron Users
-      const usrSnap = await getDocs(collection(db, 'users'));
-      let usrOk = 0;
-      for (const d of usrSnap.docs) {
-        try { await syncToSupabase('users', { id: d.id, ...d.data() }); usrOk++; }
-        catch(e) { console.warn('SB Users Skip:', d.id, e.message); }
-      }
-
-      if (window.AdminMaster) await window.AdminMaster.init();
-      addLog('MASTER SYNC', `Data Master: ${skolOk} Sekolah & ${usrOk} Users → Supabase ✓`);
-      showToast('success', '✅ SINKRON MASTER SELESAI', 
-        `${skolOk} Sekolah & ${usrOk} Pengguna telah disinkronkan ke Supabase Storage.`);
-    } catch(e) {
-      showToast('error', 'Sinkron Master Gagal', e.message);
-      console.error('masterSync master:', e);
-    } finally { setSyncState(false); }
-    return;
-  }
-}
-
-// ── Modal Konten ──────────────────────────────────────────
-function openModalKonten() {
-  document.getElementById('kontenId').value = '';
-  document.getElementById('kontenNama').value = '';
-  document.getElementById('kontenDeskripsi').value = '';
-  document.getElementById('kontenTemplate').value = '';
-  setCheckedRoles('kontenVisibleTo', ['guru','kepsek']);
-  rebuildKategoriSelect();
-  if (_currentKat) document.getElementById('kontenKategori').value = _currentKat;
-  document.getElementById('modalKontenTitle').textContent = 'Tambah Konten';
-  openModal('modalKonten');
-}
-
-async function editKonten(id) {
-  const { doc, getDoc } = window._fb;
-  const snap = await getDoc(doc(db, 'konten', id));
-  if (!snap.exists()) return;
-  const data = snap.data();
-  document.getElementById('kontenId').value = id;
-  document.getElementById('kontenNama').value = data.nama || '';
-  document.getElementById('kontenDeskripsi').value = data.deskripsi || '';
-  document.getElementById('kontenTemplate').value = data.template || '';
-  rebuildKategoriSelect();
-  document.getElementById('kontenKategori').value = data.kategori || '';
-  setCheckedRoles('kontenVisibleTo', data.visibleTo || []);
-  document.getElementById('modalKontenTitle').textContent = 'Edit Konten';
-  openModal('modalKonten');
-}
-
-async function saveKonten() {
-  const { doc, setDoc, serverTimestamp } = window._fb;
-  const editId = document.getElementById('kontenId').value;
-  const id = editId || `konten_${Date.now()}`;
-  const nama = document.getElementById('kontenNama').value.trim();
-  const kategori = document.getElementById('kontenKategori').value;
-  const deskripsi = document.getElementById('kontenDeskripsi').value.trim();
-  const template = document.getElementById('kontenTemplate').value.trim();
-  const visibleTo = getCheckedRoles('kontenVisibleTo');
-
-  if (!nama || !kategori) { showToast('warn','Peringatan','Nama dan Kategori wajib diisi!'); return; }
-  try {
-    const payload = { id, nama, kategori, deskripsi, template, visibleTo, updatedAt: serverTimestamp() };
-    
-    // Firestore Upsert
-    await setDoc(doc(db, 'konten', id), payload, { merge: true });
-    // Supabase Sync
-    await syncToSupabase('konten', payload);
-
-    closeModal('modalKonten');
-    addLog('Konten', `${editId ? 'Edit' : 'Tambah'} konten: ${nama}`);
-    showToast('success','Berhasil',`Konten "${nama}" disimpan & disinkronkan`);
-  } catch(e) { showToast('error','Error',e.message); }
-}
 
 // ════════════════════════════════════════════
 // KELOLA PENGGUNA — KARTU SEKOLAH
@@ -2533,26 +2151,7 @@ async function loadSchoolCards() {
   } catch(e) { console.warn('loadSchoolCards:', e.message); }
 }
 
-// ── Template: hapus ────────────────────────────────────────
-async function deleteTemplate(id) {
-  if (!confirm('Hapus template ini?')) return;
-  const { doc, deleteDoc } = window._fb;
-  const d = window._fb.db;
-  await deleteDoc(doc(d, 'admin_templates', id));
-  loadTemplates();
-  showToast('success','Dihapus','Template dihapus.');
-}
 
-function openModalTemplate() {
-  document.getElementById('tmpId').value = '';
-  document.getElementById('tmpNama').value = '';
-  document.getElementById('tmpRole').value = 'guru';
-  document.getElementById('tmpKategori').value = 'perencanaan';
-  document.getElementById('tmpIcon').value = '📄';
-  document.getElementById('tmpPrompt').value = '';
-  document.getElementById('tmpComponents').value = '[]';
-  openModal('modalTemplate');
-}
 
 // ════════════════════════════════════════════
 // INIT
@@ -2598,7 +2197,7 @@ async function initApp(){
       ['localVersion','settingVersion2','settingVersion4'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lv;});
     }catch(e){}
 
-    // ── Inisialisasi Supabase ──────────────────────────────
+    // ── 1. CRYPTO & STORAGE INITIALIZATION ──
     try {
       const sbCfg = window.cimegaConfig?.supabase || await window.cimegaAPI?.getSupabaseConfig();
       if(sbCfg?.url && typeof supabase !== 'undefined') {
@@ -2607,46 +2206,18 @@ async function initApp(){
       }
     } catch(e) { console.warn('Supabase init failed:', e.message); }
 
-    // ── AUTO-SEED KATEGORI (jika kosong) ────────────────────
-    try {
-      const katSnap = await getDocs(collection(db, 'kategori'));
-      if (katSnap.empty) {
-        console.log('⚠️ Kategori Firestore kosong — auto-seed 13 kategori untuk 12 role...');
-        const defaultKat = [
-          { id:'adm_guru',     nama:'Administrasi Guru & Pembelajaran',         icon:'📚', urutan:1,  visibleTo:['guru','guru_pai','guru_pjok','kepsek'] },
-          { id:'naskah_soal',  nama:'Naskah Soal & Bank Evaluasi',              icon:'📝', urutan:2,  visibleTo:['guru','guru_pai','guru_pjok','kepsek'] },
-          { id:'adm_kepsek',   nama:'Administrasi Kepala Sekolah',              icon:'🏛️', urutan:3,  visibleTo:['kepsek'] },
-          { id:'kosp',         nama:'Kurikulum Operasional (KOSP)',              icon:'📖', urutan:4,  visibleTo:['guru','guru_pai','guru_pjok','kepsek','ops'] },
-          { id:'adm_umum',     nama:'Administrasi Umum Sekolah',                icon:'🏢', urutan:5,  visibleTo:['kepsek','ops','tu'] },
-          { id:'keuangan',     nama:'Keuangan & BOS',                           icon:'💰', urutan:6,  visibleTo:['bendahara','kepsek'] },
-          { id:'evaluasi',     nama:'Evaluasi & Pelaporan',                     icon:'📊', urutan:7,  visibleTo:['guru','guru_pai','guru_pjok','kepsek'] },
-          { id:'perpus',       nama:'Administrasi Perpustakaan',                icon:'📕', urutan:8,  visibleTo:['pustakawan','guru','ops','kepsek'] },
-          { id:'tata_usaha',   nama:'Tata Usaha & Surat Menyurat',              icon:'✉️', urutan:9,  visibleTo:['tu','ops','kepsek'] },
-          { id:'adm_gpk',      nama:'Program Inklusif & Pembelajaran GPK',      icon:'♿', urutan:10, visibleTo:['gpk','kepsek'] },
-          { id:'adm_ekskul',   nama:'Ekstrakurikuler & Pembinaan Siswa',        icon:'🎭', urutan:11, visibleTo:['ekskul','kepsek'] },
-          { id:'kokurikuler',  nama:'Program Kokurikuler & P5',                 icon:'🎯', urutan:12, visibleTo:['koordinator','fasilitator','kepsek','guru'] },
-          { id:'adm_uks_pjok', nama:'UKS, Kesehatan & Kebugaran (PJOK)',        icon:'⚽', urutan:13, visibleTo:['guru_pjok','kepsek','ops'] },
-        ];
-        await Promise.all(defaultKat.map(k =>
-          setDoc(doc(db,'kategori',k.id), { nama:k.nama, icon:k.icon, urutan:k.urutan, visibleTo:k.visibleTo, deskripsi:'', createdAt:serverTimestamp() })
-        ));
-        console.log('✅ Auto-Seed: 13 kategori untuk 12 role berhasil ditanam');
-        showToast('success', 'Kategori Diseed', '13 kategori untuk semua jabatan ditambahkan');
-      }
-    } catch(e) { console.warn('Auto-seed skip:', e.message); }
 
-    // ── Muat data utama ────────────────────────────────────
+
+    // ── 3. MODULE SYNCHRONIZATION ──
     loadDashboard();
     loadSekolahDropdown();
-    loadKategoriList();
     loadLog();
     loadUpdateHistory();
 
-    // ── Musik: Init widget sidebar ───────────────────────────
-    // music.js v4.0 akan handle IPC music state
+    // ── 4. MULTIMEDIA ENGINE (Music) ──
     CimegaMusic.init();
 
-    // Ambil daftar file lokal → update halaman Kelola Musik + widget judul
+    // ★ LOCAL RESOURCE RESOLVER ★
     try {
       const getMusicFn = window.cimegaConfig?.getMusicList || window.cimegaAPI?.getMusicList;
       if (typeof getMusicFn === 'function') {
@@ -2698,26 +2269,23 @@ async function initApp(){
       }
     } catch(mErr) { console.warn('getMusicList admin (non-fatal):', mErr.message); }
 
-    // ── Updater ─────────────────────────────────────────────
+    // ── 5. SYSTEM UPDATER ──
     try{await CimegaUpdater.init({owner:'prabu26dev',repo:'Cimega_Smart_Office'});CimegaUpdater.startChecking(db);}catch(e){}
 
     showToast('success','Sistem Siap','🚀 Admin panel berhasil dimuat');
   }catch(e){showToast('error','Error','Gagal memuat: '+e.message);console.error('Admin initApp:', e);}
 }
 
-initApp();
+// ★ BOOT SEQUENCE ★
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 </script>
 
-  <!-- ██ PEMBALUT SCRIPTS AKHIR ██ -->
-  <script src="../../modules/admin/oversight.js"></script>
-  <script src="../../modules/admin/cloud_drive.js"></script>
 
-  <!-- ██ MODUL EVALUASI NASKAH SOAL — Diperlukan untuk importDefaultTemplates() ██ -->
-  <script src="../../modules/guru/evaluasi_naskah_soal.js"></script>
-  <script src="../../modules/guru_pai/evaluasi_naskah_soal_pai.js"></script>
-  <script src="../../modules/guru_pjok/evaluasi_naskah_soal_pjok.js"></script>
 
-  <!-- ██ ADMIN MASTER DATA — Sumber Kebenaran utama untuk masterSync() ██ -->
-  <script src="../../modules/admin/admin_master_data.js"></script>
+
 </body>
 </html>

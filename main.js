@@ -26,8 +26,9 @@ try {
 }
 const db = admin.firestore();
 
-// ── Baca .env ──────────────────────────────
+let _cachedEnv = null;
 function loadEnv() {
+  if (_cachedEnv) return _cachedEnv;
   const envPath = path.join(__dirname, '.env');
   if (!fs.existsSync(envPath)) return {};
   const env = {};
@@ -39,13 +40,15 @@ function loadEnv() {
     if (idx > 0) {
       let key = line.slice(0, idx).trim();
       let val = line.slice(idx + 1).trim();
-      val = val.replace(/^["']|["']$/g, ''); // Hapus tanda kutip jika ada
+      val = val.replace(/^["']|["']$/g, '');
       env[key] = val;
     }
   });
+  _cachedEnv = env;
   return env;
 }
 const envConfig = loadEnv();
+const clearEnvCache = () => { _cachedEnv = null; };
 
 // ── Jalankan AI Generator Service (Port 3001) ────────────
 try {
@@ -503,6 +506,63 @@ ipcMain.handle('install-update', async (e, { filePath }) => {
     setTimeout(() => app.quit(), 1500);
     return { success: true };
   } catch(err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// ── SYSTEM: Dynamic Resource Discovery (Autoloader Bridge) ─────
+// Izinkan renderer untuk memindai folder modules & pages agar dashboard bisa unified.
+ipcMain.handle('system:list-files', async (e, { subPath, recursive = false }) => {
+  try {
+    // SECURITY: Sanitize path to prevent directory traversal
+    const safeSubPath = path.normalize(subPath).replace(/^(\.\.(\/|\\|$))+/, '');
+    const root = path.join(__dirname, safeSubPath);
+    
+    // Jail to project root
+    if (!root.startsWith(__dirname)) {
+      console.warn('[SECURITY] Blocked path traversal attempt:', subPath);
+      return [];
+    }
+    
+    if (!fs.existsSync(root)) return [];
+
+    function walkSync(dir, filelist = []) {
+      const files = fs.readdirSync(dir);
+      files.forEach(file => {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+          if (recursive) filelist = walkSync(filePath, filelist);
+        } else {
+          // Hanya ambil file .js dan .html
+          if (/\.(js|html)$/i.test(file)) {
+            filelist.push(path.relative(root, filePath).replace(/\\/g, '/'));
+          }
+        }
+      });
+      return filelist;
+    }
+
+    return walkSync(root);
+  } catch (err) {
+    console.error('[ERROR] system:list-files:', err.message);
+    return [];
+  }
+});
+
+// Baca file mentah (raw text) untuk injeksi template HTML
+ipcMain.handle('system:read-file', async (e, { subPath }) => {
+  try {
+    // SECURITY: Sanitize path
+    const safeSubPath = path.normalize(subPath).replace(/^(\.\.(\/|\\|$))+/, '');
+    const fullPath = path.join(__dirname, safeSubPath);
+
+    if (!fullPath.startsWith(__dirname) || !fs.existsSync(fullPath)) {
+      return { success: false, error: 'Access denied or file not found' };
+    }
+
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    return { success: true, data: content };
+  } catch (err) {
     return { success: false, error: err.message };
   }
 });
