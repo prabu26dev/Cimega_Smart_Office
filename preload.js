@@ -132,6 +132,10 @@ try {
     setSessionKey:   (key) => ipcRenderer.invoke('session-set-key', key),
     getSessionKey:   ()    => ipcRenderer.invoke('session-get-key'),
     clearSessionKey: ()    => ipcRenderer.invoke('session-clear-key'),
+
+    // ── VOICE & LOGGING (Pusat Kendali) ──────────────────────────
+    ttsGenerate: (payload) => ipcRenderer.invoke('tts-generate', payload),
+    logToTerminal: (msg, type = 'INFO') => ipcRenderer.invoke('system:log', { msg, type }),
   });
   console.log('✅ PRELOAD v5.1 SECURE: window.cimegaConfig exposed');
 } catch (e) {

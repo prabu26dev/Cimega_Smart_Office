@@ -1482,7 +1482,8 @@ function fmtDate(ts) {
 function doLogout() {
   if (confirm('Keluar dari aplikasi?')) {
     // TOTAL SESSION WIPE (Advanced Security)
-    localStorage.clear();
+    // Hanya hapus data sesi (user), jangan hapus kredensial 'Ingat Saya'
+    localStorage.removeItem('cimega_user');
     sessionStorage.clear();
     if (window.cimegaAPI?.clearCache) window.cimegaAPI.clearCache();
     window.location.href = '../login/login.html';
@@ -1641,25 +1642,12 @@ async function initApp() {
       showToast('error', 'Sistem Gagal', 'Gagal memuat modul dashboard. Terjadi kesalahan pada sinkronisasi inti.');
     }
     // Attempt reveal anyway to prevent permanent white screen
-    const overlay = document.getElementById('boot-overlay');
-    if (overlay) {
-      overlay.style.opacity = '0';
-      overlay.style.visibility = 'hidden';
-      setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 600);
-    }
   }
 }
 
 // ★ INITIALIZATION ★
 (function () {
         // Instant Reveal: Hide overlay immediately to prevent hanging UI
-        const overlay = document.getElementById('boot-overlay');
-        if (overlay) {
-          overlay.style.opacity = '0';
-          overlay.style.visibility = 'hidden';
-          // Clean up DOM after fade
-          setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 400);
-        }
 
         // Start Application Services in background
         CimegaMusic.init();

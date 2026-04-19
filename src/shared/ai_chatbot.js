@@ -1,6 +1,8 @@
 // ── CIMEGA SMART OFFICE: AI CO-PILOT ──────────────────────────────
 
 window.CimegaAIChatbot = {
+  history: [], // Memori percakapan
+  currentAttachment: null, // Lampiran aktif (Base64 + MIME)
 
   getUserData: function() {
     return JSON.parse(localStorage.getItem('cimega_user') || '{}');
@@ -38,7 +40,13 @@ window.CimegaAIChatbot = {
           </div>
           <div id="aiChatHistory" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;"></div>
           <div id="aiTyping" style="display:none;padding:8px 14px;font-size:11px;color:var(--cyan);font-style:italic;">AI sedang berpikir...</div>
+          <div id="aiAttachmentBar" style="display:none;padding:8px 14px;background:rgba(0,229,255,0.1);border-top:1px solid rgba(0,229,255,0.2);font-size:10px;color:var(--cyan);display:flex;align-items:center;justify-content:space-between;">
+            <div id="aiFileName" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;"></div>
+            <span onclick="window.CimegaAIChatbot.clearAttachment()" style="cursor:pointer;font-weight:bold;margin-left:10px;">✕</span>
+          </div>
           <div style="padding:12px;border-top:1px solid rgba(170,85,255,0.2);display:flex;gap:8px;background:rgba(0,0,0,0.2);">
+            <input type="file" id="aiFileInput" style="display:none;" onchange="window.CimegaAIChatbot.handleFileChange(event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"/>
+            <button onclick="window.CimegaAIChatbot.triggerUpload()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(170,85,255,0.3);border-radius:10px;width:40px;cursor:pointer;color:#fff;font-size:16px;" title="Unggah Dokumen">📎</button>
             <input id="aiChatInput" placeholder="Ketik instruksi administrasi Anda..." style="flex:1;background:rgba(170,85,255,0.05);border:1px solid rgba(170,85,255,0.2);border-radius:10px;padding:10px;color:#fff;outline:none;font-size:12px;" onkeydown="if(event.key==='Enter') window.CimegaAIChatbot.ask()"/>
             <button id="aiSendBtn" onclick="window.CimegaAIChatbot.ask()" style="background:linear-gradient(135deg,#aa55ff,#6600ff);border:none;border-radius:10px;width:40px;cursor:pointer;color:#fff;font-size:14px;">✨</button>
           </div>
@@ -49,6 +57,9 @@ window.CimegaAIChatbot = {
     div.innerHTML = chatbotHTML;
     document.body.appendChild(div);
     this.renderMainMenuInto('aiChatHistory');
+    
+    // Aktifkan Pengamat Kecerdasan (Phase 4)
+    this.startIntelligenceObserver();
   },
 
   renderTo: function(containerId) {
@@ -68,7 +79,13 @@ window.CimegaAIChatbot = {
         </div>
         <div id="aiChatHistory" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;"></div>
         <div id="aiTyping" style="display:none;padding:10px 20px;font-size:11px;color:var(--cyan);font-style:italic;">AI sedang memproses...</div>
+        <div id="aiAttachmentBar" style="display:none;padding:10px 20px;background:rgba(0,229,255,0.05);border-top:1px solid var(--border);font-size:11px;color:var(--cyan);display:flex;align-items:center;justify-content:space-between;">
+          <div id="aiFileName" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px;"></div>
+          <span onclick="window.CimegaAIChatbot.clearAttachment()" style="cursor:pointer;font-weight:bold;padding:4px;">✕</span>
+        </div>
         <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:10px;background:rgba(0,0,0,0.08);">
+          <input type="file" id="aiFileInput" style="display:none;" onchange="window.CimegaAIChatbot.handleFileChange(event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"/>
+          <button onclick="window.CimegaAIChatbot.triggerUpload()" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;width:50px;cursor:pointer;color:#fff;font-size:18px;transition:all 0.2s;" title="Unggah Dokumen">📎</button>
           <input id="aiChatInput" placeholder="Ketik instruksi atau perintah administrasi..." style="flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:#fff;outline:none;font-size:13px;font-family:'Exo 2',sans-serif;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); window.CimegaAIChatbot.ask();}"/>
           <button id="aiSendBtn" onclick="window.CimegaAIChatbot.ask()" style="background:linear-gradient(135deg,#aa55ff,#6600ff);border:none;border-radius:12px;width:50px;cursor:pointer;color:#fff;font-size:16px;transition:transform 0.15s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">✨</button>
         </div>
@@ -100,12 +117,18 @@ window.CimegaAIChatbot = {
     }
 
     // ★ GREETING LOGIC ★
-    const hour = new Date().getHours();
+    const now = new Date();
+    const hour = now.getHours();
     let waktu = "Halo";
     if (hour >= 5 && hour < 11) waktu = "Selamat Pagi";
     else if (hour >= 11 && hour < 15) waktu = "Selamat Siang";
     else if (hour >= 15 && hour < 18) waktu = "Selamat Sore";
     else waktu = "Selamat Malam";
+
+    // Hitung Tahun Ajaran Dinamis
+    const currentYear = now.getFullYear();
+    const academicYear = (now.getMonth() >= 6) ? `${currentYear}/${currentYear + 1}` : `${currentYear - 1}/${currentYear}`;
+    const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     const menuWrapper = document.createElement('div');
     menuWrapper.id = 'aiMainMenu';
@@ -116,6 +139,7 @@ window.CimegaAIChatbot = {
       <div style="background:linear-gradient(135deg,rgba(170,85,255,0.2),rgba(102,0,255,0.1));border:1px solid rgba(170,85,255,0.3);border-radius:18px;padding:20px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,0.2);position:relative;overflow:hidden;">
         <div style="position:absolute;top:-10px;right:-10px;font-size:80px;opacity:0.05;transform:rotate(15deg);">🤖</div>
         <div style="font-size:16px;color:#fff;font-weight:800;margin-bottom:4px;font-family:'Orbitron';">${waktu}, Bapak/Ibu ${userData.nama || 'Rekan'}!</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-bottom:12px;">${dateStr} · Tahun Ajaran ${academicYear}</div>
         <div style="font-size:11px;color:var(--cyan);font-weight:600;margin-bottom:12px;letter-spacing:0.5px;font-family:'Orbitron';">${userData.sekolah || 'Cimega Smart Office'}</div>
         
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
@@ -123,17 +147,15 @@ window.CimegaAIChatbot = {
         </div>
         
         <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,0.05);">
-          <div style="font-size:10px; color:var(--muted); margin-bottom:10px;">MARGIN (MM) - STANDAR DOKUMEN</div>
+          <div style="font-size:10px; color:var(--muted); margin-bottom:10px;">PROFIL JABATAN & PENUGASAN</div>
           <div style="font-size:10px;color:#ddeeff;font-weight:600;display:flex;align-items:center;gap:4px;">
             <span>📍</span> ${assignedInfo}
           </div>
         </div>
 
-        <div style="font-size:12px;color:rgba(255,255,255,0.9);line-height:1.6;margin-top:15px;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;">
-          Saya Cimega AI, siap membantu Anda menyelesaikan administrasi sekolah hari ini secara profesional. Apa yang bisa kita kerjakan bersama?
+        <div style="font-size:11px;color:rgba(255,255,255,0.9);line-height:1.6;margin-top:15px;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;font-style:italic;">
+          "Selamat datang di Cimega AI. Saya adalah pendamping profesional Anda yang siap membantu tata kelola sekolah dengan sisi kemanusiaan. Apa yang bisa kita diskusikan hari ini?"
         </div>
-      </div>
-
       </div>
     `;
     history.appendChild(menuWrapper);
@@ -190,13 +212,24 @@ window.CimegaAIChatbot = {
     const sendBtn = this.getEl('aiSendBtn');
     const typing = this.getEl('aiTyping');
 
-    if (!input || !input.value.trim()) return;
+    if (!input || (!input.value.trim() && !this.currentAttachment)) return;
     const text = input.value.trim();
+    const attachments = this.currentAttachment ? [this.currentAttachment] : null;
 
     const mainMenu = document.getElementById('aiMainMenu');
     if (mainMenu) mainMenu.remove();
 
     this.renderMessage(text, 'user');
+    
+    // Simpan ke memori lokal
+    this.history.push({ 
+      role: 'user', 
+      content: text || (attachments ? "[Menganalisis Dokumen]" : ""),
+      attachments: attachments 
+    });
+
+    this.clearAttachment(); // Bersihkan UI lampiran setelah dikirim
+
     input.value = '';
     input.disabled = true;
     if (sendBtn) sendBtn.disabled = true;
@@ -213,7 +246,7 @@ Konteks User: [Nama: ${userData.nama || 'User'}], [Role: ${roles.join(', ').toUp
 Lokasi Aplikasi Sekarang: [${currentTitle}].
 
 TUGAS UTAMA:
-- Berikan saran administrasi Kurikulum Merdeka 2025/2026.
+- Berikan saran administrasi Kurikulum Merdeka sesuai Tahun Ajaran aktif.
 - Sesuaikan gaya bahasa: Profesional, Santun, namun To-The-Point.
 - Jika user sedang di menu "${currentTitle}", utamakan bantuan terkait menu tersebut.
 
@@ -225,24 +258,51 @@ BATASAN KEAMANAN & WEWENANG:
 RESPONSE TAGGING:
 Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVISI).`;
 
-      const res = await window.CimegaAI.ask({
+      const res = await window.electronAPI.invoke('gemini-ask', { 
+        messages: this.history, 
         system: systemPrompt,
-        messages: [{ role: 'user', content: text }]
+        maxTokens: 3000 // Tingkatkan token untuk analisis dokumen
       });
 
       if (res.error) throw new Error(res.error);
 
       let cleanText = res.text;
+      
+      // Simpan respon AI ke memori lokal
+      this.history.push({ role: 'assistant', content: cleanText });
+
       let actionTag = null;
-      const match = cleanText.match(/\[ACTION:(\w+)\]/);
+      let actionData = null;
+      const match = cleanText.match(/\[ACTION:(\w+)(?::([\s\S]+))?\]/);
       if (match) {
         actionTag = match[1];
-        cleanText = cleanText.replace(/\[ACTION:\w+\]/g, '').trim();
+        actionData = match[2];
+        cleanText = cleanText.replace(/\[ACTION:[\s\S]+?\]/g, '').trim();
       }
 
-      this.renderMessage(cleanText, 'ai', actionTag);
+      this.renderMessage(cleanText, 'ai', actionTag, actionData);
     } catch (e) {
-      this.renderMessage('⚠️ Terjadi kesalahan: ' + e.message, 'ai');
+      let errorMsg = e.message || 'Terjadi gangguan koneksi.';
+      let friendlyMsg = '⚠️ Terjadi kesalahan: ' + errorMsg;
+      let shouldSpeakAuto = false;
+
+      // DETEKSI ERROR KUOTA / LIMIT (Agar lebih ramah)
+      if (errorMsg.includes('Batas pemakaian') || errorMsg.includes('Quota') || errorMsg.includes('limit')) {
+        friendlyMsg = 'Mohon maaf Bapak Imam, sepertinya kuota harian AI saya sudah mencapai batas. Bapak bisa mencoba kembali dalam beberapa menit ya. Terima kasih atas kesabarannya.';
+        shouldSpeakAuto = true;
+      }
+
+      this.renderMessage(friendlyMsg, 'ai', null, null, true); // true = isError
+
+      if (shouldSpeakAuto && window.CimegaVoice) {
+         // BERIKAN INFORMASI LEWAT SUARA SECARA OTOMATIS
+         window.CimegaVoice.speak(friendlyMsg);
+      }
+
+      // LAPORKAN KE TERMINAL UTAMA (Main Process)
+      if (window.cimegaConfig?.logToTerminal) {
+        window.cimegaConfig.logToTerminal(`AI Chat Error: ${errorMsg}`, 'ERROR');
+      }
     } finally {
       if (typing) typing.style.display = 'none';
       if (input) { input.disabled = false; input.focus(); }
@@ -250,7 +310,7 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     }
   },
 
-  renderMessage: function(text, sender, action = null) {
+  renderMessage: function(text, sender, action = null, actionData = null, isError = false) {
     const history = this.getEl('aiChatHistory');
     if (!history) return;
 
@@ -259,7 +319,7 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     div.style.cssText = `
       align-self:${isMe?'flex-end':'flex-start'};
       max-width:87%;
-      padding:11px 15px;
+      padding:${isMe?'11px 15px':'11px 32px 11px 15px'};
       border-radius:${isMe?'14px 14px 3px 14px':'14px 14px 14px 3px'};
       font-size:13px; line-height:1.55;
       background:${isMe?'linear-gradient(135deg,#0055cc,#003da5)':'rgba(255,255,255,0.055)'};
@@ -267,15 +327,40 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
       border:1px solid ${isMe?'rgba(0,229,255,0.25)':'rgba(170,85,255,0.2)'};
       box-shadow:0 3px 12px rgba(0,0,0,0.12);
       word-break:break-word;
+      position:relative;
     `;
 
-    div.innerHTML = text.replace(/\n/g, '<br>');
+    // Hanya tampilkan tombol suara jika bukan pesan user DAN bukan pesan error
+    if (!isMe && !isError) {
+      const voiceBtn = document.createElement('div');
+      voiceBtn.innerHTML = '🔊';
+      voiceBtn.style.cssText = 'position:absolute;top:6px;right:8px;cursor:pointer;font-size:12px;opacity:0.6;transition:opacity 0.2s;';
+      voiceBtn.onmouseover = () => voiceBtn.style.opacity = '1';
+      voiceBtn.onmouseout = () => voiceBtn.style.opacity = '0.6';
+      voiceBtn.onclick = () => window.CimegaVoice.speak(text, voiceBtn);
+      div.appendChild(voiceBtn);
+    }
+
+    const textNode = document.createElement('span');
+    
+    // DETEKSI TEKS ARAB & BUNGKUS DENGAN FONT QURAN (Jika ada karakter Arab)
+    let processedText = text;
+    const arabicRegex = /([\u0600-\u06FF][\u0600-\u06FF\s،؛؟0-9]*(?:[\u0600-\u06FF][\u0600-\u06FF\s،؛؟0-9]*)*)/g;
+    
+    if (arabicRegex.test(text)) {
+      processedText = text.replace(arabicRegex, match => {
+        return `<div class="arabic-naskh" dir="rtl">${match.trim()}</div>`;
+      });
+    }
+
+    textNode.innerHTML = processedText.replace(/\n/g, '<br>');
+    div.appendChild(textNode);
 
     if (action) {
       const btn = document.createElement('button');
       btn.style.cssText = 'display:block;margin-top:10px;width:100%;padding:7px 12px;background:var(--cyan);color:#000;border:none;border-radius:8px;font-family:Orbitron;font-size:10px;font-weight:700;cursor:pointer;';
-      btn.innerText = `⚡ BUKA MODUL ${action.replace('_', ' ')}`;
-      btn.onclick = () => this.triggerAction(action);
+      btn.innerText = `⚡ TERAPKAN AKSI: ${action.replace('_', ' ')}`;
+      btn.onclick = () => this.triggerAction(action, actionData);
       div.appendChild(btn);
     }
 
@@ -283,7 +368,7 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     history.scrollTop = history.scrollHeight;
   },
 
-  triggerAction: function(type) {
+  triggerAction: function(type, data = null) {
     const findNavAndClick = (keyword) => {
       const items = Array.from(document.querySelectorAll('.nav-item'));
       const item = items.find(el => el.innerText.toLowerCase().includes(keyword));
@@ -291,9 +376,79 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     };
 
     if (type === 'MODUL_AJAR') findNavAndClick('perencanaan');
-    else if (type === 'SURAT') findNavAndClick('e-office');
+    else if (type === 'SURAT' || type === 'DRAFT_SURAT') {
+      if (data) localStorage.setItem('cimega_ai_draft', data);
+      findNavAndClick('e-office');
+      if (window.showToast) window.showToast('success', 'Draf Disiapkan', 'Draf dari AI telah dimuat ke modul E-Office.');
+    }
     else if (type === 'RKAS') findNavAndClick('rkas');
     else if (type === 'SUPERVISI') findNavAndClick('supervisi');
+  },
+
+  triggerUpload: function() {
+    const fileInput = this.getEl('aiFileInput');
+    if (fileInput) fileInput.click();
+  },
+
+  handleFileChange: function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png'];
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (!allowedExtensions.includes(ext)) {
+      this.renderMessage(`⚠️ Mohon maaf Bapak Imam, file .${ext} berada di luar koridor administrasi sekolah. Saya hanya diizinkan menganalisis PDF, Word, Excel, PowerPoint, dan Gambar.`, 'ai', null, null, true);
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64Data = e.target.result.split(',')[1];
+      let mimeType = file.type;
+      
+      // Fallback MIME untuk file office jika tidak terdeteksi browser
+      if (!mimeType) {
+        if (ext === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        else if (ext === 'xlsx') mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        else if (ext === 'pptx') mimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      }
+
+      this.currentAttachment = {
+        name: file.name,
+        mime_type: mimeType,
+        data: base64Data
+      };
+
+      const bar = this.getEl('aiAttachmentBar');
+      const nameEl = this.getEl('aiFileName');
+      if (bar && nameEl) {
+        nameEl.innerText = `📎 Lampiran: ${file.name}`;
+        bar.style.display = 'flex';
+      }
+    };
+    reader.readAsDataURL(file);
+  },
+
+  clearAttachment: function() {
+    this.currentAttachment = null;
+    const bar = this.getEl('aiAttachmentBar');
+    const fileInput = this.getEl('aiFileInput');
+    if (bar) bar.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+  },
+
+  startIntelligenceObserver: function() {
+    // Phase 4: Intelligence Observer
+    console.log('👁️ AI Intelligence Observer Aktif...');
+    // Simulasi pemantauan anomali data (misal: draf belum selesai)
+    setTimeout(() => {
+        const hasDraft = localStorage.getItem('cimega_ai_draft');
+        if (hasDraft && !this.history.length) {
+            this.renderMessage('Salam Bapak/Ibu, saya mendeteksi ada draf surat yang belum Bapak selesaikan. Apakah ingin saya bantu merapikannya sekarang?', 'ai');
+        }
+    }, 5000);
   }
 };
 

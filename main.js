@@ -680,31 +680,259 @@ ipcMain.handle('get-music-list', () => {
 
 
 
-// ══════════════════════════════════════════
-// GEMINI AI API (Google — Free Tier)
-// API key disimpan di .env → GEMINI_API_KEY
-// Gratis: https://aistudio.google.com/apikey
-// Model: gemini-2.5-flash (cepat & gratis)
-// ══════════════════════════════════════════
+// ── PUSAT KENDALI: VOICE & LOGGING ───────────────────────────
+// ── HELPER: Deteksi Bahasa (Multilingual) ───────────────────
+function detectLanguage(text) {
+  // 1. Deteksi Arab (Unicode range)
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  
+  // 2. Deteksi Inggris vs Indonesia (Keyword heuristic)
+  const enPool = /\b(the|is|are|am|was|were|have|has|had|do|does|did|will|would|shall|should|good|morning|evening|afternoon|night|how|what|where|when|who|why|this|that|these|those|at|on|in|to|for|with|by|from|about|above|below|between|among|through|during)\b/gi;
+  const idPool = /\b(yang|ada|adalah|di|dari|ke|ini|itu|saya|kami|kita|anda|kalian|mereka|dia|beliau|oleh|untuk|dengan|sebagai|pada|dari|sampai|hingga|sebelum|setelah|ketika|saat|kapan|mengapa|bagaimana|berapa|apa|siapa)\b/gi;
+  
+  const enCount = (text.match(enPool) || []).length;
+  const idCount = (text.match(idPool) || []).length;
+
+  return (enCount > idCount) ? 'en' : 'id';
+}
+
+// ── HELPER: Pembagi Teks untuk Suara Panjang ────────────────
+// ── HELPER: Pembagi Teks Berbasis Kalimat (Natural Pausing) ──
+function splitTextIntoChunks(text, maxLen = 200) {
+  const chunks = [];
+  let current = text.trim();
+  
+  while (current.length > 0) {
+    if (current.length <= maxLen) {
+      chunks.push(current);
+      break;
+    }
+    
+    let slice = current.substring(0, maxLen);
+    let lastIdx = -1;
+    
+    // PRIORITAS 1: Akhir Kalimat (Titik, Tanya, Seru) -> Jeda Panjang
+    const strongDelims = ['. ', '! ', '? ', '.\n', '!\n', '?\n'];
+    for (const d of strongDelims) {
+      const idx = slice.lastIndexOf(d);
+      if (idx > lastIdx) lastIdx = idx;
+    }
+    
+    // PRIORITAS 2: Jeda Tengah (Koma, Titik Koma, Dash) -> Jeda Pendek
+    if (lastIdx === -1) {
+      const midDelims = [', ', '; ', ' - ', ' (', '\n'];
+      for (const d of midDelims) {
+        const idx = slice.lastIndexOf(d);
+        if (idx > lastIdx) lastIdx = idx;
+      }
+    }
+    
+    // PRIORITAS 3: Spasi antar kata
+    if (lastIdx === -1) lastIdx = slice.lastIndexOf(' ');
+    
+    let cutIdx = (lastIdx === -1) ? maxLen : lastIdx + 1;
+    chunks.push(current.substring(0, cutIdx).trim());
+    current = current.substring(cutIdx).trim();
+  }
+  return chunks.filter(c => c.length > 0);
+}
+// ── HELPER: Normalisasi Teks (Pelafalan Singkatan) ──────────
+function normalizeText(text) {
+  const dictionary = {
+    'AI': 'E-Ay',
+    'PAI': 'P-A-I',
+    'RPP': 'R-P-P',
+    'KOSP': 'K-O-S-P',
+    'ATP': 'A-T-P',
+    'KKTP': 'K-K-T-P',
+    'P5': 'P-lima', 
+    'MA': 'M-A',
+    'UKK': 'U-K-K',
+    'ANBK': 'A-N-B-K',
+    'IKM': 'I-K-M',
+    'TU': 'T-U',
+    'SDN': 'S-D-N',
+    'SMPN': 'S-M-P-N',
+    'SMAN': 'S-M-A-N',
+    'PTK': 'P-T-K',
+    'NIP': 'N-I-P',
+    'NUPTK': 'N-U-P-T-K',
+    'NIK': 'N-I-K',
+    'SK': 'S-K',
+    'IUR': 'I-U-R',
+    'SPP': 'S-P-P'
+  };
+  
+  let result = text;
+  Object.keys(dictionary).forEach(key => {
+    const regex = new RegExp(`\\b${key}\\b`, 'gi');
+    result = result.replace(regex, dictionary[key]);
+  });
+  return result;
+}
+
+// --- CIRCUIT BREAKER STATUS (Antara Delay) ---
+let isJalur1Active = true; 
+
+ipcMain.handle('tts-generate', async (e, { text: rawText }) => {
+  const freshEnv = loadEnv();
+  const provider = freshEnv.VOICE_PROVIDER || 'GOOGLE';
+  const apiKey   = freshEnv.VOICE_API_KEY || freshEnv.GEMINI_API_KEY || '';
+  
+  try {
+    if (!rawText || rawText.trim().length === 0) throw new Error('Teks kosong.');
+
+    // 1. NORMALISASI PELAFALAN (AI -> A-I)
+    const text = normalizeText(rawText);
+
+    const lang = detectLanguage(text);
+    // MENGGUNAKAN 3 KEPRIBADIAN NATIVE (Gadis, Ava, Salma) agar fasih dan tegas
+    const voiceMaps = {
+      'id': { google: 'id-ID-Neural2-A', edge: 'id-ID-GadisNeural', translate: 'id' },
+      'en': { google: 'en-US-Neural2-F', edge: 'en-US-AvaNeural',   translate: 'en-US' }, 
+      'ar': { google: 'ar-XA-Wavenet-A', edge: 'ar-EG-SalmaNeural', translate: 'ar' }
+    };
+    const map = voiceMaps[lang];
+
+    const preview = text.substring(0, 30) + (text.length > 30 ? '...' : '');
+    console.log(`[TTS_DEBUG] lang:${lang.toUpperCase()} | provider:${provider} | text:"${preview}"`);
+
+    // --- JALUR 1: GOOGLE CLOUD TTS (PREMIUM OFFICIAL) ---
+    // FAST FALLBACK: Hanya coba jika Jalur 1 masih dianggap aktif
+    if (provider === 'GOOGLE' && apiKey && isJalur1Active) {
+      try {
+        console.log(`[TTS_DEBUG] Jalur 1 (Google Cloud Premium)...`);
+        const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: { text },
+            voice: { languageCode: (lang === 'en' ? 'en-US' : (lang === 'ar' ? 'ar-XA' : 'id-ID')), name: map.google }, 
+            audioConfig: { audioEncoding: 'MP3', pitch: -1.0, speakingRate: 1.15 } // Pitch sedikit rendah agar lebih tegas
+          })
+        });
+
+        const data = await response.json();
+        if (data.audioContent) {
+          return { success: true, audioContent: data.audioContent };
+        } else if (data.error) {
+          // Jika error 403 atau API mati, matikan Jalur 1 untuk sisa sesi agar tidak delay
+          console.error(`[TTS_DEBUG] Jalur 1 Gagal Fatal: ${data.error.message}`);
+          if (data.error.code === 403 || data.error.message.includes('not been used')) {
+             isJalur1Active = false;
+             console.warn(`[TTS_DEBUG] Circuit Breaker: Jalur 1 Dinonaktifkan (Fast Fallback Aktif)`);
+          }
+          throw new Error(data.error.message || 'Google API Error');
+        }
+      } catch (gErr) {
+        console.warn(`[TTS_DEBUG] Jalur 1 Skip/Fail: ${gErr.message}`);
+      }
+    }
+
+    // --- STRATEGI KHUSUS: Preferensi Jalur 3 (Edge Neural) untuk Bahasa Asing ---
+    if (lang !== 'id') {
+      try {
+        const { UniversalEdgeTTS } = require('edge-tts-universal');
+        // Perbaikan: Gunakan pitch +0Hz agar tidak error dan suara tetap jernih
+        const tts = new UniversalEdgeTTS(text, map.edge, { rate: '+15%', pitch: '+0Hz', volume: '+0%' }); 
+        const audioBuffer = await tts.synthesize(); 
+        return { success: true, audioContent: Buffer.from(audioBuffer).toString('base64') };
+      } catch (eErr) {
+        console.warn(`[TTS_DEBUG] Jalur 3 Priority Gagal: ${eErr.message}`);
+      }
+    }
+
+    // --- JALUR 2: GOOGLE TRANSLATE ENGINE (DEEP ROUTE - Unlimited Text) ---
+    try {
+      console.log(`[TTS_DEBUG] Jalur 2 (Google Translate) - Menjahit Audio...`);
+      const chunks = splitTextIntoChunks(text, 200);
+      let combinedBuffer = Buffer.alloc(0);
+      
+      for (const chunk of chunks) {
+        const silentChunk = ' ' + chunk; 
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(silentChunk)}&tl=${map.translate}&client=tw-ob`;
+        
+        const resVal = await fetch(url);
+        if (resVal.ok) {
+          const chunkArrayBuf = await resVal.arrayBuffer();
+          combinedBuffer = Buffer.concat([combinedBuffer, Buffer.from(chunkArrayBuf)]);
+        }
+      }
+
+      if (combinedBuffer.length > 0) {
+        return { success: true, audioContent: combinedBuffer.toString('base64') };
+      }
+      throw new Error('Google Translate tidak merespons.');
+    } catch (tErr) {
+      console.warn(`[TTS_DEBUG] Jalur 2 Gagal: ${tErr.message}`);
+    }
+
+    if (lang === 'id') {
+      try {
+        console.log(`[TTS_DEBUG] Jalur 3 (Edge TTS Indonesia Fallback)...`);
+        const { UniversalEdgeTTS } = require('edge-tts-universal');
+        const tts = new UniversalEdgeTTS(text, map.edge, { rate: '+15%', pitch: '+0Hz', volume: '+0%' }); 
+        const audioBuffer = await tts.synthesize(); 
+        return { success: true, audioContent: Buffer.from(audioBuffer).toString('base64') };
+      } catch (eErr) {
+        console.warn(`[TTS_DEBUG] Jalur 3 Fallback Gagal: ${eErr.message}`);
+      }
+    }
+
+    throw new Error('Semua jalur suara gagal.');
+
+  } catch (err) {
+    console.error('[TTS_DEBUG_ERROR] Fatal Error:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('system:log', (e, { msg, type }) => {
+  const time = new Date().toLocaleTimeString('id-ID');
+  const label = `[DEBUG_${type}]`.padEnd(12);
+  console.log(`${time} ${label} ${msg}`);
+  return { success: true };
+});
+
+// ── GEMINI AI API (Google — Free Tier) ───────────────────────
 ipcMain.handle('gemini-ask', async (e, { messages, system, maxTokens }) => {
-  // Muat ulang env secara live (Hot-reload) agar perubahan API Key langsung masuk tanpa restart!
   const freshEnv = loadEnv();
   const apiKey = freshEnv.GEMINI_API_KEY || envConfig.GEMINI_API_KEY;
   if (!apiKey) return { error: 'GEMINI_API_KEY belum diisi di file .env' };
 
   // Konversi format messages (claude/openai) ke format Gemini
   const systemInstruction = system ||
-    'Kamu adalah asisten administrasi sekolah dasar di Indonesia yang ahli dalam Kurikulum Merdeka Belajar dan Kurikulum 2013. Jawab dalam Bahasa Indonesia yang formal dan profesional.';
+    'Kamu adalah asisten administrasi sekolah dasar di Indonesia yang ahli dalam Kurikulum Merdeka Belajar dan Kurikulum 2013. Jawab dalam Bahasa Indonesia yang formal dan profesional. PENTING: Jika kamu menulis teks dalam Bahasa Arab, WAJIB menyertakan harakat (syakal) secara lengkap dan akurat agar mudah dibaca.';
 
   // Gemini pakai "contents" bukan "messages"
   // role: "user" | "model" (bukan "assistant")
-  const contents = messages.map(m => ({
-    role:  m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
+  const contents = messages.map(m => {
+    const parts = [{ text: m.content }];
+    
+    // Jika pesan memiliki lampiran, tambahkan ke parts
+    if (m.attachments && Array.isArray(m.attachments)) {
+      m.attachments.forEach(att => {
+        parts.push({
+          inline_data: {
+            mime_type: att.mime_type,
+            data:      att.data // Base64 tanpa prefix
+          }
+        });
+      });
+    }
+
+    return {
+      role:  m.role === 'assistant' ? 'model' : 'user',
+      parts
+    };
+  });
 
   const body = JSON.stringify({
-    system_instruction: { parts: [{ text: systemInstruction }] },
+    system_instruction: { 
+      parts: [{ 
+        text: systemInstruction + " PENTING: Jika pengguna mengunggah dokumen (PDF, Office, Gambar), analisis isinya secara mendalam, cerdas, dan gunakan sebagai referensi utama dalam merumuskan jawaban Anda." 
+      }] 
+    },
     contents,
     generationConfig: {
       maxOutputTokens: maxTokens || 2048,

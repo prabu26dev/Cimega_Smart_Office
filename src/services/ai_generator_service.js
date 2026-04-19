@@ -17,6 +17,12 @@ const app  = express();
 const PORT = 3001;
 
 app.use(cors());
+app.use((req, res, next) => {
+    if (req.path === '/api/tts') {
+        console.log(`[TTS_DEBUG] Permintaan masuk dari: ${req.ip}`);
+    }
+    next();
+});
 app.use(express.json());
 
 // ── 1. HELPER: PARSE DYNAMIC PROMPT ─────────────────────────
@@ -114,6 +120,65 @@ app.get('/api/generate-docs', async (req, res) => {
   } finally {
     res.end();
   }
+});
+
+// ── 3. ENDPOINT TTS (TEXT TO SPEECH) ─────────────────────────────
+
+app.post('/api/tts', async (req, res) => {
+    try {
+        const text = req.body.text;
+        console.log(`[TTS_DEBUG] Teks yang diterima backend: "${text ? text.substring(0, 50) : 'KOSONG'}"`);
+        
+        if (!text) {
+            console.error('[TTS_DEBUG] Error: Body tidak mengandung teks.');
+            return res.status(400).json({ error: 'Text is required in body' });
+        }
+
+        const provider = process.env.VOICE_PROVIDER || 'EDGE';
+        console.log(`[TTS_DEBUG] Menggunakan Provider: ${provider}`);
+        
+        if (provider === 'EDGE') {
+          try {
+            const { EdgeTTS } = require('edge-tts-universal');
+            const tts = new EdgeTTS();
+            
+            // Log proses pemanggilan library
+            console.log(`[TTS_DEBUG] Memulai sintesis suara Microsoft Edge...`);
+            const audioData = await tts.getAudioBase64(text, 'id-ID-ArdiNeural');
+            console.log(`[TTS_DEBUG] Sukses! Data audio berhasil dibuat (${Math.round(audioData.length/1024)} KB)`);
+            
+            return res.json({ success: true, audioContent: audioData });
+          } catch (edgeErr) {
+            console.error('[TTS_DEBUG] Edge TTS Fail:', edgeErr.message);
+            // Fallback ke Google jika ini gagal
+          }
+        }
+
+        // --- PENYEDIA PREMIUM: Google Cloud TTS (Berbasis Key) ---
+        const apiKey = process.env.VOICE_API_KEY || process.env.GEMINI_API_KEY;
+        if (!apiKey) throw new Error('API Key untuk Suara (TTS) tidak ditemukan.');
+
+        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({
+                input: { text },
+                voice: { languageCode: 'id-ID', name: 'id-ID-Wavenet-B' },
+                audioConfig: { audioEncoding: 'MP3' }
+            })
+        });
+
+        const data = await response.json();
+        if (data.audioContent) {
+            res.json({ success: true, audioContent: data.audioContent });
+        } else {
+            const errorMsg = data.error?.message || 'Gagal memproses suara di Google Cloud.';
+            res.status(500).json({ error: errorMsg });
+        }
+    } catch (err) {
+        console.error('TTS General Error:', err);
+        res.status(500).json({ error: 'Sistem Suara Sedang Gangguan: ' + err.message });
+    }
 });
 
 // Start Server (Hanya jika belum jalan)

@@ -21,50 +21,6 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     /* ██ BOOT OVERLAY ██ */
-    #boot-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--dark);
-      z-index: 99999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
-    }
-    .boot-logo {
-      width: 100px;
-      height: 100px;
-      margin-bottom: 30px;
-      filter: drop-shadow(0 0 20px var(--cyan));
-      animation: pulse 2s infinite ease-in-out;
-    }
-    .boot-loader {
-      width: 200px;
-      height: 2px;
-      background: rgba(0, 229, 255, 0.1);
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-    }
-    .boot-loader-bar {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-      animation: loading 2s infinite linear;
-      position: absolute;
-    }
-    .boot-text {
-      margin-top: 15px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 10px;
-      letter-spacing: 2px;
-      color: var(--cyan);
-      text-transform: uppercase;
-      opacity: 0.8;
-    }
-    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
-    @keyframes loading { 0% { left: -100%; } 100% { left: 200%; } }
     
     :root {
       --cyan: #00e5ff;
@@ -1678,13 +1634,6 @@
 
 <body>
   <!-- ██ SYSTEM BOOT OVERLAY (Optimized) ██ -->
-  <div id="boot-overlay" style="background:var(--dark); display:flex; flex-direction:column; align-items:center; justify-content:center;">
-    <img src="../../../assets_images/Logo SDN Cimega.png" class="boot-logo" onerror="this.style.display='none'">
-    <div class="boot-loader">
-      <div class="boot-loader-bar"></div>
-    </div>
-    <div class="boot-text" style="text-transform:uppercase">Mempersiapkan Dashbord...</div>
-  </div>
 
   <div class="toast-wrap" id="toastWrap"></div>
 
@@ -2019,6 +1968,8 @@
   <!-- ── 5. SYSTEM LIBRARIES (Shared) ── -->
   <script src="../../shared/utils.js"></script>
   <script src="../../shared/crypto_helper.js"></script>
+  <script src="../../shared/knowledge_service.js"></script>
+  <script src="../../shared/voice_service.js"></script>
   <script src="../../shared/ai_helper.js"></script>
   <script src="../../shared/ai_chatbot.js"></script>
   <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js"></script>
