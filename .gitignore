@@ -21,10 +21,8 @@ firebase-adminsdk*.json
 *-firebase-adminsdk-*.json
 google-services.json
 
-# Firebase config dengan hardcoded credentials (gunakan .env + preload.js)
-# File ini sudah diganti menjadi dokumentasi saja, tapi tetap diabaikan
-# untuk mencegah developer lain meng-hardcode credentials di sini
-src/firebase/config.js
+# Firebase config dengan hardcoded credentials
+src/services/api/serviceAccountKey.json
 
 # ───────────────────────────────────────────────────────────────
 # DEPENDENSI NODE.JS
@@ -50,16 +48,23 @@ dist_electron/
 *.nsis
 
 # ───────────────────────────────────────────────────────────────
-# ASET MEDIA (terlalu besar untuk GitHub)
+# ASET MEDIA & FONT (terlalu besar/lisensi untuk GitHub)
 # ───────────────────────────────────────────────────────────────
 
 # File audio BGM lokal — cukup simpan di mesin admin
-assets_music/*.mp3
-assets_music/*.wav
-assets_music/*.ogg
-assets_music/*.aac
-assets_music/*.flac
-assets_music/*.m4a
+src/assets/assets_music/*.mp3
+src/assets/assets_music/*.wav
+src/assets/assets_music/*.ogg
+src/assets/assets_music/*.aac
+src/assets/assets_music/*.flac
+src/assets/assets_music/*.m4a
+
+# Font Proprietary/Standar Windows (Lisensi)
+# Jangan unggah font Arial dan Times New Roman ke repositori publik
+src/assets/fonts/Arial*.ttf
+src/assets/fonts/TimesNewRoman*.ttf
+src/assets/fonts/arial*.ttf
+src/assets/fonts/times*.ttf
 
 # ───────────────────────────────────────────────────────────────
 # CACHE & DATA SEMENTARA
@@ -69,6 +74,7 @@ assets_music/*.m4a
 data_cache/
 .cache/
 *.cache
+.gemini/
 
 # Scratch / file kerja sementara
 scratch/

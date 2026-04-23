@@ -2,14 +2,14 @@
   "name": "cimega-smart-office",
   "version": "1.0.0",
   "description": "Platform Administrasi Sekolah Cerdas — Kurikulum Merdeka 2025/2026",
-  "main": "main.js",
+  "main": "src/services/electron/main.js",
   "author": "Kang Prabu",
   "scripts": {
     "start": "cls && electron . --no-deprecation",
     "clean": "powershell -Command \"Write-Host 'Cleaning project artifacts...' -ForegroundColor Yellow; Remove-Item -Path 'logs', 'data_cache', 'dist' -Recurse -Force -ErrorAction SilentlyContinue; Write-Host '--- Project is clean! ---' -ForegroundColor Green\"",
     "build:win": "electron-builder --win --x64",
     "build:all": "electron-builder --win --x64 --publish never",
-    "build:secure": "node scripts/build-secure.js",
+    "build:secure": "node src/utils/root_scripts/build-secure.js",
     "release": "electron-builder --win --x64 --publish always"
   },
   "dependencies": {
@@ -17,10 +17,13 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.1",
     "cors": "^2.8.6",
+    "docx": "^9.6.1",
     "edge-tts-universal": "^1.4.0",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "firebase": "^12.10.0",
-    "firebase-admin": "^13.8.0"
+    "firebase-admin": "^13.8.0",
+    "pdfmake": "^0.3.7"
   },
   "devDependencies": {
     "electron": "^41.0.0",
@@ -44,11 +47,11 @@
     ],
     "extraResources": [
       {
-        "from": "assets_music",
+        "from": "src/assets/assets_music",
         "to": "assets_music"
       },
       {
-        "from": "assets_images",
+        "from": "src/assets/assets_images",
         "to": "assets_images"
       }
     ],
@@ -61,15 +64,15 @@
           ]
         }
       ],
-      "icon": "assets_images/Logo SDN Cimega.ico",
+      "icon": "src/assets/assets_images/Logo SDN Cimega.ico",
       "requestedExecutionLevel": "requireAdministrator"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "assets_images/Logo SDN Cimega.ico",
-      "uninstallerIcon": "assets_images/Logo SDN Cimega.ico",
-      "installerHeaderIcon": "assets_images/Logo SDN Cimega.ico",
+      "installerIcon": "src/assets/assets_images/Logo SDN Cimega.ico",
+      "uninstallerIcon": "src/assets/assets_images/Logo SDN Cimega.ico",
+      "installerHeaderIcon": "src/assets/assets_images/Logo SDN Cimega.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Cimega Smart Office",

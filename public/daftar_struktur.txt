@@ -1,0 +1,90 @@
+Cimega_Smart_Office/
+├── .env
+├── .eslintrc.json
+├── .gitignore
+├── AGENTS.md
+├── package-lock.json
+├── package.json
+├── public
+│   └── daftar_struktur.txt
+├── README.md
+├── src
+│   ├── App.jsx
+│   ├── assets
+│   │   ├── assets_images
+│   │   │   ├── Logo SDN Cimega.ico
+│   │   │   ├── Logo SDN Cimega.png
+│   │   │   └── logo.png
+│   │   ├── assets_music
+│   │   │   ├── Kang Prabu - Duhai Pemilik Jiwa.mp3
+│   │   │   ├── Kang Prabu - Himne SDN Cimega.mp3
+│   │   │   ├── Kang Prabu - Juara Di Atas Bumi Mulia.mp3
+│   │   │   ├── Kang Prabu - Langkah Kecil Cimega.mp3
+│   │   │   ├── Kang Prabu - Mars SDN Cimega.mp3
+│   │   │   ├── Kang Prabu - Restu Terakhir.mp3
+│   │   │   └── Kang Prabu - Senam Kreasi Cimega.mp3
+│   │   └── fonts
+│   │       ├── AlQalamQuranMajeedWeb-Regular.ttf
+│   │       ├── Arial-Bold.ttf
+│   │       ├── Arial-BoldItalic.ttf
+│   │       ├── Arial-Italic.ttf
+│   │       ├── Arial-Regular.ttf
+│   │       ├── JetBrainsMono-Regular.ttf
+│   │       ├── Orbitron-Bold.ttf
+│   │       ├── Orbitron-Regular.ttf
+│   │       ├── TimesNewRoman-Bold.ttf
+│   │       ├── TimesNewRoman-BoldItalic.ttf
+│   │       ├── TimesNewRoman-Italic.ttf
+│   │       └── TimesNewRoman-Regular.ttf
+│   ├── components
+│   ├── context
+│   ├── features
+│   │   ├── admin
+│   │   │   └── data_master.js
+│   │   └── dashboard
+│   │       └── settings.js
+│   ├── hooks
+│   ├── index.css
+│   ├── layout
+│   ├── main.jsx
+│   ├── pages
+│   │   ├── admin
+│   │   │   └── admin.html
+│   │   ├── bgm
+│   │   │   └── bgm_player.html
+│   │   ├── dashboard
+│   │   │   └── dashboard.html
+│   │   └── login
+│   │       └── login.html
+│   ├── redux
+│   ├── services
+│   │   ├── ai_chatbot.js
+│   │   ├── ai_generator_service.js
+│   │   ├── ai_helper.js
+│   │   ├── api
+│   │   │   └── serviceAccountKey.json
+│   │   ├── chat.js
+│   │   ├── document_service.js
+│   │   ├── electron
+│   │   │   ├── main.js
+│   │   │   └── preload.js
+│   │   ├── knowledge_service.js
+│   │   ├── music.js
+│   │   ├── oversight.js
+│   │   ├── printer.js
+│   │   ├── seeder_service.js
+│   │   ├── sharing.js
+│   │   ├── updater.js
+│   │   └── voice_service.js
+│   ├── styles
+│   └── utils
+│       ├── crypto_helper.js
+│       ├── dialog-system.js
+│       ├── root_scripts
+│       │   └── build-secure.js
+│       ├── scripts
+│       │   ├── cleanup_npsn.js
+│       │   ├── hash_passwords.js
+│       │   └── migrate_db.js
+│       └── utils.js
+└── vite.config.js

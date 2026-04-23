@@ -52,7 +52,7 @@ app.get('/api/generate-docs', async (req, res) => {
     // Step 0-10%: Inisialisasi & Fetch Template
     sendEvent({ progress: 5, status: 'Mengambil template dari database...', isDone: false });
 
-    // GUARD v2.1: Pastikan Firebase Admin sudah siap sebelum akses Firestore
+    // GUARD v1.0.0: Pastikan Firebase Admin sudah siap sebelum akses Firestore
     if (!admin.apps || admin.apps.length === 0) {
       throw new Error('Firebase Admin belum diinisialisasi. Periksa serviceAccountKey.json dan koneksi jaringan.');
     }

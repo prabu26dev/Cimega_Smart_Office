@@ -15,10 +15,9 @@
       origErr.apply(console, args);
     };
   </script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+  <link rel="stylesheet" href="../../index.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="../../utils/dialog-system.js"></script>
   <style>
     /* ██ BOOT OVERLAY ██ */
     
@@ -181,14 +180,6 @@
       min-height: 0
     }
 
-    .sidebar-nav::-webkit-scrollbar {
-      width: 3px
-    }
-
-    .sidebar-nav::-webkit-scrollbar-thumb {
-      background: rgba(0, 229, 255, 0.2);
-      border-radius: 2px
-    }
 
     .nav-section {
       font-size: 10px;
@@ -554,14 +545,6 @@
       padding: 18px
     }
 
-    .content::-webkit-scrollbar {
-      width: 4px
-    }
-
-    .content::-webkit-scrollbar-thumb {
-      background: rgba(0, 229, 255, 0.2);
-      border-radius: 2px
-    }
 
     .page {
       display: none;
@@ -1658,7 +1641,7 @@
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <img id="sidebarLogoImg" src="../../../assets_images/Logo SDN Cimega.png" onerror="this.src='../../assets/img/logo.png'" alt="logo" />
+        <img id="sidebarLogoImg" src="../../assets/assets_images/Logo SDN Cimega.png" onerror="this.src='../../assets/img/logo.png'" alt="logo" />
         <div class="sidebar-logo-text" id="sidebarLogoText">SDN CIMEGA<span>SMART OFFICE</span></div>
       </div>
       <div class="user-card">
@@ -1966,20 +1949,20 @@
   </div>
 
   <!-- ── 5. SYSTEM LIBRARIES (Shared) ── -->
-  <script src="../../shared/utils.js"></script>
-  <script src="../../shared/crypto_helper.js"></script>
-  <script src="../../shared/knowledge_service.js"></script>
-  <script src="../../shared/voice_service.js"></script>
-  <script src="../../shared/ai_helper.js"></script>
-  <script src="../../shared/ai_chatbot.js"></script>
+  <script src="../../utils/utils.js"></script>
+  <script src="../../utils/crypto_helper.js"></script>
+  <script src="../../services/knowledge_service.js"></script>
+  <script src="../../services/voice_service.js"></script>
+  <script src="../../services/ai_helper.js"></script>
+  <script src="../../services/ai_chatbot.js"></script>
   <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-  <script src="../../shared/chat.js"></script>
-  <script src="../../shared/sharing.js"></script>
-  <script src="../../shared/music.js"></script>
-  <script src="../../shared/updater.js"></script>
+  <script src="../../services/chat.js"></script>
+  <script src="../../services/sharing.js"></script>
+  <script src="../../services/music.js"></script>
+  <script src="../../services/updater.js"></script>
   
   <!-- Modular Dashboard Settings -->
-  <script type="module" src="../../modules/dashboard/settings.js"></script>
+  <script type="module" src="../../features/dashboard/settings.js"></script>
 </body>
 </html>

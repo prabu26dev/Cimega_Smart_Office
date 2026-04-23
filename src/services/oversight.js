@@ -212,7 +212,7 @@ window.ModulOversight = {
             if (window.showToast) window.showToast('info', 'Data Kosong', 'Belum ada data pengawasan yang bisa dibersihkan.');
             return;
         }
-        if (!confirm('Peringatan: Ini hanya akan membersihkan tampilan log di panel admin. Dokumen asli di akun user tidak akan terhapus. Lanjutkan?')) return;
+        if (!(await window.CyberDialog.confirm('Peringatan: Ini hanya akan membersihkan tampilan log di panel admin. Dokumen asli di akun user tidak akan terhapus. Lanjutkan?'))) return;
 
         const { doc, updateDoc } = window._fb;
         const db = window._fb.db;

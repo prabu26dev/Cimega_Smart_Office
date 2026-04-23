@@ -4,9 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>Login - Cimega Smart Office</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+  <link rel="stylesheet" href="../../index.css">
+  <script src="../../utils/dialog-system.js"></script>
   <style>
     :root {
       --cyan: #00e5ff;
@@ -882,10 +881,10 @@
 
   <!-- LEFT BRANDING PANEL -->
   <div class="left-panel">
-    <img class="logo-img" src="../../../assets_images/Logo SDN Cimega.png" alt="Logo"
+    <img class="logo-img" src="../../assets/assets_images/Logo SDN Cimega.png" alt="Logo"
       onerror="this.style.opacity='0'" />
     <div class="brand-name">CIMEGA<br /><span>SMART OFFICE</span></div>
-    <div class="brand-sub">Unified Smart Office System</div>
+    <div class="brand-sub">Sistem Administrasi Digital Sekolah</div>
 
     <div class="stats-grid">
       <div class="stat-box">
@@ -924,7 +923,7 @@
     <div class="login-card">
       <div class="corner-tr"></div>
       <div class="corner-bl"></div>
-      <div class="version-badge">OFFICIAL PRE-RELEASE v1.0.0</div>
+      <div class="version-badge">OFFICIAL CIMEGA SMART OFFICE v1.0.0</div>
 
       <div class="card-title">PORTAL <span>LOGIN</span></div>
       <div class="card-desc">Silahkan masukan Username/NIP dan Password anda untuk masuk ke Aplikasi.</div>
@@ -987,7 +986,7 @@
     </div>
   </div>
 
-  <script src="../../shared/music.js"></script>
+  <script src="../../services/music.js"></script>
   <script type="module">
     'use strict';
 
@@ -1175,7 +1174,7 @@
     }
 
     // ══════════════════════════════════════════
-    // AUTH ENGINE — Secure v2.0
+    // AUTH ENGINE — Secure v1.0.0
     // Proteksi: Brute-Force + SHA-256 hashing
     // ══════════════════════════════════════════
     window.doLogin = async function () {

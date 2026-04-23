@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8"/>
   <title>Admin Panel - Cimega Smart Office</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../index.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../utils/dialog-system.js"></script>
   <style>
     :root{
       --cyan:#00e5ff;--blue:#0066ff;--dark:#020b18;--dark2:#041428;--dark3:#061a35;
@@ -46,8 +47,7 @@
     .sidebar-logo-text span{color:var(--cyan);display:block}
     .sidebar-role{font-size:11px;color:var(--cyan);background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:20px;padding:3px 10px;display:inline-block;margin-top:5px}
     .sidebar-nav{flex:1;padding:8px 7px;overflow-y:auto;min-height:0}
-    .sidebar-nav::-webkit-scrollbar{width:3px}
-    .sidebar-nav::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
+
     .nav-section{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:7px 8px 3px}
     .nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:12px;color:var(--muted)}
     .nav-item:hover{background:rgba(0,229,255,0.08);color:var(--text)}
@@ -82,8 +82,7 @@
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
     @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
     .content{flex:1;overflow-y:auto;padding:20px}
-    .content::-webkit-scrollbar{width:5px}
-    .content::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.3);border-radius:3px}
+
     .page{display:none}.page.active{display:block}
 
     /* STAT */
@@ -180,7 +179,7 @@
     /* KONTEN */
     .konten-layout{display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:start}
     .kat-list{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px;height:fit-content;position:sticky;top:0;max-height:calc(100vh - 160px);overflow-y:auto}
-    .kat-list::-webkit-scrollbar{width:3px}.kat-list::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2);border-radius:2px}
+
     .kat-header{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 8px}
     .kat-header-label{font-size:11px;color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:1px}
     .kat-item{display:flex;align-items:center;border-radius:8px;margin-bottom:1px;transition:all .2s;position:relative}
@@ -221,7 +220,7 @@
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
     .modal-overlay.show{opacity:1;pointer-events:all}
     .modal{background:linear-gradient(135deg,var(--dark2),var(--dark3));border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto;position:relative}
-    .modal::-webkit-scrollbar{width:4px}.modal::-webkit-scrollbar-thumb{background:rgba(0,229,255,0.2)}
+
     .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
     .modal-title{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#fff}
     .modal-close{background:rgba(255,68,102,0.1);border:1px solid rgba(255,68,102,0.2);border-radius:7px;color:#ff8899;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
@@ -250,7 +249,7 @@
 <div class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <img src="../../../assets_images/Logo SDN Cimega.png" onerror="this.style.display='none'" alt="logo"/>
+      <img src="../../assets/assets_images/Logo SDN Cimega.png" onerror="this.style.display='none'" alt="logo"/>
       <div class="sidebar-logo-text">CIMEGA<span>SMART OFFICE</span></div>
     </div>
     <div class="sidebar-role">👑 ADMINISTRATOR</div>
@@ -889,10 +888,10 @@
   </div>
 </div>
 
-<script src="../../shared/music.js"></script>
-<script src="../../shared/updater.js"></script>
+<script src="../../services/music.js"></script>
+<script src="../../services/updater.js"></script>
 <!-- Modul Admin -->
-<script src="../../modules/admin/data_master.js"></script>
+<script src="../../features/admin/data_master.js"></script>
 <script src="../../services/oversight.js"></script>
 
 <script>
@@ -1434,7 +1433,7 @@ async function saveTemplate() {
 }
 
 async function deleteTemplate(id) {
-  if (!confirm('Hapus template ini?')) return;
+  if (!(await window.CyberDialog.confirm('Hapus template ini?'))) return;
   const { doc, deleteDoc } = window._fb;
   try {
     await deleteDoc(doc(db, 'admin_templates', id));
@@ -1550,7 +1549,7 @@ async function uploadMusikLokal() {
 
 // ── Hapus dari LOKAL saja ─────────────────────────────────────────
 async function deleteMusikLokal(fileName, title) {
-  if (!confirm(`Hapus lagu "${title}" dari aplikasi & cloud?`)) return;
+  if (!(await window.CyberDialog.confirm(`Hapus lagu "${title}" dari aplikasi & cloud?`))) return;
 
   try {
     const api = window.cimegaConfig || window.cimegaAPI;
@@ -1598,7 +1597,7 @@ async function sinkronMusik() {
 
     if (!localFiles || localFiles.length === 0) {
       showToast('warn', 'Playlist Kosong', 'Tidak ada file di assets_music untuk disinkronkan.');
-      // FIX v2.1: throw agar finally block tetap dieksekusi (reset button)
+      // FIX v1.0.0: throw agar finally block tetap dieksekusi (reset button)
       throw new Error('EMPTY_PLAYLIST');
     }
 
@@ -1606,7 +1605,7 @@ async function sinkronMusik() {
     let synced      = 0;
     let skipped     = 0;
     let failed      = 0;
-    const failedItems = []; // FIX v2.3: kumpulkan detail error
+    const failedItems = []; // FIX v1.0.0: kumpulkan detail error
 
     for (let i = 0; i < localFiles.length; i++) {
       const f        = localFiles[i];
@@ -1638,7 +1637,7 @@ async function sinkronMusik() {
         });
 
         // 2. Upload ke Supabase Storage
-        // FIX v2.2: path deterministik — hindari duplikat saat sinkronisasi ulang
+        // FIX v1.0.0: path deterministik — hindari duplikat saat sinkronisasi ulang
         const safeName = fileName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
         const sbPath   = `music/${safeName}`;
         const { error: sbErr } = await window._supabase.storage
@@ -1671,7 +1670,7 @@ async function sinkronMusik() {
         _cloudSyncedUrls[fileName] = publicUrl;
         synced++;
       } catch (itemErr) {
-        // FIX v2.3: kumpulkan error detail agar muncul di summary akhir
+        // FIX v1.0.0: kumpulkan error detail agar muncul di summary akhir
         const errMsg = itemErr.message || 'Error tidak diketahui';
         console.error(`Sinkron gagal untuk "${fileName}":`, itemErr);
         statusEl.innerHTML = `❌ [${i+1}/${localFiles.length}] Gagal: <strong>${cleanTitle}</strong> — ${errMsg}`;
@@ -1703,7 +1702,7 @@ async function sinkronMusik() {
       failed  > 0 ? `❌ ${failed} lagu gagal` : ''
     ].filter(Boolean).join(' · ');
 
-    // FIX v2.3: tampilkan detail error di bawah summary jika ada kegagalan
+    // FIX v1.0.0: tampilkan detail error di bawah summary jika ada kegagalan
     const errorDetail = failedItems.length > 0
       ? `<ul style="margin:6px 0 0 0;padding-left:16px;font-size:10px;color:#ff6688">${failedItems.join('')}</ul>`
       : '';
@@ -1713,7 +1712,7 @@ async function sinkronMusik() {
 
     await loadMusik(); // Refresh tampilan
   } catch (e) {
-    // FIX v2.1: EMPTY_PLAYLIST adalah sentinel — bukan error nyata, jangan tampilkan merah
+    // FIX v1.0.0: EMPTY_PLAYLIST adalah sentinel — bukan error nyata, jangan tampilkan merah
     if (e.message !== 'EMPTY_PLAYLIST') {
       statusEl.innerHTML = `❌ Error: ${e.message}`;
       showToast('error', 'Sinkron Gagal', e.message);
@@ -1861,7 +1860,7 @@ async function loadLog(){
   }catch(e){}
 }
 async function clearLog(){
-  if(!confirm('Hapus semua log aktivitas?')) return;
+  if(!(await window.CyberDialog.confirm('Hapus semua log aktivitas?'))) return;
   const{collection,getDocs,deleteDoc,doc}=window._fb;
   const snap=await getDocs(collection(db,'adminLog'));
   for(const d of snap.docs) await deleteDoc(doc(db,'adminLog',d.id));
@@ -1897,7 +1896,7 @@ async function gantiPassword(){
 // ════════════════════════════════════════════
 function fmtDate(ts){if(!ts)return'-';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
 function fmtDateInput(ts){if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);return d.toISOString().split('T')[0];}
-function doLogout(){if(confirm('Keluar dari admin panel?')){localStorage.removeItem('cimega_user');window.location.href='../login/login.html';}}
+async function doLogout(){if(await window.CyberDialog.confirm('Keluar dari admin panel?')){localStorage.removeItem('cimega_user');window.location.href='../login/login.html';}}
 
 
 
@@ -2230,7 +2229,7 @@ async function saveKategori() {
 }
 
 async function deleteKategori(id, nama) {
-  if (!confirm(`Hapus kategori "${nama}"? Data di Supabase juga akan dihapus.`)) return;
+  if (!(await window.CyberDialog.confirm(`Hapus kategori "${nama}"? Data di Supabase juga akan dihapus.`))) return;
   const { doc, deleteDoc } = window._fb;
   try {
     await deleteDoc(doc(db, 'kategori', id));
@@ -2482,7 +2481,7 @@ async function lockApp() {
 }
 
 async function unlockApp() {
-  if (!confirm('Buka kunci aplikasi? Seluruh pengguna dapat masuk kembali ke sistem.')) return;
+  if (!(await window.CyberDialog.confirm('Buka kunci aplikasi? Seluruh pengguna dapat masuk kembali ke sistem.'))) return;
   try {
     const { doc, setDoc, serverTimestamp } = window._fb;
     const db = window._fb.db;
