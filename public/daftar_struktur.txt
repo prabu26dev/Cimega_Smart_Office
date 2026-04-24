@@ -1,9 +1,11 @@
-Cimega_Smart_Office/
+CIMEGA SMART OFFICE - DIRECTORY STRUCTURE
+=========================================
+
+.
 ├── .env
 ├── .eslintrc.json
 ├── .gitignore
 ├── AGENTS.md
-├── package-lock.json
 ├── package.json
 ├── public
 │   └── daftar_struktur.txt
@@ -40,7 +42,8 @@ Cimega_Smart_Office/
 │   ├── context
 │   ├── features
 │   │   ├── admin
-│   │   │   └── data_master.js
+│   │   │   ├── data_master.js
+│   │   │   └── modul_builder.js
 │   │   └── dashboard
 │   │       └── settings.js
 │   ├── hooks
@@ -80,6 +83,7 @@ Cimega_Smart_Office/
 │   └── utils
 │       ├── crypto_helper.js
 │       ├── dialog-system.js
+│       ├── performance_optimizer.js
 │       ├── root_scripts
 │       │   └── build-secure.js
 │       ├── scripts

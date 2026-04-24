@@ -60,10 +60,10 @@ window.openModulWorkspace = async function(adminData) {
         `;
     }
 
-    // Kunci Nama tapi bebaskan ID agar bisa diedit
+    // Kunci ID dan Nama agar tidak bisa diedit karena sudah terintegrasi
     const idInput = document.getElementById('builder-modul-id');
     const nameInput = document.getElementById('builder-modul-name');
-    if (idInput) { idInput.value = adminData.id; idInput.removeAttribute('readonly'); }
+    if (idInput) { idInput.value = adminData.id; idInput.setAttribute('readonly', 'true'); }
     if (nameInput) { nameInput.value = adminData.nama; nameInput.setAttribute('readonly', 'true'); }
 
     // Reset field

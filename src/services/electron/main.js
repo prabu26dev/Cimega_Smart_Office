@@ -9,6 +9,11 @@ const path = require('path');
 
 // Tambahkan flag autoplay agar audio bisa jalan di background tanpa interaksi user
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
+// ── ADAPTIVE PERFORMANCE OPTIMIZER (SMART AUTO-SCALING) ──
+const optimizer = require('../../utils/performance_optimizer');
+optimizer.init();
+
 const fs = require('fs');
 const https = require('https');
 const url = require('url');
@@ -290,6 +295,8 @@ function createWindow() {
       allowRunningInsecureContent: false, // ✅ Blokir mixed content
       devTools: true,      // ✅ Debug mode
       preload: path.join(__dirname, 'preload.js'),
+      backgroundThrottling: true, // ✅ SMART SCALING: Drop CPU when minimized
+      additionalArguments: [optimizer.isLowEnd ? '--entry-level' : '--normal-level'] // ✅ Inject status for renderer
     },
     show: false,
     backgroundColor: '#020b18',

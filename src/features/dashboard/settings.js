@@ -356,16 +356,367 @@ function navToMenu(el, menuId) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (el) el.classList.add('active');
   pageHistory = [{ id: 'beranda', title: 'BERANDA' }];
-  
+
+  // Tampilkan halaman administrasi split-view
+  showPage('administrasi', 'ADMINISTRASI DIGITAL');
+
   if (menuId) {
-    // Jika ada ID kategori, renderMenuGrid akan otomatis memanggil openDocList
-    renderMenuGrid(_menuDataDynamic, menuId);
+    renderAdmLeftPanel(menuId);
   } else {
-    // Jika tidak ada ID, tampilkan halaman utama pemilihan kategori
-    renderMenuGrid(_menuDataDynamic);
-    showPage('menu', 'ADMINISTRASI');
+    const leftEl = document.getElementById('admLeftList');
+    if (leftEl) leftEl.innerHTML = '<div class="adm-empty-state" style="padding:20px;height:auto"><p>Pilih kategori dari sidebar</p></div>';
   }
 }
+
+// ── SPLIT-VIEW ADMINISTRASI: PANEL KIRI RENDERER ────────────────
+function renderAdmLeftPanel(katId) {
+  const leftEl = document.getElementById('admLeftList');
+  const titleEl = document.getElementById('admPageTitle');
+  const subEl = document.getElementById('admPageSub');
+  if (!leftEl) return;
+
+  const menu = _menuDataDynamic.find(m => m.id === katId);
+  if (!menu) {
+    leftEl.innerHTML = '<div class="adm-empty-state" style="padding:20px;height:auto"><p>Kategori tidak ditemukan.</p></div>';
+    return;
+  }
+
+  if (titleEl) titleEl.textContent = menu.title.toUpperCase();
+  if (subEl) subEl.textContent = menu.docs.length + ' administrasi tersedia';
+
+  const renderBody = document.getElementById('admRenderBody');
+  const renderTitle = document.getElementById('admRenderTitle');
+  const katBadge = document.getElementById('admKatBadge');
+  if (renderBody) renderBody.innerHTML = '<div class="adm-empty-state"><div class="icon">📋</div><p>Pilih item administrasi di panel kiri<br>untuk memulai pengerjaan</p></div>';
+  if (renderTitle) renderTitle.textContent = 'AREA KERJA';
+  if (katBadge) { katBadge.textContent = menu.title; katBadge.style.display = ''; }
+
+  const icons = ['📄', '📝', '📋', '🗒️', '📃', '📑', '🗃️', '📂', '🗂️', '📊'];
+
+  if (menu.docs.length === 0) {
+    leftEl.innerHTML = '<div class="adm-empty-state" style="padding:20px;height:auto"><div class="icon" style="font-size:28px;margin-bottom:8px">📭</div><p>Belum ada administrasi<br>di kategori ini.</p></div>';
+    return;
+  }
+
+  leftEl.innerHTML = menu.docs.map(function(docData, i) {
+    var safeName = docData.nama.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    // Embed modul_id dan hasModul sebagai data-attribute untuk akses cepat tanpa re-query
+    var hasModul = !!(docData.modul && docData.modul.koding_html) ? '1' : '0';
+    var modulBadge = hasModul === '1' ? '<span style="font-size:8px;background:rgba(0,229,255,0.15);color:#00e5ff;padding:1px 5px;border-radius:3px;margin-left:4px;border:1px solid rgba(0,229,255,0.3)">⚡</span>' : '';
+    return '<div class="adm-list-item" id="adm-item-' + i + '" data-kat="' + katId + '" data-idx="' + i + '" data-has-modul="' + hasModul + '" onclick="openAdmItem(' + i + ')">' +
+      '<span class="adm-list-item-icon">' + icons[i % icons.length] + '</span>' +
+      '<span class="adm-list-item-name">' + safeName + modulBadge + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+// ── SPLIT-VIEW: KLIK ITEM DI PANEL KIRI ─────────────────────────
+// Signature baru: hanya pakai index (data diambil dari _currentAdmKatId cache)
+var _currentAdmKatId = '';
+function openAdmItem(itemIndex) {
+  // Ambil el dan metadata dari DOM
+  var el = document.getElementById('adm-item-' + itemIndex);
+  var katId = el ? el.getAttribute('data-kat') : _currentAdmKatId;
+
+  // 1. Set active class
+  document.querySelectorAll('.adm-list-item').forEach(function(e) { e.classList.remove('active'); });
+  if (el) el.classList.add('active');
+
+  // 2. Ambil data lengkap dari cache _menuDataDynamic
+  var menu = _menuDataDynamic.find(function(m) { return m.id === katId; });
+  if (!menu) { console.warn('openAdmItem: kategori tidak ada di cache:', katId); return; }
+  var docData = menu.docs[itemIndex];
+  if (!docData) { console.warn('openAdmItem: doc tidak ada di index:', itemIndex); return; }
+
+  var docName = docData.nama;
+
+  // 3. Update header panel kanan
+  var renderTitle = document.getElementById('admRenderTitle');
+  if (renderTitle) renderTitle.textContent = docName.toUpperCase();
+  var renderBody = document.getElementById('admRenderBody');
+  if (renderBody) renderBody.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div class="spinner"></div><p style="margin-top:12px;font-size:11px">Memuat modul...</p></div>';
+
+  // ── PRIORITY CHAIN ──────────────────────────────────────────────
+  // LAYER 0 (TERCEPAT): Cek data.modul.koding_html dari cache konten (ditulis oleh modul_builder.js)
+  if (docData.modul && docData.modul.koding_html && docData.modul.koding_html.trim() !== '') {
+    console.log('✅ [LAYER 0] Modul ditemukan via cache konten.modul:', docData.id);
+    renderDynamicModuleInPanel({
+      id: docData.id,
+      nama: docData.nama,
+      koding_html: docData.modul.koding_html,
+      koding_js: docData.modul.koding_js || '',
+      ai_prompt: docData.modul.ai_prompt || ''
+    });
+    return;
+  }
+
+  // LAYER 1: Cek _dynamicModulesMap via ID langsung (jika modul sudah di-cache dari fetchDynamicModules)
+  if (window._dynamicModulesMap && window._dynamicModulesMap[docData.id]) {
+    var modById = window._dynamicModulesMap[docData.id];
+    if (modById.koding_html && modById.koding_html.trim() !== '') {
+      console.log('✅ [LAYER 1] Modul ditemukan via ID di _dynamicModulesMap:', docData.id);
+      renderDynamicModuleInPanel(modById);
+      return;
+    }
+  }
+
+  // LAYER 2: Cek _dynamicModulesMap via NAME MATCHING (fallback jika ID berbeda)
+  if (window._dynamicModulesMap) {
+    var docNameLower = docName.toLowerCase().trim();
+    var matchedMod = null;
+    Object.values(window._dynamicModulesMap).forEach(function(m) {
+      if (m && m.nama && m.nama.toLowerCase().trim() === docNameLower && m.koding_html) {
+        matchedMod = m;
+      }
+    });
+    if (matchedMod) {
+      console.log('✅ [LAYER 2] Modul ditemukan via name match:', matchedMod.id || matchedMod.nama);
+      renderDynamicModuleInPanel(matchedMod);
+      return;
+    }
+  }
+
+  // LAYER 3 (FALLBACK): Async query ke Firestore modul_dinamis + konten
+  renderDocInPanel(katId, docName, docData.id);
+}
+
+// ── RENDER MODUL DINAMIS KE PANEL KANAN ─────────────────────────
+function renderDynamicModuleInPanel(modulData) {
+  var renderBody = document.getElementById('admRenderBody');
+  if (!renderBody) {
+    if (window.renderDynamicModule) window.renderDynamicModule(modulData);
+    return;
+  }
+
+  // Bersihkan skrip & gaya dari modul sebelumnya
+  document.querySelectorAll('.dynamic-injected-script, .dynamic-injected-style').forEach(function(el) { el.remove(); });
+
+  var rawHTML = modulData.koding_html || '';
+  var extractedStyles = '';
+
+  // Ekstrak CSS dari tag <style> dan suntikkan ke document.head agar tidak disanitasi
+  rawHTML = rawHTML.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, function(match, styleContent) {
+    extractedStyles += styleContent + '\n';
+    return '';
+  });
+
+  if (extractedStyles.trim() !== '') {
+    var styleEl = document.createElement('style');
+    styleEl.id = 'dynamic-modul-style-' + (modulData.id || 'temp');
+    styleEl.className = 'dynamic-injected-style';
+    styleEl.textContent = extractedStyles;
+    document.head.appendChild(styleEl);
+    console.log('⚡ CSS Modul Panel [' + modulData.id + '] disuntikkan ke document.head');
+  }
+
+  renderBody.innerHTML = '<div class="cyber-panel fade-in" style="height:100%"><div id="dynamic-content-wrapper" style="height:100%">' + rawHTML + '</div></div>';
+
+  window._currentDynamicPrompt = modulData.ai_prompt;
+
+  if (modulData.koding_js) {
+    try {
+      var scriptEl = document.createElement('script');
+      scriptEl.className = 'dynamic-injected-script';
+      scriptEl.textContent = '(function() { try { ' + modulData.koding_js + ' console.log("⚡ Modul Panel [' + modulData.id + '] berhasil dimuat."); } catch(err) { console.error("⚠️ Error pada logika Modul:", err); if(window.showToast) window.showToast("error","Logic Error","Terjadi kesalahan pada skrip modul."); } })();';
+      document.body.appendChild(scriptEl);
+    } catch(e) {
+      console.error('Gagal menyuntikkan skrip modul panel:', e);
+    }
+  }
+}
+
+// ── RENDER DOKUMEN KE PANEL KANAN (dengan Dynamic Module Detection) ─────
+async function renderDocInPanel(katId, docName, kontenId) {
+  var renderBody = document.getElementById('admRenderBody');
+  if (!renderBody) return;
+
+  renderBody.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div class="spinner"></div><p style="margin-top:12px;font-size:11px">Memuat konten...</p></div>';
+
+  try {
+    const { collection, query, where, getDocs, doc, getDoc } = window._fb;
+
+    // ── LAYER 0: Direct getDoc modul_dinamis/{kontenId} (O(1), tanpa query scan) ──
+    if (kontenId) {
+      try {
+        const modulSnap = await getDoc(doc(db, 'modul_dinamis', kontenId));
+        if (modulSnap.exists()) {
+          const modulData = modulSnap.data();
+          if (modulData.koding_html && modulData.koding_html.trim() !== '') {
+            console.log('✅ [LAYER 0 Async] Modul ditemukan via direct ID:', kontenId);
+            // Cache untuk akses berikutnya
+            if (!window._dynamicModulesMap) window._dynamicModulesMap = {};
+            window._dynamicModulesMap[kontenId] = { id: kontenId, ...modulData };
+            renderDynamicModuleInPanel({ id: kontenId, ...modulData });
+            return;
+          }
+        }
+      } catch (e0) {
+        console.warn('[LAYER 0] getDoc modul_dinamis gagal (non-fatal):', e0.message);
+      }
+    }
+
+    // ── LAYER 1: Query konten collection + cek field inline koding_html ──
+    const kontenSnap = await getDocs(query(
+      collection(db, 'konten'),
+      where('kategori', '==', katId),
+      where('nama', '==', docName.trim())
+    ));
+
+    if (!kontenSnap.empty) {
+      const kontenDoc = kontenSnap.docs[0];
+      const kontenData = kontenDoc.data();
+
+      // Cek koding_html langsung di doc konten (field inline)
+      if (kontenData.koding_html && kontenData.koding_html.trim() !== '') {
+        console.log('✅ [LAYER 1] koding_html inline di konten doc:', kontenDoc.id);
+        renderDynamicModuleInPanel({
+          id: kontenDoc.id,
+          nama: kontenData.nama || docName,
+          koding_html: kontenData.koding_html,
+          koding_js: kontenData.koding_js || '',
+          ai_prompt: kontenData.ai_prompt || kontenData.prompt || ''
+        });
+        return;
+      }
+
+      // Cek nested field konten.modul.koding_html (format lama modul_builder.js)
+      if (kontenData.modul && kontenData.modul.koding_html && kontenData.modul.koding_html.trim() !== '') {
+        console.log('✅ [LAYER 1b] koding_html di konten.modul:', kontenDoc.id);
+        renderDynamicModuleInPanel({
+          id: kontenDoc.id,
+          nama: kontenData.nama || docName,
+          koding_html: kontenData.modul.koding_html,
+          koding_js: kontenData.modul.koding_js || '',
+          ai_prompt: kontenData.modul.ai_prompt || ''
+        });
+        return;
+      }
+    }
+
+    // ── LAYER 2: Query modul_dinamis by nama ──
+    try {
+      const modulSnap = await getDocs(query(
+        collection(db, 'modul_dinamis'),
+        where('nama', '==', docName.trim())
+      ));
+      if (!modulSnap.empty) {
+        const modulDoc = modulSnap.docs[0];
+        const modulData = modulDoc.data();
+        if (modulData.koding_html && modulData.koding_html.trim() !== '') {
+          console.log('✅ [LAYER 2] Modul ditemukan via nama query:', modulDoc.id);
+          if (!window._dynamicModulesMap) window._dynamicModulesMap = {};
+          window._dynamicModulesMap[modulDoc.id] = { id: modulDoc.id, ...modulData };
+          renderDynamicModuleInPanel({ id: modulDoc.id, ...modulData });
+          return;
+        }
+      }
+    } catch (e2) {
+      console.warn('[LAYER 2] modul_dinamis nama query gagal (non-fatal):', e2.message);
+    }
+
+    // ── LAYER 3 (FALLBACK): Tampilkan dokumen default ──
+    if (kontenSnap.empty) {
+      renderBody.innerHTML = '<div class="adm-empty-state"><div class="icon">📄</div><p>Konten belum tersedia<br><span style="font-size:10px;color:var(--muted)">Hubungi administrator untuk mengisi template</span></p></div>';
+      return;
+    }
+
+    const d = kontenSnap.docs[0];
+    const data = d.data();
+    currentDocId = d.id;
+    currentDocName = docName;
+    currentKat = katId;
+    _activeDocData = data;
+
+    const savedContent = data.savedContentByUser?.[userData.id] || data.savedContent || null;
+
+    if (data.components && data.components.length > 0 && !savedContent) {
+      var formHtml = data.components.map(function(c) {
+        return '<div class="form-group-ai"><label>' + c.label + '</label><textarea id="ai-input-' + c.id + '" placeholder="Masukkan data untuk ' + c.label + '..." class="ai-form-input"></textarea></div>';
+      }).join('');
+      renderBody.innerHTML = '<div class="doc-form-container"><div style="font-size:11px;color:var(--cyan);letter-spacing:1px;margin-bottom:14px;font-weight:700">✏️ PARAMETER ADMINISTRASI</div>' + formHtml + '<div class="ai-action-bar"><button class="btn-generate-big" id="btnGenerateAI" onclick="generateWithAI()"><span>✨</span> GENERASI DATA AI</button></div><div class="ai-disclaimer">Data diproses oleh AI Gemini · Kurikulum Merdeka 2025/2026</div></div>';
+    } else {
+      var content = savedContent ||
+        (data.template ? data.template.replace(/\n/g, '<br/>') : null) ||
+        '<div style="color:var(--muted);text-align:center;padding:30px"><div style="font-size:36px;margin-bottom:12px">📄</div><div>' + docName + '</div><div style="font-size:11px;margin-top:8px">Template belum diisi admin.</div></div>';
+
+      renderBody.innerHTML =
+        '<div style="display:flex;flex-direction:column;height:100%;gap:10px">' +
+        '<div id="admDocToolbar" style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">' +
+        '<button class="btn btn-ghost btn-sm" id="admEditBtn" onclick="toggleAdmEdit()">✏️ Edit</button>' +
+        '<button class="btn btn-primary btn-sm" id="admSaveBtn" style="display:none" onclick="saveAdmDoc()">💾 Simpan</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="printAdmDoc()">🖨️ Cetak</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="downloadAdmDoc()">⬇️ Unduh</button>' +
+        '</div>' +
+        '<div id="admDocContent" style="flex:1;overflow-y:auto;background:rgba(255,255,255,0.02);border:1px solid rgba(0,229,255,0.07);border-radius:9px;padding:16px;font-size:13px;line-height:1.8;color:var(--text);min-height:0" contenteditable="false">' + content + '</div>' +
+        '</div>';
+    }
+  } catch (e) {
+    console.error('renderDocInPanel Error:', e);
+    renderBody.innerHTML = '<div class="adm-empty-state"><div class="icon">⚠️</div><p>Gagal memuat dokumen.<br><span style="font-size:10px">Cek koneksi internet Anda.</span></p></div>';
+  }
+}
+
+// ── HELPER EDIT/SIMPAN/CETAK/UNDUH PANEL KANAN ──────────────────
+
+function toggleAdmEdit() {
+  const ce = document.getElementById('admDocContent');
+  const editBtn = document.getElementById('admEditBtn');
+  const saveBtn = document.getElementById('admSaveBtn');
+  if (!ce) return;
+  const editing = ce.contentEditable === 'true';
+  if (editing) {
+    ce.contentEditable = 'false';
+    ce.style.borderColor = 'rgba(0,229,255,0.07)';
+    if (editBtn) editBtn.textContent = '✏️ Edit';
+    if (saveBtn) saveBtn.style.display = 'none';
+  } else {
+    ce.contentEditable = 'true';
+    ce.style.borderColor = 'rgba(0,229,255,0.3)';
+    ce.focus();
+    if (editBtn) editBtn.textContent = '✕ Batal';
+    if (saveBtn) saveBtn.style.display = 'inline-flex';
+  }
+}
+async function saveAdmDoc() {
+  if (!currentDocId) { showToast('warn', 'Perhatian', 'Dokumen belum ada di database.'); return; }
+  const { doc, updateDoc, serverTimestamp } = window._fb;
+  const ce = document.getElementById('admDocContent');
+  if (!ce) return;
+  try {
+    const field = 'savedContentByUser.' + userData.id;
+    await updateDoc(doc(db, 'konten', currentDocId), { [field]: ce.innerHTML, updatedAt: serverTimestamp() });
+    toggleAdmEdit();
+    showToast('success', 'Tersimpan', 'Dokumen berhasil disimpan');
+  } catch (e) { showToast('error', 'Gagal', e.message); }
+}
+function printAdmDoc() {
+  const ce = document.getElementById('admDocContent');
+  if (!ce) return;
+  const w = window.open('', '_blank');
+  w.document.write('<!DOCTYPE html><html><head><title>' + currentDocName + '</title><style>body{font-family:\'Times New Roman\',serif;font-size:12pt;line-height:1.6;color:#000;padding:2cm}</style></head><body>' + ce.innerHTML + '</body></html>');
+  w.document.close();
+  setTimeout(function() { w.print(); w.close(); }, 400);
+}
+function downloadAdmDoc() {
+  const ce = document.getElementById('admDocContent');
+  if (!ce) return;
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + currentDocName + '</title><style>body{font-family:\'Times New Roman\',serif;font-size:12pt;line-height:1.6;padding:2cm}</style></head><body><h2>' + currentDocName + '</h2><hr/>' + ce.innerHTML + '</body></html>';
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = currentDocName + '.html'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('success', 'Diunduh', currentDocName + ' berhasil diunduh');
+}
+
+// Expose ke global
+window.renderAdmLeftPanel = renderAdmLeftPanel;
+window.openAdmItem = openAdmItem;
+window.renderDynamicModuleInPanel = renderDynamicModuleInPanel;
+window.renderDocInPanel = renderDocInPanel;
+window.toggleAdmEdit = toggleAdmEdit;
+window.saveAdmDoc = saveAdmDoc;
+window.printAdmDoc = printAdmDoc;
+window.downloadAdmDoc = downloadAdmDoc;
 
 // ── setupUser ──────────────────────────────
 function setupUser() {
@@ -1987,24 +2338,25 @@ window.fetchDynamicModules = async function() {
     const fetchedModules = [];
 
     try {
-        if (window.showToast) window.showToast('info', 'Sinkronisasi...', 'Memeriksa pembaruan modul dinamis dari cloud...');
-        
         // Menggunakan filter lokal untuk menghindari error Missing Index di Firebase
         const q = query(collection(window.db, 'modul_dinamis'));
         const snapshot = await getDocs(q);
-        
-        snapshot.forEach(doc => {
-            const data = typeof doc.data === 'function' ? doc.data() : doc;
-            const hasAccess = data.akses_role && data.akses_role.some(r => roles.includes(r));
+
+        snapshot.forEach(function(docSnap) {
+            const data = typeof docSnap.data === 'function' ? docSnap.data() : docSnap;
+            // ★ KRITIS: Selalu embed doc.id agar name matching bisa bekerja
+            const fullData = Object.assign({ id: docSnap.id }, data);
+            const hasAccess = fullData.akses_role && fullData.akses_role.some(function(r) { return roles.includes(r); });
             if (hasAccess || roles.includes('admin')) {
-                fetchedModules.push(data);
+                fetchedModules.push(fullData);
+                console.log('📦 Modul dimuat:', fullData.id, '| nama:', fullData.nama, '| has_html:', !!fullData.koding_html);
             }
         });
 
-        console.log(`✅ Berhasil menarik ${fetchedModules.length} modul dinamis untuk role: ${roles.join(', ')}`);
+        console.log('✅ Total modul dinamis ter-cache:', fetchedModules.length, '(role:', roles.join(', ') + ')');
         return fetchedModules;
     } catch (error) {
-        console.error("❌ Gagal mengambil modul dinamis:", error);
+        console.error('❌ Gagal mengambil modul dinamis:', error);
         if(window.showToast) window.showToast('warn', 'Koneksi Lemah', 'Gagal memuat modul dinamis, mode offline aktif.');
         return [];
     }
@@ -2013,30 +2365,48 @@ window.fetchDynamicModules = async function() {
 window.navToDynamicModule = function(el, moduleId) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
-    
-    // Sembunyikan halaman statis, tampilkan page-dynamic
+
+    const mod = window._dynamicModulesMap ? window._dynamicModulesMap[moduleId] : null;
+    const tt = document.getElementById('topbarTitle');
+
+    // Jika halaman administrasi split-view sedang aktif, render ke panel kanan
+    const admPage = document.getElementById('page-administrasi');
+    const renderBody = document.getElementById('admRenderBody');
+    const renderTitle = document.getElementById('admRenderTitle');
+
+    if (admPage && admPage.classList.contains('active') && renderBody) {
+        // Render ke panel kanan split-view (tidak menimpa seluruh halaman)
+        if (renderTitle && mod) renderTitle.textContent = (mod.nama || 'MODUL DINAMIS').toUpperCase();
+        if (tt && mod) tt.textContent = (mod.nama || 'MODUL DINAMIS').toUpperCase();
+        if (mod) {
+            if (window.renderDynamicModuleInPanel) {
+                window.renderDynamicModuleInPanel(mod);
+            } else {
+                window.renderDynamicModule(mod);
+            }
+        }
+        return;
+    }
+
+    // Fallback: tampilkan page-dynamic sebagai full-view
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     let target = document.getElementById('page-dynamic');
-    
-    // Jika container #page-dynamic belum ada atau salah tempat, atur ulang
+
     if (!target || target.parentNode === document.body) {
-        if (target) target.remove(); // Hapus yang salah tempat
+        if (target) target.remove();
         const mainContent = document.querySelector('.content') || document.getElementById('mainContent') || document.body;
         target = document.createElement('div');
         target.id = 'page-dynamic';
         target.className = 'page';
         mainContent.appendChild(target);
     }
-    
+
     target.classList.add('active');
 
-    const tt = document.getElementById('topbarTitle');
-    const mod = window._dynamicModulesMap ? window._dynamicModulesMap[moduleId] : null;
-    
     if (tt && mod) {
         tt.textContent = (mod.nama || 'MODUL DINAMIS').toUpperCase();
     } else if (tt) {
-        tt.textContent = "MODUL DINAMIS";
+        tt.textContent = 'MODUL DINAMIS';
     }
 
     if (mod) {

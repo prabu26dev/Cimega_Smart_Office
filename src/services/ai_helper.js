@@ -277,11 +277,11 @@ window.CimegaAIDebugger = {
         modal.innerHTML = `
             <div style="background:rgba(4,20,45,0.98); border:1px solid rgba(0,229,255,0.3);
                         border-radius:16px; padding:28px; max-width:640px; width:90%;
-                        box-shadow:0 20px 60px rgba(0,0,0,0.8); font-family:Arial,sans-serif;">
+                        box-shadow:0 20px 60px rgba(0,0,0,0.8); font-family:Arial;">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-size:20px;">🧪</span>
-                        <span style="font-family:'Orbitron',sans-serif; font-size:13px; color:#00e5ff; font-weight:700; letter-spacing:1px;">HASIL ANALISIS AI DEBUGGER</span>
+                        <span style="font-family:'Orbitron',Arial; font-size:13px; color:#00e5ff; font-weight:700; letter-spacing:1px;">HASIL ANALISIS AI DEBUGGER</span>
                     </div>
                     <button onclick="document.getElementById('debugger-result-modal').remove()"
                             style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15);

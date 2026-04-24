@@ -158,4 +158,17 @@
 
 #builder-html::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.6); }
 #builder-js::-webkit-scrollbar-thumb:hover { background: rgba(255, 204, 0, 0.6); }
-#builder-prompt::-webkit-scrollbar-thumb:hover { background: rgba(255, 68, 102, 0.6); }
+#builder-prompt::-webkit-scrollbar-thumb:hover { background: rgba(255, 68, 102, 0.6); }
+
+/* PENURUNAN ELEGAN UNTUK ENTRY-LEVEL (PERFORMANCE OPTIMIZER) */
+body.entry-level-mode * {
+    animation-duration: 0s !important; /* Matikan animasi berulang */
+}
+body.entry-level-mode .cyber-panel, 
+body.entry-level-mode .c-panel,
+body.entry-level-mode .glass-effect {
+    backdrop-filter: none !important; /* MATIKAN BLUR (Pembunuh GPU) */
+    background-color: #030d1c !important; /* Ganti dengan warna solid gelap */
+    box-shadow: none !important; /* Matikan efek glow besar */
+    border: 1px solid rgba(0, 229, 255, 0.8) !important; /* Pertahankan identitas neon */
+}

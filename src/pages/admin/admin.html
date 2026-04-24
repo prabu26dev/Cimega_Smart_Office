@@ -588,7 +588,7 @@
               <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:0;">
                 <div style="display:flex; align-items:center; gap:8px; background:rgba(0,229,255,0.06); border:1px solid rgba(0,229,255,0.15); border-radius:8px; padding:6px 12px;">
                   <span style="font-size:14px;">🛠️</span>
-                  <span style="font-family:'Orbitron',sans-serif; font-size:10px; color:#00e5ff; font-weight:700; letter-spacing:1.5px;">MODUL BUILDER</span>
+                  <span style="font-family:'Orbitron',Arial; font-size:10px; color:#00e5ff; font-weight:700; letter-spacing:1.5px;">MODUL BUILDER</span>
                 </div>
                 <span style="color:rgba(0,229,255,0.3); font-size:14px;">›</span>
                 <div id="modul-workspace-breadcrumb" style="display:flex; align-items:center; gap:6px; overflow:hidden;">
@@ -635,7 +635,7 @@
                 <input type="text" id="builder-modul-id" readonly placeholder="auto-filled"
                   style="width:100%; background:transparent; border:none; outline:none;
                          color:#00e5ff; font-family:'Courier New',monospace; font-size:12px; font-weight:700;
-                         cursor:not-allowed;">
+                         cursor:default;">
               </div>
 
               <!-- Nama + Role Distribution -->
@@ -649,7 +649,7 @@
                   <div style="font-size:9px; color:var(--muted); letter-spacing:1px; margin-bottom:6px; text-transform:uppercase;">Nama Administrasi</div>
                   <input type="text" id="builder-modul-name" readonly placeholder="auto-filled"
                     style="width:220px; background:transparent; border:none; outline:none;
-                           color:#fff; font-size:13px; font-weight:600; cursor:not-allowed;">
+                           color:#fff; font-size:13px; font-weight:600; cursor:default;">
                 </div>
 
                 <!-- Divider -->
@@ -692,7 +692,7 @@
                     <div style="width:8px;height:8px;border-radius:50%;background:#febc2e;"></div>
                     <div style="width:8px;height:8px;border-radius:50%;background:#28c840;"></div>
                   </div>
-                  <span style="font-family:'Orbitron',sans-serif; font-size:9px; color:#00e5ff; letter-spacing:1.5px; font-weight:700;">📄 HTML / TEMPLATE</span>
+                  <span style="font-family:'Orbitron',Arial; font-size:9px; color:#00e5ff; letter-spacing:1.5px; font-weight:700;">📄 HTML / TEMPLATE</span>
                   <span style="margin-left:auto; font-size:9px; color:rgba(0,229,255,0.4); background:rgba(0,229,255,0.08); padding:2px 7px; border-radius:4px; border:1px solid rgba(0,229,255,0.15);">UI Layer</span>
                 </div>
                 <textarea id="builder-html"
@@ -723,7 +723,7 @@
                     <div style="width:8px;height:8px;border-radius:50%;background:#febc2e;"></div>
                     <div style="width:8px;height:8px;border-radius:50%;background:#28c840;"></div>
                   </div>
-                  <span style="font-family:'Orbitron',sans-serif; font-size:9px; color:#ffcc00; letter-spacing:1.5px; font-weight:700;">⚡ JAVASCRIPT / LOGIC</span>
+                  <span style="font-family:'Orbitron',Arial; font-size:9px; color:#ffcc00; letter-spacing:1.5px; font-weight:700;">⚡ JAVASCRIPT / LOGIC</span>
                   <span style="margin-left:auto; font-size:9px; color:rgba(255,204,0,0.5); background:rgba(255,204,0,0.07); padding:2px 7px; border-radius:4px; border:1px solid rgba(255,204,0,0.2);">Logic Layer</span>
                 </div>
                 <textarea id="builder-js"
@@ -755,7 +755,7 @@ document.getElementById('nama_siswa')
                     <div style="width:8px;height:8px;border-radius:50%;background:#febc2e;"></div>
                     <div style="width:8px;height:8px;border-radius:50%;background:#28c840;"></div>
                   </div>
-                  <span style="font-family:'Orbitron',sans-serif; font-size:9px; color:#aa55ff; letter-spacing:1.5px; font-weight:700;">🤖 AI PROMPT / BRAIN</span>
+                  <span style="font-family:'Orbitron',Arial; font-size:9px; color:#aa55ff; letter-spacing:1.5px; font-weight:700;">🤖 AI PROMPT / BRAIN</span>
                   <span style="margin-left:auto; font-size:9px; color:rgba(170,85,255,0.5); background:rgba(170,85,255,0.07); padding:2px 7px; border-radius:4px; border:1px solid rgba(170,85,255,0.2);">AI Layer</span>
                 </div>
                 <textarea id="builder-prompt"
@@ -1879,6 +1879,13 @@ async function konfirmasiHapus(tipe,id,nama){
       const fsCollection = tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten';
       const sbTable = tipe==='user'?'users':tipe==='sekolah'?'sekolah':'konten';
       
+      // -- CASCADING DELETE KONTEN (Administrasi) --
+      if (tipe === 'konten') {
+          // Hapus modul_dinamis yang terikat
+          await deleteDoc(doc(db, 'modul_dinamis', id));
+          await syncToSupabase('modul_dinamis', { id }, true);
+      }
+      
       // 1. Delete from Firestore
       await deleteDoc(doc(db, fsCollection, id));
       
@@ -2189,23 +2196,34 @@ async function totalSync(){
   try {
     if(!window._supabase) throw new Error('Supabase tidak aktif');
     const { collection, getDocs } = window._fb;
-    let totalSynced = 0;
+    let syncKat = 0, syncKon = 0, syncTmp = 0, syncMod = 0;
 
     showToast('info','Sinkronisasi','Memulai sinkronisasi kategori...');
     
     // 1. Kategori
     const katSnap = await getDocs(collection(db, 'kategori'));
+    const validKatIds = new Set();
     for (const d of katSnap.docs) {
+      validKatIds.add(d.id);
       await syncToSupabase('kategori', { id: d.id, ...d.data() });
-      totalSynced++;
+      syncKat++;
     }
 
     // 2. Konten / Administrasi
     showToast('info','Sinkronisasi','Menyinkronkan dokumen administrasi...');
     const konSnap = await getDocs(collection(db, 'konten'));
+    const validKonIds = new Set();
     for (const d of konSnap.docs) {
-      await syncToSupabase('konten', { id: d.id, ...d.data() });
-      totalSynced++;
+      const data = d.data();
+      // CLEANUP: Hapus data yatim (orphan) jika kategori induknya tidak ada
+      if (!validKatIds.has(data.kategori)) {
+          await window._fb.deleteDoc(window._fb.doc(db, 'konten', d.id));
+          await syncToSupabase('konten', { id: d.id }, true);
+          continue;
+      }
+      validKonIds.add(d.id);
+      await syncToSupabase('konten', { id: d.id, ...data });
+      syncKon++;
     }
 
     // 3. Template AI
@@ -2213,18 +2231,34 @@ async function totalSync(){
     const tmpSnap = await getDocs(collection(db, 'admin_templates'));
     for (const d of tmpSnap.docs) {
       await syncToSupabase('admin_templates', { id: d.id, ...d.data() });
-      totalSynced++;
+      syncTmp++;
     }
 
     // 4. Modul Dinamis (Modul Builder)
     showToast('info','Sinkronisasi','Menyinkronkan data modul dinamis...');
     const modSnap = await getDocs(collection(db, 'modul_dinamis'));
     for (const d of modSnap.docs) {
+      // CLEANUP: Hapus modul dinamis yatim jika konten induknya tidak ada
+      if (!validKonIds.has(d.id)) {
+          await window._fb.deleteDoc(window._fb.doc(db, 'modul_dinamis', d.id));
+          await syncToSupabase('modul_dinamis', { id: d.id }, true);
+          continue;
+      }
       await syncToSupabase('modul_dinamis', { id: d.id, ...d.data() });
-      totalSynced++;
+      syncMod++;
     }
 
-    showToast('success','Sinkron Selesai',`Berhasil mengunggah ${totalSynced} data ke Cloud.`);
+    const totalSynced = syncKat + syncKon + syncTmp + syncMod;
+    
+    let msg = `Berhasil mengunggah total <b>${totalSynced}</b> data ke Cloud.<br>`;
+    msg += `<div style="font-size:11px; margin-top:6px; color:var(--text); text-align:left; background:rgba(0,0,0,0.1); padding:8px; border-radius:6px;">`;
+    msg += `• Kategori: <b>${syncKat}</b><br>`;
+    msg += `• Administrasi: <b>${syncKon}</b><br>`;
+    msg += `• Modul Dinamis: <b>${syncMod}</b><br>`;
+    msg += `• Template AI: <b>${syncTmp}</b>`;
+    msg += `</div>`;
+
+    showToast('success','Sinkron Selesai', msg);
     loadTemplates();
   } catch(e) { 
     showToast('error','Gagal Sinkron', e.message); 
@@ -2386,9 +2420,20 @@ async function saveKategori() {
 }
 
 async function deleteKategori(id, nama) {
-  if (!(await window.CyberDialog.confirm(`Hapus kategori "${nama}"? Data di Supabase juga akan dihapus.`))) return;
-  const { doc, deleteDoc } = window._fb;
+  if (!(await window.CyberDialog.confirm(`Hapus kategori "${nama}" beserta SEMUA administrasi & modul di dalamnya? Data tidak bisa dikembalikan.`))) return;
+  const { doc, deleteDoc, collection, query, where, getDocs } = window._fb;
   try {
+    // -- CASCADING DELETE KATEGORI --
+    // Cari & hapus semua konten & modul di bawah kategori ini
+    const qKonten = query(collection(db, 'konten'), where('kategori', '==', id));
+    const snap = await getDocs(qKonten);
+    for (const d of snap.docs) {
+        await deleteDoc(doc(db, 'modul_dinamis', d.id));
+        await syncToSupabase('modul_dinamis', { id: d.id }, true);
+        await deleteDoc(doc(db, 'konten', d.id));
+        await syncToSupabase('konten', { id: d.id }, true);
+    }
+
     await deleteDoc(doc(db, 'kategori', id));
     await syncToSupabase('kategori', { id }, true);
     

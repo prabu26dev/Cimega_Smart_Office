@@ -4,10 +4,10 @@ Platform Administrasi Sekolah Cerdas — Kurikulum Merdeka 2025/2026.
 Proyek ini sedang dalam masa transisi arsitektur dari Vanilla JS/HTML menuju React + Vite, dibungkus sebagai aplikasi desktop menggunakan **Electron**.
 
 ## Fitur Utama
-- **Desktop Wrapper**: Electron.js untuk akses *native* dan performa tinggi di Windows.
+- **Desktop Wrapper**: Electron.js untuk akses *native* dan performa tinggi di Windows. Telah dilengkapi dengan **Adaptive Performance Optimizer** (*Smart Auto-Scaling*) untuk memastikan aplikasi berjalan super ringan di perangkat kelas *Entry-Level* (RAM < 4GB).
 - **Backend & Database**: Firebase Firestore, Firebase Auth, dan sinkronisasi ke Supabase.
-- **AI Asisten**: Terintegrasi dengan Gemini AI untuk bantuan cerdas.
-- **Global Cyberpunk Modal System**: UI/UX kustom berbasis *Glassmorphism* & *Beveled Corners* yang sepenuhnya *offline* (bebas dari alert bawaan OS).
+- **AI Asisten**: Terintegrasi dengan Gemini AI untuk bantuan cerdas pembuatan RPP, ATP, dan administrasi lainnya.
+- **Global Cyberpunk Modal System**: UI/UX kustom berbasis *Glassmorphism* & *Beveled Corners* yang adaptif.
 - **Document Generator**: Ekspor PDF, Word, dan Excel otomatis menggunakan `pdfmake`, `docx`, dan `exceljs` dengan dukungan font administrasi standar secara *offline*.
 
 ## Struktur Direktori Utama (`src/`)
@@ -16,12 +16,12 @@ Proyek ini sedang dalam masa transisi arsitektur dari Vanilla JS/HTML menuju Rea
 - `src/pages/`: Antarmuka HTML utama.
 - `src/services/`: Layanan terpusat (API, Firebase, integrasi AI, Document Generator, dll).
   - `electron/`: Script *entry point* Electron (`main.js`, `preload.js`).
-- `src/utils/`: Script bantuan, *formatter*, dan *CyberDialog system*.
+- `src/utils/`: Script bantuan, *Performance Optimizer* (`performance_optimizer.js`), *formatter*, dan *CyberDialog system*.
 
 ## Persyaratan Sistem & Instalasi
 
-### 1. Kredensial Firebase
-Pastikan Anda memiliki file `serviceAccountKey.json` yang ditempatkan di dalam `src/services/api/` (file ini diabaikan oleh Git demi keamanan).
+### 1. Kredensial Firebase & Supabase
+Pastikan Anda memiliki file `serviceAccountKey.json` yang ditempatkan di dalam `src/services/api/` (file ini diabaikan oleh Git demi keamanan). Konfigurasi API Client dapat diakses melalui file `.env` di root.
 
 ### 2. Font Offline Administrasi
 Untuk menggunakan fitur **Document Generator** secara *offline*, pastikan Anda menyalin font standar (Arial & Times New Roman) dari sistem operasi Anda (misal: `C:\Windows\Fonts\`) ke dalam folder `src/assets/fonts/`.

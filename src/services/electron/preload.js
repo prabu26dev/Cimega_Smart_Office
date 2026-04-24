@@ -193,3 +193,11 @@ try {
 }
 
 console.log('🚀 PRELOAD v1.0.0 SECURE: Bridge siap. Firebase → CDN renderer. Gemini AI, Auto-Updater, Session Key Store aktif.');
+
+// ── 5. JEMBATAN KE ANTARMUKA: Inject Performance Mode ────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (process.argv.includes('--entry-level')) {
+    document.body.classList.add('entry-level-mode');
+    console.log('⚡ [PERFORMANCE OPTIMIZER] Entry-Level Mode diaktifkan. Grafik kelas tinggi dinonaktifkan secara elegan.');
+  }
+});
