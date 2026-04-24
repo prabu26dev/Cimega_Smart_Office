@@ -223,6 +223,12 @@ function createBgMusicWindow() {
       if (isError) {
         _bgmSkipCount++;
         console.warn(`[BGM] Playback error (attempt ${_bgmSkipCount}/${BGM_MAX_SKIP})`);
+      } else if (title.startsWith('BGM_FREQ_')) {
+        // Forward frequency data to main window for visualizer
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('music-frequency', title.replace('BGM_FREQ_', ''));
+        }
+        return; // Don't reset skip count on freq updates
       } else {
         _bgmSkipCount = 0; // Reset jika sukses
       }

@@ -1649,13 +1649,12 @@ function loadBeranda() {
       quick.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:11px">Belum ada kategori tersedia</div>';
     } else {
       quick.innerHTML = _menuDataDynamic.slice(0, 6).map(m => `
-      <div class="recent-item" style="cursor:pointer;padding:8px;border-radius:6px;margin-bottom:4px;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.02)" onclick="openDocList('${m.id}')">
+      <div class="recent-item" style="padding:8px;border-radius:6px;margin-bottom:4px;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.02)">
         <div style="font-size:18px">${m.icon}</div>
         <div style="flex:1">
           <div style="font-size:12px;font-weight:600;color:#fff">${m.title}</div>
           <div style="font-size:10px;color:var(--muted)">${m.items.length} Dokumen</div>
         </div>
-        <span style="color:var(--cyan);font-size:10px">BUKA</span>
       </div>`).join('');
     }
   }

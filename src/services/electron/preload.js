@@ -109,6 +109,7 @@ try {
     musicPrev:           ()   => ipcRenderer.invoke('music-prev'),
     musicToggleMute:     ()   => ipcRenderer.invoke('music-toggle-mute'),
     onMusicStateChanged: (cb) => ipcRenderer.on('music-state-changed', (_e, d) => cb(d)),
+    onMusicFrequencyChanged: (cb) => ipcRenderer.on('music-frequency', (_e, d) => cb(d)),
 
     // Daftar file musik lokal dari folder assets_music (via IPC)
     getMusicList:        ()            => ipcRenderer.invoke('get-music-list'),
@@ -174,6 +175,7 @@ try {
     musicPrev:           ()   => ipcRenderer.invoke('music-prev'),
     musicToggleMute:     ()   => ipcRenderer.invoke('music-toggle-mute'),
     onMusicStateChanged: (cb) => ipcRenderer.on('music-state-changed', (_e, d) => cb(d)),
+    onMusicFrequencyChanged: (cb) => ipcRenderer.on('music-frequency', (_e, d) => cb(d)),
 
     // ── AUTO UPDATER (dipakai oleh updater.js) ───────────────────
     checkGithubUpdate:      (opts) => ipcRenderer.invoke('check-github-update', opts),

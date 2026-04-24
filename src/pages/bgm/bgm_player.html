@@ -11,6 +11,47 @@
     var bgm = document.getElementById('bgm');
     window._bgm = bgm;
 
+    // ── Web Audio API Analyzer ──
+    var audioCtx = null;
+    var analyser = null;
+    var dataArray = null;
+
+    function initAnalyzer() {
+      if (audioCtx) return;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var source = audioCtx.createMediaElementSource(bgm);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64; // Kecil saja untuk performa
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        updateVisualizer();
+      } catch (e) { console.error('Analyzer error:', e); }
+    }
+
+    function updateVisualizer() {
+      if (!analyser || bgm.paused) {
+        requestAnimationFrame(updateVisualizer);
+        return;
+      }
+      analyser.getByteFrequencyData(dataArray);
+      
+      // Ambil 5 titik frekuensi untuk 5 bar equalizer
+      // Kita ambil indeks 1, 3, 5, 7, 9 (hindari 0/sub-bass yang sering flat)
+      var v1 = dataArray[1] || 0;
+      var v2 = dataArray[3] || 0;
+      var v3 = dataArray[6] || 0;
+      var v4 = dataArray[9] || 0;
+      var v5 = dataArray[12] || 0;
+      
+      // Kirim data via title (throttled by browser title update frequency)
+      // Format: BGM_FREQ_v1_v2_v3_v4_v5
+      document.title = 'BGM_FREQ_' + v1 + '_' + v2 + '_' + v3 + '_' + v4 + '_' + v5;
+      
+      requestAnimationFrame(updateVisualizer);
+    }
+
     // Lagu selesai diputar normal
     bgm.addEventListener('ended', function() {
       document.title = 'BGM_ENDED_' + Date.now();
@@ -25,7 +66,12 @@
 
     // Dipanggil dari main.js via executeJavaScript
     window.playSong = function(fileUrl, volume) {
-      // Reset bersih: gunakan removeAttribute agar tidak trigger error dari src kosong
+      // Pastikan AudioContext jalan (butuh trigger user gesture biasanya, 
+      // tapi autoplay-policy: no-user-gesture-required membantu)
+      initAnalyzer();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+      // Reset bersih
       bgm.pause();
       bgm.removeAttribute('src');
       bgm.load();
@@ -37,7 +83,6 @@
       bgm.addEventListener('canplay', function onReady() {
         bgm.removeEventListener('canplay', onReady);
         bgm.play().catch(function(err) {
-          // Abaikan NotAllowedError (autoplay policy) — sudah ditangani di main.js
           if (err.name !== 'NotAllowedError') {
             document.title = 'BGM_ERROR_' + Date.now();
           }

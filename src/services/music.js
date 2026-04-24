@@ -79,8 +79,16 @@ window.CimegaMusic = (() => {
     if (info) info.textContent = track;
     if (btn)  btn.textContent  = icon;
     if (bars) {
-      if (isMuted) bars.classList.add('paused');
-      else bars.classList.remove('paused');
+      if (isMuted) {
+        bars.classList.add('paused');
+        var bDivs = bars.getElementsByClassName('b');
+        for (var i = 0; i < bDivs.length; i++) {
+          bDivs[i].style.height = ''; // Reset to CSS default
+          bDivs[i].style.animation = ''; // Restore CSS animation
+        }
+      } else {
+        bars.classList.remove('paused');
+      }
     }
 
     // Login IDs (mwTitle, mwMuteBtn, mwBars)
@@ -91,8 +99,16 @@ window.CimegaMusic = (() => {
     if (mwT)    mwT.textContent   = title;
     if (mwBtn)  mwBtn.textContent = icon;
     if (mwBars) {
-      if (isMuted) mwBars.classList.add('paused');
-      else mwBars.classList.remove('paused');
+      if (isMuted) {
+        mwBars.classList.add('paused');
+        var bDivs = mwBars.getElementsByClassName('b');
+        for (var i = 0; i < bDivs.length; i++) {
+          bDivs[i].style.height = ''; 
+          bDivs[i].style.animation = '';
+        }
+      } else {
+        mwBars.classList.remove('paused');
+      }
     }
 
     // Retry jika elemen belum terbentuk (hanya jika memang tidak ada sama sekali)
@@ -149,6 +165,14 @@ window.CimegaMusic = (() => {
       api.onMusicStateChanged(function(state) { applyState(state); });
     }
 
+    if (api && api.onMusicFrequencyChanged) {
+      api.onMusicFrequencyChanged(function(data) {
+        if (isMuted) return;
+        var freqs = data.split('_').map(Number);
+        updateBars(freqs);
+      });
+    }
+
     try {
       var initFn = (api && api.musicInit);
       if (initFn) {
@@ -170,6 +194,32 @@ window.CimegaMusic = (() => {
     }
 
     updateUI();
+  }
+
+  function updateBars(freqs) {
+    if (!freqs || freqs.length < 5) return;
+    
+    // Update Admin & Dashboard bars
+    var bars = document.getElementById('musicBars');
+    if (bars) {
+      var bDivs = bars.getElementsByClassName('b');
+      for (var i = 0; i < bDivs.length && i < freqs.length; i++) {
+        var h = Math.max(4, (freqs[i] / 255) * 16); // Min 4px, Max 16px
+        bDivs[i].style.height = h + 'px';
+        bDivs[i].style.animation = 'none'; // Disable CSS animation while reactive
+      }
+    }
+
+    // Update Login bars
+    var mwBars = document.getElementById('mwBars');
+    if (mwBars) {
+      var bDivs = mwBars.getElementsByClassName('b');
+      for (var i = 0; i < bDivs.length && i < freqs.length; i++) {
+        var h = Math.max(4, (freqs[i] / 255) * 16);
+        bDivs[i].style.height = h + 'px';
+        bDivs[i].style.animation = 'none';
+      }
+    }
   }
 
   async function toggleMute() {
