@@ -251,3 +251,96 @@ PRINSIP OPERASIONAL:
 
 console.log('✅ Cimega AI Helper loaded.');
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ── AI DEBUGGER — MODUL BUILDER (Admin Panel Only) ───────────────────────────
+// Menganalisis koding HTML & JS yang dimasukkan admin ke Modul Builder.
+// Dipanggil via tombol "🧪 DEBUG AI" sebelum admin menekan "💾 SIMPAN MODUL".
+// ─────────────────────────────────────────────────────────────────────────────
+window.CimegaAIDebugger = {
+
+    /**
+     * Tampilkan hasil analisis di dalam modal popup
+     * @param {string} result - Teks hasil analisis dari AI
+     */
+    showResult: function(result) {
+        // Hapus modal lama jika ada
+        const oldModal = document.getElementById('debugger-result-modal');
+        if (oldModal) oldModal.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'debugger-result-modal';
+        modal.style.cssText = `
+            position:fixed; inset:0; z-index:99999;
+            background:rgba(0,0,0,0.75); backdrop-filter:blur(6px);
+            display:flex; align-items:center; justify-content:center;
+        `;
+        modal.innerHTML = `
+            <div style="background:rgba(4,20,45,0.98); border:1px solid rgba(0,229,255,0.3);
+                        border-radius:16px; padding:28px; max-width:640px; width:90%;
+                        box-shadow:0 20px 60px rgba(0,0,0,0.8); font-family:Arial,sans-serif;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:20px;">🧪</span>
+                        <span style="font-family:'Orbitron',sans-serif; font-size:13px; color:#00e5ff; font-weight:700; letter-spacing:1px;">HASIL ANALISIS AI DEBUGGER</span>
+                    </div>
+                    <button onclick="document.getElementById('debugger-result-modal').remove()"
+                            style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15);
+                                   color:#fff; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:13px;">✕</button>
+                </div>
+                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(0,229,255,0.1);
+                            border-radius:10px; padding:16px; max-height:340px; overflow-y:auto;
+                            font-size:12px; line-height:1.7; color:#ddeeff; white-space:pre-wrap;">${result}</div>
+                <div style="margin-top:14px; text-align:right;">
+                    <button onclick="document.getElementById('debugger-result-modal').remove()"
+                            style="background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(0,180,200,0.1));
+                                   border:1px solid rgba(0,229,255,0.4); color:#00e5ff;
+                                   border-radius:8px; padding:8px 20px; cursor:pointer; font-size:12px;">
+                        Tutup
+                    </button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    },
+
+    /**
+     * Analisis kode HTML & JS dari Modul Builder menggunakan AI
+     */
+    analyzeCode: async function() {
+        const htmlContent = document.getElementById('builder-html')?.value || '';
+        const jsContent   = document.getElementById('builder-js')?.value   || '';
+
+        if (!htmlContent.trim() && !jsContent.trim()) {
+            if (window.showToast) window.showToast('warn', 'Kosong', 'Isi kolom HTML atau JavaScript terlebih dahulu.');
+            return;
+        }
+
+        if (window.showToast) window.showToast('info', 'Menganalisis...', 'AI sedang memeriksa koding Anda...');
+
+        const systemPrompt = `Anda adalah Senior Software Engineer dan Code Reviewer profesional.
+TUGAS: Lakukan inspeksi koding HTML dan JavaScript dari Modul Builder sistem administrasi sekolah.
+Cari: bug, tag HTML tidak tertutup, error sintaks, variabel tidak terdefinisi, atau referensi ID yang tidak sinkron antara HTML dan JavaScript.
+
+ATURAN KETAT (HEMAT TOKEN):
+1. DILARANG menulis ulang (rewrite) atau memperbaiki kode secara utuh.
+2. Berikan hasil dalam poin-poin singkat dan spesifik (sebutkan nama variabel/ID/baris yang bermasalah).
+3. Jika koding 100% valid, balas HANYA dengan: "✅ STATUS AMAN: Tidak ditemukan error kritikal. Kodingan siap di-deploy."`;
+
+        const userPrompt = `[KODING HTML]\n${htmlContent || '(Kosong)'}\n\n[KODING JAVASCRIPT]\n${jsContent || '(Kosong)'}\n\nLakukan inspeksi sekarang.`;
+
+        try {
+            const res = await window.CimegaAI.ask({
+                system: systemPrompt,
+                messages: [{ role: 'user', content: userPrompt }],
+                maxTokens: 400
+            });
+
+            if (res.error) throw new Error(res.error);
+            this.showResult(res.text);
+        } catch (error) {
+            console.error('[CimegaAIDebugger] Error:', error);
+            if (window.showToast) window.showToast('error', 'Gagal', 'AI Debugger tidak dapat terhubung: ' + error.message);
+        }
+    }
+};
+
+console.log('✅ Cimega AI Debugger loaded (Admin Modul Builder).');

@@ -4,18 +4,18 @@ window.CimegaAIChatbot = {
   history: [], // Memori percakapan
   currentAttachment: null, // Lampiran aktif (Base64 + MIME)
 
-  getUserData: function() {
+  getUserData: function () {
     return JSON.parse(localStorage.getItem('cimega_user') || '{}');
   },
 
-  getUserRoles: function() {
+  getUserRoles: function () {
     const u = this.getUserData();
     if (Array.isArray(u.roles) && u.roles.length > 0) return u.roles;
     if (u.role) return [u.role];
     return ['guru'];
   },
 
-  init: function(containerId) {
+  init: function (containerId) {
     if (containerId) {
       this.renderTo(containerId);
       return;
@@ -25,7 +25,7 @@ window.CimegaAIChatbot = {
 
     const userData = this.getUserData();
     const chatbotHTML = `
-      <div id="aiChatbotContainer" style="position:fixed;bottom:20px;left:20px;z-index:9998;font-family:'Exo 2',sans-serif;">
+      <div id="aiChatbotContainer" style="position:fixed;bottom:20px;left:20px;z-index:9998;font-family: Arial;">
         <div onclick="window.CimegaAIChatbot.toggle()" style="width:52px;height:52px;background:linear-gradient(135deg,#aa55ff,#6600ff);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(170,85,255,0.4);position:relative;transition:all 0.2s;">
           <span style="font-size:22px;">🤖</span>
           <div style="position:absolute;top:-4px;right:-4px;background:var(--cyan);color:#000;font-size:8px;font-weight:900;padding:2px 4px;border-radius:8px;font-family:'Orbitron';">AI</div>
@@ -57,12 +57,12 @@ window.CimegaAIChatbot = {
     div.innerHTML = chatbotHTML;
     document.body.appendChild(div);
     this.renderMainMenuInto('aiChatHistory');
-    
+
     // Aktifkan Pengamat Kecerdasan (Phase 4)
     this.startIntelligenceObserver();
   },
 
-  renderTo: function(containerId) {
+  renderTo: function (containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -86,7 +86,7 @@ window.CimegaAIChatbot = {
         <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:10px;background:rgba(0,0,0,0.08);">
           <input type="file" id="aiFileInput" style="display:none;" onchange="window.CimegaAIChatbot.handleFileChange(event)" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"/>
           <button onclick="window.CimegaAIChatbot.triggerUpload()" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;width:50px;cursor:pointer;color:#fff;font-size:18px;transition:all 0.2s;" title="Unggah Dokumen">📎</button>
-          <input id="aiChatInput" placeholder="Ketik instruksi atau perintah administrasi..." style="flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:#fff;outline:none;font-size:13px;font-family:'Exo 2',sans-serif;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); window.CimegaAIChatbot.ask();}"/>
+          <input id="aiChatInput" placeholder="Ketik instruksi atau perintah administrasi..." style="flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:#fff;outline:none;font-size:13px;font-family: Arial;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); window.CimegaAIChatbot.ask();}"/>
           <button id="aiSendBtn" onclick="window.CimegaAIChatbot.ask()" style="background:linear-gradient(135deg,#aa55ff,#6600ff);border:none;border-radius:12px;width:50px;cursor:pointer;color:#fff;font-size:16px;transition:transform 0.15s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">✨</button>
         </div>
       </div>`;
@@ -94,14 +94,14 @@ window.CimegaAIChatbot = {
     this.renderMainMenuInto('aiChatHistory');
   },
 
-  renderMainMenuInto: function(historyId) {
+  renderMainMenuInto: function (historyId) {
     const history = document.getElementById(historyId);
     if (!history) return;
     history.innerHTML = '';
 
     const userData = this.getUserData();
     const roles = this.getUserRoles();
-    
+
     // ★ USER IDENTITY & ASSIGNMENTS ★
     let assignedInfo = "";
     if (userData.teaching_assignments) {
@@ -133,7 +133,7 @@ window.CimegaAIChatbot = {
     const menuWrapper = document.createElement('div');
     menuWrapper.id = 'aiMainMenu';
     menuWrapper.style.cssText = 'animation: fadein 0.5s ease; width: 100%;';
-    
+
     // ★ IDENTITY CARD UI ★
     menuWrapper.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(170,85,255,0.2),rgba(102,0,255,0.1));border:1px solid rgba(170,85,255,0.3);border-radius:18px;padding:20px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,0.2);position:relative;overflow:hidden;">
@@ -161,7 +161,7 @@ window.CimegaAIChatbot = {
     history.appendChild(menuWrapper);
   },
 
-  getMergedSuggestions: function(roles) {
+  getMergedSuggestions: function (roles) {
     const suggestions = {
       guru: [
         { icon: '📝', label: 'Tulis Artikel', prompt: 'Bantu saya menulis artikel edukatif singkat tentang teknologi masa depan.' },
@@ -171,12 +171,12 @@ window.CimegaAIChatbot = {
     };
 
     let mySugs = suggestions['guru'];
-    
+
     return mySugs.filter((v, i, a) => a.findIndex(t => t.label === v.label) === i).slice(0, 6);
   },
 
 
-  quickAsk: function(promptText) {
+  quickAsk: function (promptText) {
     const m = document.getElementById('aiMainMenu');
     if (m) m.remove();
 
@@ -187,7 +187,7 @@ window.CimegaAIChatbot = {
     }
   },
 
-  toggle: function() {
+  toggle: function () {
     const win = document.getElementById('aiChatWindow');
     if (!win) return;
     const isOpen = win.style.display !== 'flex';
@@ -198,7 +198,7 @@ window.CimegaAIChatbot = {
     }
   },
 
-  getEl: function(id) {
+  getEl: function (id) {
     const embedded = document.getElementById('aiChatbotEmbedded');
     if (embedded) {
       const el = embedded.querySelector('#' + id);
@@ -207,7 +207,7 @@ window.CimegaAIChatbot = {
     return document.getElementById(id);
   },
 
-  ask: async function() {
+  ask: async function () {
     const input = this.getEl('aiChatInput');
     const sendBtn = this.getEl('aiSendBtn');
     const typing = this.getEl('aiTyping');
@@ -220,12 +220,12 @@ window.CimegaAIChatbot = {
     if (mainMenu) mainMenu.remove();
 
     this.renderMessage(text, 'user');
-    
+
     // Simpan ke memori lokal
-    this.history.push({ 
-      role: 'user', 
+    this.history.push({
+      role: 'user',
       content: text || (attachments ? "[Menganalisis Dokumen]" : ""),
-      attachments: attachments 
+      attachments: attachments
     });
 
     this.clearAttachment(); // Bersihkan UI lampiran setelah dikirim
@@ -258,8 +258,8 @@ BATASAN KEAMANAN & WEWENANG:
 RESPONSE TAGGING:
 Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVISI).`;
 
-      const res = await window.electronAPI.invoke('gemini-ask', { 
-        messages: this.history, 
+      const res = await window.electronAPI.invoke('gemini-ask', {
+        messages: this.history,
         system: systemPrompt,
         maxTokens: 3000 // Tingkatkan token untuk analisis dokumen
       });
@@ -267,7 +267,7 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
       if (res.error) throw new Error(res.error);
 
       let cleanText = res.text;
-      
+
       // Simpan respon AI ke memori lokal
       this.history.push({ role: 'assistant', content: cleanText });
 
@@ -295,8 +295,8 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
       this.renderMessage(friendlyMsg, 'ai', null, null, true); // true = isError
 
       if (shouldSpeakAuto && window.CimegaVoice) {
-         // BERIKAN INFORMASI LEWAT SUARA SECARA OTOMATIS
-         window.CimegaVoice.speak(friendlyMsg);
+        // BERIKAN INFORMASI LEWAT SUARA SECARA OTOMATIS
+        window.CimegaVoice.speak(friendlyMsg);
       }
 
       // LAPORKAN KE TERMINAL UTAMA (Main Process)
@@ -310,21 +310,21 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     }
   },
 
-  renderMessage: function(text, sender, action = null, actionData = null, isError = false) {
+  renderMessage: function (text, sender, action = null, actionData = null, isError = false) {
     const history = this.getEl('aiChatHistory');
     if (!history) return;
 
     const isMe = sender === 'user';
     const div = document.createElement('div');
     div.style.cssText = `
-      align-self:${isMe?'flex-end':'flex-start'};
+      align-self:${isMe ? 'flex-end' : 'flex-start'};
       max-width:87%;
-      padding:${isMe?'11px 15px':'11px 32px 11px 15px'};
-      border-radius:${isMe?'14px 14px 3px 14px':'14px 14px 14px 3px'};
+      padding:${isMe ? '11px 15px' : '11px 32px 11px 15px'};
+      border-radius:${isMe ? '14px 14px 3px 14px' : '14px 14px 14px 3px'};
       font-size:13px; line-height:1.55;
-      background:${isMe?'linear-gradient(135deg,#0055cc,#003da5)':'rgba(255,255,255,0.055)'};
-      color:${isMe?'#fff':'#ddeeff'};
-      border:1px solid ${isMe?'rgba(0,229,255,0.25)':'rgba(170,85,255,0.2)'};
+      background:${isMe ? 'linear-gradient(135deg,#0055cc,#003da5)' : 'rgba(255,255,255,0.055)'};
+      color:${isMe ? '#fff' : '#ddeeff'};
+      border:1px solid ${isMe ? 'rgba(0,229,255,0.25)' : 'rgba(170,85,255,0.2)'};
       box-shadow:0 3px 12px rgba(0,0,0,0.12);
       word-break:break-word;
       position:relative;
@@ -342,11 +342,11 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     }
 
     const textNode = document.createElement('span');
-    
+
     // DETEKSI TEKS ARAB & BUNGKUS DENGAN FONT QURAN (Jika ada karakter Arab)
     let processedText = text;
     const arabicRegex = /([\u0600-\u06FF][\u0600-\u06FF\s،؛؟0-9]*(?:[\u0600-\u06FF][\u0600-\u06FF\s،؛؟0-9]*)*)/g;
-    
+
     if (arabicRegex.test(text)) {
       processedText = text.replace(arabicRegex, match => {
         return `<div class="arabic-naskh" dir="rtl">${match.trim()}</div>`;
@@ -368,7 +368,7 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     history.scrollTop = history.scrollHeight;
   },
 
-  triggerAction: function(type, data = null) {
+  triggerAction: function (type, data = null) {
     const findNavAndClick = (keyword) => {
       const items = Array.from(document.querySelectorAll('.nav-item'));
       const item = items.find(el => el.innerText.toLowerCase().includes(keyword));
@@ -385,12 +385,12 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     else if (type === 'SUPERVISI') findNavAndClick('supervisi');
   },
 
-  triggerUpload: function() {
+  triggerUpload: function () {
     const fileInput = this.getEl('aiFileInput');
     if (fileInput) fileInput.click();
   },
 
-  handleFileChange: function(event) {
+  handleFileChange: function (event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -407,7 +407,7 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     reader.onload = (e) => {
       const base64Data = e.target.result.split(',')[1];
       let mimeType = file.type;
-      
+
       // Fallback MIME untuk file office jika tidak terdeteksi browser
       if (!mimeType) {
         if (ext === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -431,7 +431,7 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     reader.readAsDataURL(file);
   },
 
-  clearAttachment: function() {
+  clearAttachment: function () {
     this.currentAttachment = null;
     const bar = this.getEl('aiAttachmentBar');
     const fileInput = this.getEl('aiFileInput');
@@ -439,15 +439,15 @@ Tanggapi dengan tag [ACTION:TYPE] jika relevan (MODUL_AJAR, SURAT, RKAS, SUPERVI
     if (fileInput) fileInput.value = '';
   },
 
-  startIntelligenceObserver: function() {
+  startIntelligenceObserver: function () {
     // Phase 4: Intelligence Observer
     console.log('👁️ AI Intelligence Observer Aktif...');
     // Simulasi pemantauan anomali data (misal: draf belum selesai)
     setTimeout(() => {
-        const hasDraft = localStorage.getItem('cimega_ai_draft');
-        if (hasDraft && !this.history.length) {
-            this.renderMessage('Salam Bapak/Ibu, saya mendeteksi ada draf surat yang belum Bapak selesaikan. Apakah ingin saya bantu merapikannya sekarang?', 'ai');
-        }
+      const hasDraft = localStorage.getItem('cimega_ai_draft');
+      if (hasDraft && !this.history.length) {
+        this.renderMessage('Salam Bapak/Ibu, saya mendeteksi ada draf surat yang belum Bapak selesaikan. Apakah ingin saya bantu merapikannya sekarang?', 'ai');
+      }
     }, 5000);
   }
 };

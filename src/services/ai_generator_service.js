@@ -8,20 +8,20 @@
  */
 
 const express = require('express');
-const cors    = require('cors');
-const admin   = require('firebase-admin');
+const cors = require('cors');
+const admin = require('firebase-admin');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
-const app  = express();
+const app = express();
 const PORT = 3001;
 
 app.use(cors());
 app.use((req, res, next) => {
-    if (req.path === '/api/tts') {
-        console.log(`[TTS_DEBUG] Permintaan masuk dari: ${req.ip}`);
-    }
-    next();
+  if (req.path === '/api/tts') {
+    console.log(`[TTS_DEBUG] Permintaan masuk dari: ${req.ip}`);
+  }
+  next();
 });
 app.use(express.json());
 
@@ -40,15 +40,15 @@ function parsePrompt(template, params) {
 
 app.get('/api/generate-docs', async (req, res) => {
   // SSE Headers
-  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection',    'keep-alive');
+  res.setHeader('Connection', 'keep-alive');
 
   const sendEvent = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
 
   try {
     const { role, adminType, ...params } = req.query;
-    
+
     // Step 0-10%: Inisialisasi & Fetch Template
     sendEvent({ progress: 5, status: 'Mengambil template dari database...', isDone: false });
 
@@ -72,8 +72,8 @@ app.get('/api/generate-docs', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GEMINI_API_KEY belum diisi di file .env');
 
-    const genAI  = new GoogleGenerativeAI(apiKey);
-    const model  = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const systemInstruction = `
       Kamu adalah CIMEGA SMART GENERATOR. 
@@ -89,25 +89,25 @@ app.get('/api/generate-docs', async (req, res) => {
 
     // Stream dari Gemini
     const result = await model.generateContentStream(systemInstruction);
-    
+
     let fullText = '';
     let progress = 20;
 
     for await (const chunk of result.stream) {
       const chunkText = chunk.text();
       fullText += chunkText;
-      
+
       if (progress < 90) progress += 2;
       sendEvent({ progress, status: 'AI sedang merakit konten dinamis...', isDone: false });
     }
 
     // Step 91-100%: Validasi & Selesai
     sendEvent({ progress: 95, status: 'Memvalidasi hasil...', isDone: false });
-    
+
     try {
       const cleanJson = fullText.replace(/```json|```/gi, '').trim();
       const finalData = JSON.parse(cleanJson);
-      
+
       sendEvent({ progress: 100, status: 'Selesai!', isDone: true, payload: finalData });
     } catch (parseError) {
       console.error('JSON Parse Fail:', fullText);
@@ -125,60 +125,60 @@ app.get('/api/generate-docs', async (req, res) => {
 // ── 3. ENDPOINT TTS (TEXT TO SPEECH) ─────────────────────────────
 
 app.post('/api/tts', async (req, res) => {
-    try {
-        const text = req.body.text;
-        console.log(`[TTS_DEBUG] Teks yang diterima backend: "${text ? text.substring(0, 50) : 'KOSONG'}"`);
-        
-        if (!text) {
-            console.error('[TTS_DEBUG] Error: Body tidak mengandung teks.');
-            return res.status(400).json({ error: 'Text is required in body' });
-        }
+  try {
+    const text = req.body.text;
+    console.log(`[TTS_DEBUG] Teks yang diterima backend: "${text ? text.substring(0, 50) : 'KOSONG'}"`);
 
-        const provider = process.env.VOICE_PROVIDER || 'EDGE';
-        console.log(`[TTS_DEBUG] Menggunakan Provider: ${provider}`);
-        
-        if (provider === 'EDGE') {
-          try {
-            const { EdgeTTS } = require('edge-tts-universal');
-            const tts = new EdgeTTS();
-            
-            // Log proses pemanggilan library
-            console.log(`[TTS_DEBUG] Memulai sintesis suara Microsoft Edge...`);
-            const audioData = await tts.getAudioBase64(text, 'id-ID-ArdiNeural');
-            console.log(`[TTS_DEBUG] Sukses! Data audio berhasil dibuat (${Math.round(audioData.length/1024)} KB)`);
-            
-            return res.json({ success: true, audioContent: audioData });
-          } catch (edgeErr) {
-            console.error('[TTS_DEBUG] Edge TTS Fail:', edgeErr.message);
-            // Fallback ke Google jika ini gagal
-          }
-        }
-
-        // --- PENYEDIA PREMIUM: Google Cloud TTS (Berbasis Key) ---
-        const apiKey = process.env.VOICE_API_KEY || process.env.GEMINI_API_KEY;
-        if (!apiKey) throw new Error('API Key untuk Suara (TTS) tidak ditemukan.');
-
-        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
-        const response = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify({
-                input: { text },
-                voice: { languageCode: 'id-ID', name: 'id-ID-Wavenet-B' },
-                audioConfig: { audioEncoding: 'MP3' }
-            })
-        });
-
-        const data = await response.json();
-        if (data.audioContent) {
-            res.json({ success: true, audioContent: data.audioContent });
-        } else {
-            const errorMsg = data.error?.message || 'Gagal memproses suara di Google Cloud.';
-            res.status(500).json({ error: errorMsg });
-        }
-    } catch (err) {
-        console.error('TTS General Error:', err);
-        res.status(500).json({ error: 'Sistem Suara Sedang Gangguan: ' + err.message });
+    if (!text) {
+      console.error('[TTS_DEBUG] Error: Body tidak mengandung teks.');
+      return res.status(400).json({ error: 'Text is required in body' });
     }
+
+    const provider = process.env.VOICE_PROVIDER || 'EDGE';
+    console.log(`[TTS_DEBUG] Menggunakan Provider: ${provider}`);
+
+    if (provider === 'EDGE') {
+      try {
+        const { EdgeTTS } = require('edge-tts-universal');
+        const tts = new EdgeTTS();
+
+        // Log proses pemanggilan library
+        console.log(`[TTS_DEBUG] Memulai sintesis suara Microsoft Edge...`);
+        const audioData = await tts.getAudioBase64(text, 'id-ID-ArdiNeural');
+        console.log(`[TTS_DEBUG] Sukses! Data audio berhasil dibuat (${Math.round(audioData.length / 1024)} KB)`);
+
+        return res.json({ success: true, audioContent: audioData });
+      } catch (edgeErr) {
+        console.error('[TTS_DEBUG] Edge TTS Fail:', edgeErr.message);
+        // Fallback ke Google jika ini gagal
+      }
+    }
+
+    // --- PENYEDIA PREMIUM: Google Cloud TTS (Berbasis Key) ---
+    const apiKey = process.env.VOICE_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('API Key untuk Suara (TTS) tidak ditemukan.');
+
+    const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        input: { text },
+        voice: { languageCode: 'id-ID', name: 'id-ID-Wavenet-B' },
+        audioConfig: { audioEncoding: 'MP3' }
+      })
+    });
+
+    const data = await response.json();
+    if (data.audioContent) {
+      res.json({ success: true, audioContent: data.audioContent });
+    } else {
+      const errorMsg = data.error?.message || 'Gagal memproses suara di Google Cloud.';
+      res.status(500).json({ error: errorMsg });
+    }
+  } catch (err) {
+    console.error('TTS General Error:', err);
+    res.status(500).json({ error: 'Sistem Suara Sedang Gangguan: ' + err.message });
+  }
 });
 
 // Start Server (Hanya jika belum jalan)

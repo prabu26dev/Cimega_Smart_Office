@@ -72,7 +72,7 @@ window.CimegaChat = {
     const sidebarIcon = this.currentTab === 'kepsek' ? '🏛️' : '🌍';
 
     container.innerHTML = `
-      <div id="cimegaChatWrapper" style="display:flex; height:calc(100vh - 150px); background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; font-family:'Exo 2', sans-serif;">
+      <div id="cimegaChatWrapper" style="display:flex; height:calc(100vh - 150px); background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; font-family: Arial;">
         <!-- SIDEBAR -->
         <div style="width:260px; border-right:1px solid var(--border); background:rgba(0,0,0,0.25); display:flex; flex-direction:column; flex-shrink:0;">
           

@@ -6,6 +6,9 @@ if (process.stdout.isTTY) console.clear();
 // ─────────────────────────────────────────────────────────
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
+
+// Tambahkan flag autoplay agar audio bisa jalan di background tanpa interaksi user
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 const fs = require('fs');
 const https = require('https');
 const url = require('url');
@@ -101,14 +104,19 @@ function loadLocalMusicFiles() {
     const files = fs.readdirSync(musicDir)
       .filter(f => /\.(mp3|ogg|wav|flac|m4a|aac)$/i.test(f));
     if (files.length > 0) {
-      musicFiles = sortMusicFiles(files.map(f => ({
-        id: f,
-        title: f.replace(/\.(mp3|ogg|wav|flac|m4a|aac)$/i, '').trim(),
-        // Absolute file:// URL — WAJIB untuk bgm_player.html (same-origin file://)
-        url: url.pathToFileURL(path.join(musicDir, f)).href,
-      })));
-      buildShuffleQueue(); // Bangun antrean acak segera setelah file dimuat
-      musicState.index = getNextShuffleIndex(); // Pilih lagu pertama secara acak
+      musicFiles = sortMusicFiles(files.map(f => {
+        const absPath = path.resolve(musicDir, f);
+        // Split pada backslash Windows, join dengan forward slash, lalu encode spasi
+        // Hasilnya: file:///C:/Users/.../Kang%20Prabu%20-%20Himne%20SDN%20Cimega.mp3
+        const posixPath = absPath.split(path.sep).join('/');
+        const fileUrl = 'file:///' + posixPath.split(' ').join('%20');
+        return {
+          id: f,
+          title: f.replace(/\.(mp3|ogg|wav|flac|m4a|aac)$/i, '').trim(),
+          url: fileUrl,
+        };
+      }));
+      buildShuffleQueue();
     }
   } catch (e) {
     console.warn('[WARN] loadLocalMusicFiles:', e.message);
@@ -127,11 +135,12 @@ function syncMusicFromFirestore() {
         // Hanya reload lokal jika jumlah lagu berubah (file ditambah/hapus via Sinkron)
         const prevCount = musicFiles.length;
         loadLocalMusicFiles();
+        // Selalu broadcast setelah sync Firestore agar UI (judul dll) terupdate
+        // Tapi JANGAN memanggil getNextShuffleIndex agar lagu tidak ter-skip tiba-tiba
         if (musicFiles.length !== prevCount) {
-          buildShuffleQueue();
           if (musicState.index >= musicFiles.length) musicState.index = 0;
-          broadcastMusicState();
         }
+        broadcastMusicState();
       }, 1500);
     }, err => {
       console.warn('[WARN] Music sync:', err.message);
@@ -203,15 +212,28 @@ function createBgMusicWindow() {
   bgMusicWindow.loadFile(path.join(__dirname, '..', '..', 'pages', 'bgm', 'bgm_player.html'));
 
   bgMusicWindow.on('page-title-updated', (e, title) => {
-    if (title.startsWith('BGM_ENDED')) {
-      _bgmSkipCount++;
+    if (title.startsWith('BGM_ENDED') || title.startsWith('BGM_ERROR')) {
+      const isError = title.startsWith('BGM_ERROR');
+
+      if (isError) {
+        _bgmSkipCount++;
+        console.warn(`[BGM] Playback error (attempt ${_bgmSkipCount}/${BGM_MAX_SKIP})`);
+      } else {
+        _bgmSkipCount = 0; // Reset jika sukses
+      }
+
       if (_bgmSkipCount >= BGM_MAX_SKIP) {
-        console.warn('[BGM] Audio gagal dimuat setelah ' + BGM_MAX_SKIP + ' percobaan. Cek folder assets_music.');
+        console.error('[BGM] Terlalu banyak error. Menghentikan pemutaran otomatis.');
         _bgmSkipCount = 0;
         return;
       }
-      getNextShuffleIndex();
-      playMusicOnBgWindow();
+
+      // Jika error, beri jeda 2 detik sebelum skip agar tidak "shuffling" gila-gilaan
+      const delay = isError ? 2000 : 100;
+      setTimeout(() => {
+        getNextShuffleIndex();
+        playMusicOnBgWindow();
+      }, delay);
     }
   });
 
@@ -289,8 +311,6 @@ function createWindow() {
       }
     }, 1500);
   });
-
-
 
   // SECURITY: Hapus Menu Bar bawaan (yang berisi menu akses DevTools)
   mainWindow.setMenuBarVisibility(false);

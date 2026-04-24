@@ -6,45 +6,49 @@
   <style>body { margin:0; background:#000; }</style>
 </head>
 <body>
-  <!-- Audio element -- loaded from file:// origin sehingga file:// audio bisa diputar -->
   <audio id="bgm" preload="auto"></audio>
   <script>
     var bgm = document.getElementById('bgm');
-    window._bgm = bgm; // Expose ke main.js untuk cek isPlaying via executeJavaScript
+    window._bgm = bgm;
 
-    bgm.onended = function() {
+    // Lagu selesai diputar normal
+    bgm.addEventListener('ended', function() {
       document.title = 'BGM_ENDED_' + Date.now();
-    };
+    });
 
-    bgm.onerror = function() {
-      var code = bgm.error ? bgm.error.code : '?';
-      console.error('[BGM] Audio error code ' + code + ' | src: ' + bgm.src);
-      setTimeout(function() {
-        document.title = 'BGM_ENDED_' + Date.now();
-      }, 500);
-    };
+    // Error load/decode — HANYA dari src yang sedang aktif
+    bgm.addEventListener('error', function() {
+      // Pastikan src bukan kosong (bukan dari sisa reset sebelumnya)
+      if (!bgm.src || bgm.src === window.location.href || bgm.src.endsWith('/bgm_player.html')) return;
+      document.title = 'BGM_ERROR_' + Date.now();
+    });
 
     // Dipanggil dari main.js via executeJavaScript
     window.playSong = function(fileUrl, volume) {
+      // Reset bersih: gunakan removeAttribute agar tidak trigger error dari src kosong
       bgm.pause();
       bgm.removeAttribute('src');
       bgm.load();
-      bgm.src    = fileUrl;
-      bgm.volume = typeof volume === 'number' ? volume : 0.8;
-      bgm.load();
-      var promise = bgm.play();
-      if (promise && promise.catch) {
-        promise.catch(function(e) {
-          console.error('[BGM] play() rejected:', e.name, e.message);
-          setTimeout(function() {
-            document.title = 'BGM_ENDED_' + Date.now();
-          }, 500);
+
+      bgm.volume = (typeof volume === 'number' && volume >= 0 && volume <= 1) ? volume : 0.8;
+      bgm.src = fileUrl;
+
+      // Tunggu browser siap sebelum play()
+      bgm.addEventListener('canplay', function onReady() {
+        bgm.removeEventListener('canplay', onReady);
+        bgm.play().catch(function(err) {
+          // Abaikan NotAllowedError (autoplay policy) — sudah ditangani di main.js
+          if (err.name !== 'NotAllowedError') {
+            document.title = 'BGM_ERROR_' + Date.now();
+          }
         });
-      }
+      });
+
+      bgm.load();
     };
 
     window.setVolume = function(v) {
-      bgm.volume = v;
+      if (typeof v === 'number' && v >= 0 && v <= 1) bgm.volume = v;
     };
 
     window.isPaused = function() {

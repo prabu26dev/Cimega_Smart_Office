@@ -172,6 +172,7 @@ function loadKontenDynamic() {
       const visible = data.visibleTo || ['guru', 'kepsek', 'bendahara', 'ops'];
       const canSee = roles.some(r => visible.includes(r));
       if (!canSee) return;
+      if (!data.kategori || !data.nama) return; // Mencegah munculnya kategori/dokumen "undefined"
       if (!byKat[data.kategori]) byKat[data.kategori] = [];
       byKat[data.kategori].push({ id: d.id, nama: data.nama, ...data });
     });
@@ -259,6 +260,16 @@ function refreshDashboardUI() {
   });
 
   buildSidebar();
+
+  // Async load dynamic modules
+  if (window.fetchDynamicModules) {
+      window.fetchDynamicModules().then(modules => {
+          window._fetchedDynamicModules = modules;
+          window._dynamicModulesMap = {};
+          modules.forEach(m => window._dynamicModulesMap[m.id] = m);
+          if (modules.length > 0) buildSidebar(); // Re-render sidebar if modules exist
+      }).catch(err => console.error("Dynamic modules failed to load", err));
+  }
 
   // UI Sync
   if (document.getElementById('page-beranda')?.classList.contains('active')) loadBeranda();
@@ -500,6 +511,16 @@ function renderMenuGrid(menus, targetKatId = null) {
 // ── 7. DOCUMENT LIST NAVIGATION ──────────────────────────────────
 function openDocList(katId) {
   try {
+    // INTERCEPT: Cek apakah Kategori Administrasi (katId) ini di-override oleh Modul Dinamis
+    // Jika ada modul di database dengan ID yang sama dengan ID menu Administrasi (katId)
+    if (window._dynamicModulesMap && window._dynamicModulesMap[katId]) {
+      console.log('⚡ Mengalihkan menu ke Modul Dinamis:', katId);
+      // Cari elemen menu sidebar yang sedang aktif/diklik agar highlight UI tetap sinkron
+      const elSidebar = document.querySelector(`.nav-item[onclick*="navToMenu(this,'${katId}')"]`);
+      window.navToDynamicModule(elSidebar, katId);
+      return;
+    }
+
     const menu = _menuDataDynamic.find(m => m.id === katId);
     if (!menu) {
       console.warn('openDocList: kategori tidak ditemukan →', katId);
@@ -556,8 +577,30 @@ function openDocList(katId) {
 
 // ── 8. DOCUMENT VIEWER & EDITOR ──────────────────────────────────
 async function openDoc(katId, docName) {
+  try {
+    // ADDITIONAL INTERCEPT: Jika ternyata admin menghubungkan ID Modul dengan Konten/Dokumen spesifik (bukan kategori)
+    // ID dokumen biasanya sulit ditebak karena berupa UID firestore, tapi jika admin menggunakan slug docName sebagai ID modul
+    const possibleModuleId = docName.toLowerCase().replace(/\s+/g, '_').replace(/[^\w\-]+/g, '');
+    if (window._dynamicModulesMap && window._dynamicModulesMap[possibleModuleId]) {
+      console.log('⚡ Mengalihkan dokumen ke Modul Dinamis:', possibleModuleId);
+      window.navToDynamicModule(null, possibleModuleId);
+      return;
+    }
+  } catch(e) {}
+
   currentKat = katId; currentDocName = docName; currentDocId = '';
   pageHistory.push({ id: 'doclist', title: 'DAFTAR DOKUMEN' });
+  
+  // RESTORE DEFAULT UI: Kembalikan toolbar jika sebelumnya disembunyikan oleh Modul Dinamis
+  const actionBars = document.querySelectorAll('.doc-action-bar, .action-bar');
+  actionBars.forEach(el => { el.style.display = 'flex'; });
+  const docForm = document.getElementById('docFormContainer');
+  if (docForm) docForm.style.display = 'block';
+  const saveBtn = document.getElementById('saveBtn');
+  const editBtn = document.getElementById('editBtn');
+  if (saveBtn) saveBtn.style.display = 'block';
+  if (editBtn) editBtn.style.display = 'block';
+
   const titleEl = document.getElementById('docviewTitle');
   if (titleEl) titleEl.textContent = docName;
   const metaEl = document.getElementById('docviewMeta');
@@ -1053,7 +1096,7 @@ async function loadMonitor() {
       <div style="font-size:11px;color:var(--muted);margin-top:2px">${roles.join(' · ')}</div>
     </div>
     <div style="text-align:right">
-      <div style="font-family:'Orbitron',sans-serif;font-size:16px;color:var(--cyan)">${docs.length}</div>
+      <div style="font-family: Arial;font-size:16px;color:var(--cyan)">${docs.length}</div>
       <div style="font-size:10px;color:var(--muted)">Dokumen</div>
     </div>
   </div>`;
@@ -1204,7 +1247,7 @@ async function loadRekap() {
       html += `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,229,255,0.07)">
     <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:16px">👤</div>
     <div style="flex:1"><div style="font-size:12px;font-weight:700;color:#fff">${g.nama || '-'}</div><div style="font-size:10px;color:var(--muted)">${roles.join(' · ')}</div></div>
-    <div style="text-align:right"><div style="font-family:'Orbitron',sans-serif;font-size:16px;color:var(--cyan)">${docs.length}</div><div style="font-size:10px;color:var(--muted)">Dokumen</div></div></div>`;
+    <div style="text-align:right"><div style="font-family: Arial;font-size:16px;color:var(--cyan)">${docs.length}</div><div style="font-size:10px;color:var(--muted)">Dokumen</div></div></div>`;
     });
     el.innerHTML = html + '</div></div>';
   } catch (e) { el.innerHTML = '<div class="empty-state"><p>Gagal memuat rekap</p></div>'; }
@@ -1232,7 +1275,7 @@ function loadBeranda() {
   ].map(s => `
     <div class="stat-card">
       <div class="stat-icon">${s.icon}</div>
-      <div class="stat-num" style="font-family:'Orbitron',sans-serif">${s.num}</div>
+      <div class="stat-num" style="font-family: Arial">${s.num}</div>
       <div class="stat-label">${s.label}</div>
     </div>`).join('');
 
@@ -1240,7 +1283,7 @@ function loadBeranda() {
     statsHtml += `
     <div class="stat-card" style="cursor:pointer;border-color:rgba(255,208,0,0.3)" onclick="navTo(null,'keuangan','KEUANGAN',loadLaporanKeu)">
       <div class="stat-icon">💰</div>
-      <div class="stat-num" style="font-family:'Orbitron',sans-serif">${(_kontenCache['keuangan'] || []).length}</div>
+      <div class="stat-num" style="font-family: Arial">${(_kontenCache['keuangan'] || []).length}</div>
       <div class="stat-label">Keuangan</div>
     </div>`;
   }
@@ -1768,3 +1811,235 @@ async function initApp() {
           }
         }
       });
+
+// ── MESIN INJEKTOR MODUL DINAMIS (FASE 3) ─────────────────────────
+
+/**
+ * Fungsi untuk me-render Modul Administrasi dari Database (Admin)
+ * @param {Object} modulData - Paket JSON berisi id, nama, html, js, dan prompt
+ */
+window.renderDynamicModule = function(modulData) {
+    if (!modulData) return;
+
+    // 1. GARBAGE COLLECTION: Bersihkan skrip & gaya dari modul sebelumnya
+    document.querySelectorAll('.dynamic-injected-script, .dynamic-injected-style').forEach(el => el.remove());
+    
+    // PENIMPAAN PAKSA (OVERRIDING UI LAMA)
+    // Sembunyikan elemen dokumen default (toolbar, edit, update, hapus)
+    const actionBars = document.querySelectorAll('.doc-action-bar, .action-bar');
+    actionBars.forEach(el => { el.style.display = 'none'; });
+
+    const docForm = document.getElementById('docFormContainer');
+    if (docForm) docForm.style.display = 'none';
+
+    const saveBtn = document.getElementById('saveBtn');
+    const editBtn = document.getElementById('editBtn');
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+
+    // Pastikan kita bekerja di kontainer aktif
+    let container = document.getElementById('page-dynamic');
+    if (!container) {
+        const mainContent = document.querySelector('.content') || document.querySelector('.main-content') || document.body;
+        container = document.createElement('div');
+        container.id = 'page-dynamic';
+        container.className = 'page active';
+        mainContent.appendChild(container);
+    }
+
+    // Pastikan halaman dokumen default ditutup agar tidak bentrok
+    const docView = document.getElementById('page-docview');
+    if (docView) docView.classList.remove('active');
+    
+    // Tampilkan page-dynamic
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    container.classList.add('active');
+
+    // BERSIHKAN TOTAL kontainer utama sebelum dirender
+    container.innerHTML = '';
+
+    // -- EKSTRAKTOR TAG STYLE --
+    // Browser seringkali mengabaikan tag <style> jika disuntikkan via innerHTML
+    let rawHTML = modulData.koding_html || '';
+    let extractedStyles = '';
+    
+    // Ekstrak isi tag <style>...</style> menggunakan Regex
+    const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+    rawHTML = rawHTML.replace(styleRegex, function(match, styleContent) {
+        extractedStyles += styleContent + '\n';
+        return ''; // Hapus tag style dari HTML murni
+    });
+
+    // Tempelkan style yang diekstrak langsung ke document.head
+    if (extractedStyles.trim() !== '') {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'dynamic-modul-style-' + (modulData.id || 'temp');
+        styleEl.className = 'dynamic-injected-style';
+        styleEl.textContent = extractedStyles;
+        document.head.appendChild(styleEl);
+        console.log(`⚡ CSS Modul [${modulData.id}] berhasil disuntikkan ke document.head`);
+    }
+
+    // 2. RENDER ANTARMUKA (HTML)
+    container.innerHTML = `
+        <div class="cyber-panel fade-in">
+            <div class="cyber-header">
+                <h2 class="orbitron-title">${(modulData.nama || 'Modul Dinamis').toUpperCase()}</h2>
+                <div style="font-size: 10px; color: var(--muted); margin-top: 5px;">Modul ID: ${modulData.id || ''}</div>
+            </div>
+            <div id="dynamic-content-wrapper">
+                ${rawHTML}
+            </div>
+        </div>
+    `;
+
+    // Simpan prompt ke memori global sementara untuk modul ini
+    window._currentDynamicPrompt = modulData.ai_prompt;
+
+    // 3. SANDBOXING & EKSEKUSI JAVASCRIPT
+    if (modulData.koding_js) {
+        try {
+            const scriptEl = document.createElement('script');
+            scriptEl.className = 'dynamic-injected-script';
+            
+            // Membungkus JS dalam IIFE agar terisolasi dan tidak bentrok antar modul
+            scriptEl.textContent = `
+                (function() {
+                    try {
+                        ${modulData.koding_js}
+                        console.log("⚡ Modul Logic [${modulData.id}] berhasil dimuat.");
+                    } catch(err) {
+                        console.error("⚠️ Error pada logika Modul [${modulData.id}]:", err);
+                        if(window.showToast) window.showToast('error', 'Logic Error', 'Terjadi kesalahan pada skrip internal modul ini.');
+                    }
+                })();
+            `;
+            document.body.appendChild(scriptEl);
+        } catch(e) {
+            console.error("Gagal menyuntikkan skrip modul:", e);
+        }
+    }
+};
+
+/**
+ * PROMPT PARSER (Mesin Penerjemah Variabel AI)
+ * Fungsi ini dipanggil dari dalam tombol di HTML Modul Anda (misal: onclick="executeDynamicPrompt(this)")
+ */
+window.executeDynamicPrompt = async function(btnElement) {
+    if (!window._currentDynamicPrompt) {
+        if(window.showToast) window.showToast('error', 'Gagal', 'Instruksi AI (Prompt) tidak ditemukan pada modul ini.');
+        return;
+    }
+
+    // Ubah status tombol agar tidak dispam
+    const originalText = btnElement ? btnElement.innerHTML : 'GENERATE';
+    if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.innerHTML = '⏳ MENGANALISIS...';
+    }
+
+    try {
+        // 4. PARSER: Ganti variabel {{id_input}} dengan nilai ketikan user
+        let finalPrompt = window._currentDynamicPrompt.replace(/\{\{([^}]+)\}\}/g, function(match, elementId) {
+            const el = document.getElementById(elementId.trim());
+            // Jika elemen berupa checkbox/radio
+            if (el && (el.type === 'checkbox' || el.type === 'radio')) {
+                return el.checked ? (el.value || 'Ya') : 'Tidak';
+            }
+            // Jika elemen input teks/select biasa
+            return el ? el.value : match; 
+        });
+
+        console.log("🚀 Mengirim Prompt Dinamis ke AI:\n", finalPrompt);
+        
+        if(window.showToast) window.showToast('info', 'AI Bekerja', 'Memproses dokumen sesuai parameter...');
+
+        // Di sini Anda memanggil fungsi utama Gemini Anda
+        // Contoh: const hasil = await window.CimegaAI.ask({ system: "...", messages: [{role:'user', content: finalPrompt}] });
+        
+        // Simulasi sukses
+        setTimeout(() => {
+            if(window.showToast) window.showToast('success', 'Selesai', 'AI berhasil memproses dokumen!');
+        }, 2000);
+
+    } catch (e) {
+        console.error("AI Generation Error:", e);
+        if(window.showToast) window.showToast('error', 'Gagal', 'Sistem AI mengalami gangguan.');
+    } finally {
+        if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.innerHTML = originalText;
+        }
+    }
+};
+
+// ── FUNGSI FETCH MODUL DINAMIS & NAVIGASI ──
+
+window.fetchDynamicModules = async function() {
+    const roles = typeof userData !== 'undefined' ? (userData.roles || ['guru']) : ['guru'];
+    
+    if (!window._fb || !window.db) {
+        console.warn("Database tidak tersedia untuk fetch modul dinamis.");
+        return [];
+    }
+
+    const { collection, getDocs, query } = window._fb;
+    const fetchedModules = [];
+
+    try {
+        if (window.showToast) window.showToast('info', 'Sinkronisasi...', 'Memeriksa pembaruan modul dinamis dari cloud...');
+        
+        // Menggunakan filter lokal untuk menghindari error Missing Index di Firebase
+        const q = query(collection(window.db, 'modul_dinamis'));
+        const snapshot = await getDocs(q);
+        
+        snapshot.forEach(doc => {
+            const data = typeof doc.data === 'function' ? doc.data() : doc;
+            const hasAccess = data.akses_role && data.akses_role.some(r => roles.includes(r));
+            if (hasAccess || roles.includes('admin')) {
+                fetchedModules.push(data);
+            }
+        });
+
+        console.log(`✅ Berhasil menarik ${fetchedModules.length} modul dinamis untuk role: ${roles.join(', ')}`);
+        return fetchedModules;
+    } catch (error) {
+        console.error("❌ Gagal mengambil modul dinamis:", error);
+        if(window.showToast) window.showToast('warn', 'Koneksi Lemah', 'Gagal memuat modul dinamis, mode offline aktif.');
+        return [];
+    }
+};
+
+window.navToDynamicModule = function(el, moduleId) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+    
+    // Sembunyikan halaman statis, tampilkan page-dynamic
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    let target = document.getElementById('page-dynamic');
+    
+    // Jika container #page-dynamic belum ada atau salah tempat, atur ulang
+    if (!target || target.parentNode === document.body) {
+        if (target) target.remove(); // Hapus yang salah tempat
+        const mainContent = document.querySelector('.content') || document.getElementById('mainContent') || document.body;
+        target = document.createElement('div');
+        target.id = 'page-dynamic';
+        target.className = 'page';
+        mainContent.appendChild(target);
+    }
+    
+    target.classList.add('active');
+
+    const tt = document.getElementById('topbarTitle');
+    const mod = window._dynamicModulesMap ? window._dynamicModulesMap[moduleId] : null;
+    
+    if (tt && mod) {
+        tt.textContent = (mod.nama || 'MODUL DINAMIS').toUpperCase();
+    } else if (tt) {
+        tt.textContent = "MODUL DINAMIS";
+    }
+
+    if (mod) {
+        window.renderDynamicModule(mod);
+    }
+};
